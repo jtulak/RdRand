@@ -71,7 +71,7 @@ int rdrand16_step(uint16_t *x) {
 
 /*
 32 bits of entropy through RDRAND
-Returns 1 on success, or 0 on undeerflow
+Returns 1 on success, or 0 on underflow.
 */
 
 int rdrand32_step(uint32_t *x) {
@@ -358,8 +358,8 @@ size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
 Get count bytes of random values.
 Will retry up to retry_limit times. Negative retry_limit
 implies default retry_limit RETRY_LIMIT
-Returns the number of bytes successfuly acquired
-Uses rdrand64_step for the higher speed
+Returns the number of bytes successfuly acquired.
+Uses rdrand64_step for the higher speed.
 */
 size_t rdrand_get_bytes_retry(unsigned int count, void *dest, int retry_limit)
 {
@@ -517,23 +517,6 @@ int _rdrand_get_n_uints_retry(unsigned int n, unsigned int retry_limit, unsigned
         return total_uints;
 }
 
-/**************************************************/
-/* Uses RdRand to acquire a 32 bit random number  */
-/*   Writes that entropy to (unsigned int *)dest. */
-/*   Will not attempt retry on underflow          */
-/*   Returns 1 on success, or 0 on underflow      */
-/**************************************************/
-
-int _rdrand_get_uint(unsigned int *dest)
-{
-	int therand;
-	if (_rdrand32_step(&therand))
-	{
-		*dest = therand;
-		return 1;
-	}
-	else return 0;
-}
 
 /****************************************************************/
 /* Uses RdRand to acquire a block of n 32 bit random numbers    */
@@ -591,78 +574,6 @@ int _rdrand_get_n_uints(int n, unsigned int *dest)
 
 }
 
-/****************************************************************/
-/* Uses RdRand to acquire a block of random bytes               */
-/*   Uses RdRand64 to optimize speed                            */
-/*   Writes that entropy to (unsigned int *)dest[0+].           */
-/*   Internally will retry up to 10 times un underflow.         */
-/*   Returns 1 on success, 0 on failure                         */
-/****************************************************************/
-
-int _rdrand_get_bytes_step(unsigned int n, unsigned char *dest)
-{
-unsigned char *start;
-unsigned char *residualstart;
-unsigned long long int *blockstart;
-unsigned int count;
-unsigned int residual;
-unsigned int startlen;
-unsigned long long int i;
-unsigned long long int temprand;
-unsigned int length;
-
-	/* Compute the address of the first 64 bit aligned block in the destination buffer */
-	start = dest;
-	if (((unsigned long int)start % (unsigned long int)8) == 0)
-	{
-		blockstart = (unsigned long long int *)start;
-		count = n;
-		startlen = 0;
-	}
-	else
-	{
-		blockstart = (unsigned long long int *)(((unsigned long long int)start & ~(unsigned long long int)7)+(unsigned long long int)8);
-		count = n - (8 - (unsigned int)((unsigned long long int)start % 8));
-		startlen = (unsigned int)((unsigned long long int)blockstart - (unsigned long long int)start);
-	}
-
-	/* Compute the number of 64 bit blocks and the remaining number of bytes */
-	residual = count % 8;
-	length = count >> 3;
-	if (residual != 0)
-	{
-		residualstart = (unsigned char *)(blockstart + length);
-	}
-
-	/* Get a temporary random number for use in the residuals. Failout if retry fails */
-	if (startlen > 0)
-	{
-		if (_rdrand_get_n_qints_retry(1, 10, (void *)&temprand) == 0) return 0;
-	}
-
-	/* populate the starting misaligned block */
-	for (i = 0; i<startlen; i++)
-	{
-		start[i] = (unsigned char)(temprand & 0xff);
-		temprand = temprand >> 8;
-	}
-
-	/* populate the central aligned block. Fail out if retry fails */
-	if (_rdrand_get_n_qints_retry(length, 10, (void *)(blockstart)) == 0) return 0;
-
-	/* populate the final misaligned block */
-	if (residual > 0)
-	{
-		if (_rdrand_get_n_qints_retry(1, 10, (void *)&temprand) == 0) return 0;
-		for (i = 0; i<residual; i++)
-		{
-			residualstart[i] = (unsigned char)(temprand & 0xff);
-			temprand = temprand >> 8;
-		}
-	}
-
-        return 1;
-}
 
 /***************************************************************/
 /* Two methods of computing a reseed key                       */
