@@ -8,6 +8,7 @@ gcc -Wall -Wextra -O2 -fopenmp -mrdrnd [-lrt -lssl -lcrypto (for rng emulation)]
 #include <stddef.h>
 #include <string.h>
 #include <omp.h>
+#include <stdio.h>
 
 #include <cpuid.h>
 
@@ -32,7 +33,6 @@ gcc -Wall -Wextra -O2 -fopenmp -mrdrnd [-lrt -lssl -lcrypto (for rng emulation)]
 #endif // EMULATE_RNG
 
 #if DEBUG_VERBOSE > 0
-#include <stdio.h>
 #define DEBUG_PRINT_1(fmt, args...)    fprintf(stderr, fmt, ## args)
 #else
 #define DEBUG_PRINT_1(fmt, args...)    /* Don't do anything in release builds */
@@ -444,7 +444,41 @@ size_t rdrand_get_bytes_retry(unsigned int count, void *dest, int retry_limit)
     return generatedBytes;
 }
 
+/**
+ * Write count bytes of random data to a binary file.
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfuly acquired.
+ */
+size_t rdrand_fwrite(FILE *f, size_t count, int retry_limit)
+{
+    uint64_t tmprand;
+    size_t count64;
+    size_t count8;
+    size_t generated;
 
+    generated = 0;
+
+    count64 = count >> 3; // divide by 8
+    count8 = count % 8;
+
+    // generate 64bit blocks
+    for(;count64 > 0; count64--)
+    {
+        if(!rdrand_get_uint64_retry(&tmprand, retry_limit)) return generated;
+        fwrite(&tmprand,sizeof(uint64_t),1,f);
+        generated += 8;
+    }
+
+    // generate the rest unaligned bytes
+    if(count8)
+    {
+        if(!rdrand_get_uint64_retry(&tmprand, retry_limit)) return generated;
+        fwrite(&tmprand,sizeof(uint8_t),count8,f);
+        generated += count8;
+    }
+
+    return generated;
+}
 
 
 #if 0

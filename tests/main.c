@@ -7,7 +7,7 @@ gcc -Wall -Wextra -fopenmp -mrdrnd -O2 -o main main.c -lrt
 #include <x86intrin.h>
 #include <time.h>
 #include <omp.h>
-
+#include <string.h>
 
 #include "../src/rdrand.h"
 
@@ -15,6 +15,16 @@ gcc -Wall -Wextra -fopenmp -mrdrnd -O2 -o main main.c -lrt
 
 //#define THROUGHPUT
 #define CORRECT_SIZES
+#define FILE_IO
+
+int test(int expr)
+{
+    if(expr)
+        printf("OK\n");
+    else
+        fprintf(stderr,"FAILURE");
+    return expr;
+}
 
 int fill(uint64_t* buf, int size) {
   int j,k;
@@ -98,6 +108,8 @@ int main(void) {
  uint64_t uint64;
  int x;
 
+ FILE *file;
+
  omp_set_num_threads(threads);
 
 
@@ -177,6 +189,20 @@ int main(void) {
 
     printf("\n\n");
 #endif // CORRECT_SIZES
+
+
+#ifdef FILE_IO
+    printf("\nFilling a file:\n");
+    file = tmpfile();
+    //file=fopen("guu","wb");
+    test(rdrand_fwrite(file,(size_t)200, RETRY_LIMIT) == 200);
+    fseek(file,0L, SEEK_END);
+    printf("Verifying written size:\n");
+    test(ftell(file) == 200);
+    fclose(file);
+
+#endif // FILE_IO
+
 
 return 0;
 }

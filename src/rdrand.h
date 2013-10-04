@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
+#include <stdio.h>
 
 /**
  * 16 bits of entropy through RDRAND
@@ -63,13 +63,21 @@ size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
 
 
 /**
- * Get count bytes of random values.
+ * Get bytes of random values.
  * Will retry up to retry_limit times. Negative retry_limit
  * implies default retry_limit RETRY_LIMIT
  * Returns the number of bytes successfuly acquired.
  * Uses rdrand64_step for the higher speed.
  */
 size_t rdrand_get_bytes_retry(unsigned int count, void *dest, int retry_limit);
+
+/**
+ * Write count bytes of random data to a file.
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfuly acquired.
+ */
+size_t rdrand_fwrite(FILE *f, size_t count,int retry_limit);
+
 
 #endif
 
