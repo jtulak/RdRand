@@ -123,7 +123,7 @@ int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit) {
   do {
     rc=rdrand16_step( &x );
     ++count;
-  } while((rc == 0) || (count < retry_limit));
+  } while((rc == 0) && (count < retry_limit));
 
   if (rc == 1) {
     *dest = x;
@@ -150,7 +150,7 @@ int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit) {
   do {
     rc=rdrand32_step( &x );
     ++count;
-  } while((rc == 0) || (count < retry_limit));
+  } while((rc == 0) && (count < retry_limit));
 
   if (rc == 1) {
     *dest = x;
@@ -177,7 +177,7 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit) {
   do {
     rc=rdrand64_step( &x );
     ++count;
-  } while((rc == 0) || (count < retry_limit));
+  } while((rc == 0) && (count < retry_limit));
 
   if (rc == 1) {
     *dest = x;
