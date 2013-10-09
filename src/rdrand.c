@@ -217,7 +217,7 @@ size_t rdrand_get_uint32_array_retry(uint32_t *dest, size_t size, int retry_limi
     do {
       rc=rdrand32_step( &x_32 );
       ++retry_count;
-    } while((rc == 0) || (retry_count < retry_limit));
+    } while((rc == 0) && (retry_count < retry_limit));
 
     if (rc == 1) {
       *dest = x_32;
@@ -235,7 +235,7 @@ size_t rdrand_get_uint32_array_retry(uint32_t *dest, size_t size, int retry_limi
     do {
       rc=rdrand64_step( &x_64 );
       ++retry_count;
-    } while((rc == 0) || (retry_count < retry_limit));
+    } while((rc == 0) && (retry_count < retry_limit));
 
     if (rc == 1) {
       *dest_64 = x_64;
@@ -312,7 +312,7 @@ size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
     do {
       rc=rdrand64_step( &x_64 );
       ++retry_count;
-    } while((rc == 0) || (retry_count < retry_limit));
+    } while((rc == 0) && (retry_count < retry_limit));
 
     if (rc == 1) {
 #if 0
@@ -339,7 +339,7 @@ size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
     do {
       rc=rdrand64_step( &x_64 );
       ++retry_count;
-    } while((rc == 0) || (retry_count < retry_limit));
+    } while((rc == 0) && (retry_count < retry_limit));
 
     if (rc == 1) {
       *dest_64 = x_64;
