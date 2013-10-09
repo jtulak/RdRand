@@ -47,8 +47,8 @@ gcc -Wall -Wextra -O2 -fopenmp -mrdrnd [-lrt -lssl -lcrypto (for rng emulation)]
 #ifdef HAVE_X86INTRIN_H
 #include <x86intrin.h>
 inline int rdrand16_step(uint16_t *x) { return _rdrand16_step ( (unsigned short*) x ); }
-inline int rdrand32_step(uint32_t *x) { return _rdrand16_step ( (unsigned int*) x ); }
-inline int rdrand64_step(uint64_t *x) { return _rdrand16_step ( (unsigned long long*) x ); }
+inline int rdrand32_step(uint32_t *x) { return _rdrand32_step ( (unsigned int*) x ); }
+inline int rdrand64_step(uint64_t *x) { return _rdrand64_step ( (unsigned long long*) x ); }
 #else
 
 /*
@@ -271,7 +271,7 @@ size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limi
     do {
       rc=rdrand64_step( &x_64 );
       ++retry_count;
-    } while((rc == 0) || (retry_count < retry_limit));
+    } while((rc == 0) && (retry_count < retry_limit));
 
     if (rc == 1) {
       *dest = x_64;
