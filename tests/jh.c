@@ -100,7 +100,10 @@ int main(int argc, char **argv) {
     written = 0;
 #pragma omp parallel for reduction(+:written)
     for (int i=0; i<threads; ++i) {
-      written += rdrand_get_uint64_array_retry(&buf[i*chunk], chunk, 1);
+      written += rdrand_get_uint8_array_retry((uint8_t*)&buf[i*chunk], chunk, 1);
+      //written += rdrand_get_uint32_array_retry((uint32_t*)&buf[i*chunk], chunk, 1);
+      //written += rdrand_get_uint64_array_retry(&buf[i*chunk], chunk, 1);
+      //written += rdrand_get_bytes_retry(&buf[i*chunk], chunk,1);
     }
     if ( written != SIZEOF(buf) ) {
       fprintf(stderr, "ERROR:rdrand_get_uint64_array_retry  - bytes generated %zu, bytes expected %zu\n", written , SIZEOF(buf));
