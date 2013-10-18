@@ -16,14 +16,17 @@ gcc -DHAVE_X86INTRIN_H -Wall -Wextra -std=gnu99 -fopenmp -mrdrnd -I../src -O3 -o
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <rdrand.h>
 #include <omp.h>
 #include <time.h>
 #include <termios.h>
 #include <string.h>
+//#include <rdrand.h>
+#include "../src/rdrand.h"
 
 
 #define SIZEOF(a) ( sizeof (a) / sizeof (a[0]) )
+
+#define RDRAND_LIBRARY
 
 #ifndef RDRAND_LIBRARY
 #include <x86intrin.h>
@@ -33,7 +36,7 @@ int fill(uint64_t* buf, int size, int retry_limit) {
 
   for (j=0; j<size; ++j) {
     k = 0;
-    do { 
+    do {
       rc = _rdrand64_step ( (long long unsigned*)&buf[j] );
       ++k;
     } while ( rc == 0 && k < retry_limit);
@@ -93,7 +96,7 @@ int main(int argc, char **argv) {
 
   fprintf(stderr, "Press [Esc] to stop the loop\n");
   do {
-#ifdef RDRAND_LIBRARY    
+#ifdef RDRAND_LIBRARY
     written = 0;
 #pragma omp parallel for reduction(+:written)
     for (int i=0; i<threads; ++i) {
@@ -126,7 +129,7 @@ int main(int argc, char **argv) {
   } while (key != 0x1B);
 
   clock_gettime(CLOCK_REALTIME, &t[1]);
-  run_time = (double)(t[1].tv_sec) - (double)(t[0].tv_sec) + 
+  run_time = (double)(t[1].tv_sec) - (double)(t[0].tv_sec) +
     ( (double)(t[1].tv_nsec) - (double)(t[0].tv_nsec) ) / 1.0E9;
   throughput = (double) (total) * sizeof(buf[0]) / run_time/1024.0/1024.0;
   fprintf(stderr, "Runtime %g, throughput %gMiB/s\n", run_time, throughput);

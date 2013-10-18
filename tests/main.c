@@ -15,7 +15,9 @@ gcc -Wall -Wextra -fopenmp -mrdrnd -O2 -o main main.c -lrt
 
 //#define THROUGHPUT
 #define CORRECT_SIZES
-#define FILE_IO
+//#define FILE_IO
+
+
 
 int test(int expr)
 {
@@ -93,33 +95,44 @@ void print_bin(char *ptr, uint64_t bytes)
 }
 
 int main(void) {
- uint64_t* buf;
- const int size=2048;
- const int threads=4;
- const int rounds=1;
- int i, j, k;
- struct timespec t[2];
- double run_time, throughput;
- int thread_error;
- int rc;
+    uint64_t* buf;
+    const int size=2048;
+    const int threads=4;
+    const int rounds=1;
+    int i, j, k;
+    //struct timespec t[2];
+    double run_time, throughput;
+    int thread_error;
+    int rc;
 
- uint16_t uint16;
- uint32_t uint32;
- uint64_t uint64;
- int x;
+    uint16_t uint16;
+    uint32_t uint32;
+    uint64_t uint64;
+    int x;
 
- FILE *file;
+    FILE *file;
 
- omp_set_num_threads(threads);
+    omp_set_num_threads(threads);
 
 
- buf = malloc(threads * size * sizeof(uint64_t) );
+    /* initialize random seed for rdrand emulation: */
+    srand (time(NULL));
+
+
+    buf = malloc(threads * size * sizeof(uint64_t) );
+
+
+    if(rdrand_testSupport() == RDRAND_UNSUPPORTED)
+    {
+        printf("RdRand is not supported!\n");
+        exit (EXIT_FAILURE);
+    }
 
 
 #ifdef THROUGHPUT
- clock_gettime(CLOCK_REALTIME, &t[0]);
- for (i=0; i<rounds;i++)
- {
+    clock_gettime(CLOCK_REALTIME, &t[0]);
+    for (i=0; i<rounds;i++)
+    {
 
          thread_error = 0;
          //#pragma omp parallel for reduction(+ : thread_error) schedule(static, 1024)
@@ -131,16 +144,16 @@ int main(void) {
          //if ( thread_error ) return 1;
          //fwrite(buf, sizeof(uint64_t), threads * size , stdout);
          print_numbers((char*)buf,threads*size);
-  }
+    }
 
- clock_gettime(CLOCK_REALTIME, &t[1]);
+    clock_gettime(CLOCK_REALTIME, &t[1]);
 
- run_time = (double)(t[1].tv_sec) - (double)(t[0].tv_sec) +
-            ( (double)(t[1].tv_nsec) - (double)(t[0].tv_nsec) ) / 1.0E9;
+    run_time = (double)(t[1].tv_sec) - (double)(t[0].tv_sec) +
+        ( (double)(t[1].tv_nsec) - (double)(t[0].tv_nsec) ) / 1.0E9;
 
-  throughput = (double) (i) * size * sizeof(uint64_t) / run_time/1024.0/1024.0;
+    throughput = (double) (i) * size * sizeof(uint64_t) / run_time/1024.0/1024.0;
 
-  fprintf(stderr, "Runtime %g, throughput %gMiB/s\n", run_time, throughput);
+    fprintf(stderr, "Runtime %g, throughput %gMiB/s\n", run_time, throughput);
 #endif // THROUGHPUT
 
 #ifdef CORRECT_SIZES
@@ -179,6 +192,49 @@ int main(void) {
     rdrand_get_bytes_retry(18,((unsigned char *)(buf))+1,RETRY_LIMIT);
     print_numbers( (char *)buf+1,18);
     print_bin( (char *)buf+1,18);
+
+    printf("\nA 18-bytes array (misaligned by 2 byte shift):\n");
+    // to make potential non-generated numbers visible
+    memset(buf,0,threads * size * sizeof(uint64_t) );
+    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+2,RETRY_LIMIT);
+    print_numbers( (char *)buf+2,18);
+    print_bin( (char *)buf+2,18);
+
+    printf("\nA 18-bytes array (misaligned by 3 byte shift):\n");
+    // to make potential non-generated numbers visible
+    memset(buf,0,threads * size * sizeof(uint64_t) );
+    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+3,RETRY_LIMIT);
+    print_numbers( (char *)buf+3,18);
+    print_bin( (char *)buf+3,18);
+
+    printf("\nA 18-bytes array (misaligned by 2 byte shift):\n");
+    // to make potential non-generated numbers visible
+    memset(buf,0,threads * size * sizeof(uint64_t) );
+    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+4,RETRY_LIMIT);
+    print_numbers( (char *)buf+4,18);
+    print_bin( (char *)buf+4,18);
+
+    printf("\nA 18-bytes array (misaligned by 2 byte shift):\n");
+    // to make potential non-generated numbers visible
+    memset(buf,0,threads * size * sizeof(uint64_t) );
+    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+5,RETRY_LIMIT);
+    print_numbers( (char *)buf+5,18);
+    print_bin( (char *)buf+5,18);
+
+    printf("\nA 18-bytes array (misaligned by 6 byte shift):\n");
+    // to make potential non-generated numbers visible
+    memset(buf,0,threads * size * sizeof(uint64_t) );
+    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+6,RETRY_LIMIT);
+    print_numbers( (char *)buf+6,18);
+    print_bin( (char *)buf+6,18);
+
+    printf("\nA 18-bytes array (misaligned by 7 byte shift):\n");
+    // to make potential non-generated numbers visible
+    memset(buf,0,threads * size * sizeof(uint64_t) );
+    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+7,RETRY_LIMIT);
+    print_numbers( (char *)buf+7,18);
+    print_bin( (char *)buf+7,18);
+
 
     printf("\nA 26-bytes array (misaligned):\n");
     // to make potential non-generated numbers visible

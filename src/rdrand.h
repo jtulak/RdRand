@@ -28,6 +28,12 @@
 #define RDRAND_UNSUPPORTED  -2
 
 /**
+ * Detect if the CPU support RdRand instruction.
+ * Returns RDRAND_SUPPORTED  or RDRAND_UNSUPPORTED.
+ */
+int rdrand_testSupport();
+
+/**
  * 16 bits of entropy through RDRAND
  *
  * The 16 bit result is zero extended to 32 bits.

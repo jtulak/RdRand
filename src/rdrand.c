@@ -14,6 +14,11 @@ gcc -Wall -Wextra -O2 -fopenmp -mrdrnd [-lrt -lssl -lcrypto (for rng emulation)]
 
 #define RETRY_LIMIT 10
 
+/**
+ * Mask for CPUINFO result. RdRand support on Intel CPUs is
+ * declared on 30th bit in ECX register.
+ */
+#define RDRAND_MASK	0x40000000
 
 
 /**
@@ -25,7 +30,7 @@ gcc -Wall -Wextra -O2 -fopenmp -mrdrnd [-lrt -lssl -lcrypto (for rng emulation)]
  * 9 - all informations (multiple messages from one function)
  *
  */
-#define EMULATE_RNG 1
+#define EMULATE_RNG 0
 #define DEBUG_VERBOSE 9
 
 #if EMULATE_RNG == 1
@@ -51,6 +56,49 @@ inline int rdrand32_step(uint32_t *x) { return _rdrand32_step ( (unsigned int*) 
 inline int rdrand64_step(uint64_t *x) { return _rdrand64_step ( (unsigned long long*) x ); }
 #else
 
+struct cpuid
+{
+    uint32_t eax,ebx,ecx,edx;
+};
+typedef struct cpuid cpuid_t;
+
+
+void cpuid(cpuid_t *result,uint32_t eax)
+{
+    __asm__ __volatile__("cpuid"
+				: "=a" (result->eax),
+				  "=b" (result->ebx),
+				  "=c" (result->ecx),
+				  "=d" (result->edx)
+				: "a"  (eax)
+				: "memory");
+}
+/**
+ * Detect if the CPU support RdRand instruction.
+ * Returns RDRAND_SUPPORTED  or RDRAND_UNSUPPORTED.
+ */
+int rdrand_testSupport()
+{
+    cpuid_t reg;
+    // test if an Intel CPU
+    cpuid(&reg,0); // get vendor
+
+    if(reg.ebx == 0x756e6547 && // Genu
+       reg.ecx == 0x6c65746e && // ntel
+       reg.edx == 0x49656e69 )  // ineI
+       {
+            // If yes, test if know RdRand
+            cpuid(&reg,1); // get feature bits
+            if( reg.ecx & RDRAND_MASK )
+            {
+                return RDRAND_SUPPORTED;
+            }
+       }
+
+
+    return RDRAND_UNSUPPORTED;
+}
+
 /*
 16 bits of entropy through RDRAND
 The 16 bit result is zero extended to 32 bits
@@ -58,15 +106,18 @@ Returns 1 on success, or 0 on underflow
 */
 
 int rdrand16_step(uint16_t *x) {
-  unsigned char err;
+  unsigned char err = 1;
 #if EMULATE_RNG == 0
   asm volatile("rdrand %0 ; setc %1"
 	    : "=r" (*x), "=qm" (err));
 #else
     RAND_pseudo_bytes((unsigned char *)x, 2);
-    err=1;
 #endif
-	return (int) err;
+    if(err == 1)
+    {
+        return RDRAND_SUCCESS;
+    }
+	return RDRAND_FAILURE;
 }
 
 /*
@@ -75,15 +126,18 @@ Returns 1 on success, or 0 on underflow.
 */
 
 int rdrand32_step(uint32_t *x) {
-	unsigned char err;
+	unsigned char err = 1;
 #if EMULATE_RNG == 0
 	asm volatile("rdrand %0 ; setc %1"
 	    : "=r" (*x), "=qm" (err));
 #else
     RAND_pseudo_bytes((unsigned char *)x, 4);
-    err=1;
 #endif
-	return (int) err;
+    if(err == 1)
+    {
+        return RDRAND_SUCCESS;
+    }
+	return RDRAND_FAILURE;
 }
 
 
@@ -93,15 +147,18 @@ Returns 1 on success, or 0 on underflow
 */
 
 int rdrand64_step(uint64_t *x) {
-	unsigned char err;
+	unsigned char err = 1;
 #if EMULATE_RNG == 0
 	asm volatile("rdrand %0 ; setc %1"
 	    : "=r" (*x), "=qm" (err));
 #else
     RAND_pseudo_bytes((unsigned char *)x, 8);
-    err=1;
 #endif
-	return (int) err;
+    if(err == 1)
+    {
+        return RDRAND_SUCCESS;
+    }
+	return RDRAND_FAILURE;
 }
 #endif /* HAVE_X86INTRIN_H */
 
@@ -110,7 +167,7 @@ int rdrand64_step(uint64_t *x) {
 Get a 16 bit random number
 Will retry up to retry_limit times. Negative retry_limit
 implies default retry_limit RETRY_LIMIT
-Returns 1 on success, or 0 on underflow
+Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow
 */
 
 int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit) {
@@ -125,11 +182,11 @@ int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit) {
     ++count;
   } while((rc == 0) && (count < retry_limit));
 
-  if (rc == 1) {
+  if (rc == RDRAND_SUCCESS) {
     *dest = x;
-    return 1;
+    return RDRAND_SUCCESS;
   } else {
-    return 0;
+    return RDRAND_FAILURE;
   }
 }
 
@@ -137,7 +194,7 @@ int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit) {
 Get a 32 bit random number
 Will retry up to retry_limit times. Negative retry_limit
 implies default retry_limit RETRY_LIMIT
-Returns 1 on success, or 0 on underflow
+Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow
 */
 
 int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit) {
@@ -152,11 +209,11 @@ int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit) {
     ++count;
   } while((rc == 0) && (count < retry_limit));
 
-  if (rc == 1) {
+  if (rc == RDRAND_SUCCESS) {
     *dest = x;
-    return 1;
+    return RDRAND_SUCCESS;
   } else {
-    return 0;
+    return RDRAND_FAILURE;
   }
 }
 
@@ -164,7 +221,7 @@ int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit) {
 Get a 64 bit random number
 Will retry up to retry_limit times. Negative retry_limit
 implies default retry_limit RETRY_LIMIT
-Returns 1 on success, or 0 on underflow
+Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow
 */
 
 int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit) {
@@ -179,11 +236,11 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit) {
     ++count;
   } while((rc == 0) && (count < retry_limit));
 
-  if (rc == 1) {
+  if (rc == RDRAND_SUCCESS) {
     *dest = x;
-    return 1;
+    return RDRAND_SUCCESS;
   } else {
-    return 0;
+    return RDRAND_FAILURE;
   }
 }
 
