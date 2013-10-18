@@ -7,6 +7,26 @@
 #include <stdint.h>
 #include <stdio.h>
 
+
+/**
+ * Returned by function if a random number(s) was generated correctly.
+ */
+#define RDRAND_SUCCESS      1
+
+/**
+ * Returned by function if a random number(s) was NOT generated correctly.
+ */
+#define RDRAND_FAILURE      -1
+
+/**
+ * Returned by support-test function if the CPU support rdrand
+ */
+#define RDRAND_SUPPORTED    2
+/**
+ * Returned by support-test function if the CPU doesn't know rdrand
+ */
+#define RDRAND_UNSUPPORTED  -2
+
 /**
  * 16 bits of entropy through RDRAND
  *
