@@ -518,34 +518,33 @@ size_t rdrand_get_bytes_retry(unsigned int count, void *dest, int retry_limit)
 
         restStart = alignedStart + qWords;
         /* generate only minimum bytes - no more than one will be wasted */
-        if(rest < 3)
+        if(rest < 3) // 1 or 2 bytes - generate 16bit number
         {
             if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == 0)
                 return 0;
             memcpy((void*)restStart,(void*)&tmpRand,rest);
         }
-        else if(rest < 5)
+        else if(rest < 5) // 3 or 4 bytes - generate 32bit number
         {
             if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == 0)
                 return 0;
             memcpy((void*)restStart,(void*)&tmpRand,rest);
         }
-        else if(offset < 7)
+        else if(offset < 7) // 5 or 6 bytes - generate one 32bit and one 16 bit number
         {
+            // generate first 32 bits
             if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == 0)
                 return 0;
             memcpy((void*)restStart,(void*)&tmpRand,4);
 
+            // generate next 16bit number
             if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == 0)
                 return 0;
-            memcpy(((void*)start+4),(void*)&tmpRand,offset-4);
+            //memcpy(((void*)start+4),(void*)&tmpRand,offset-4);
             memcpy((void*)restStart+4,(void*)&tmpRand,rest-4);
         }
-        else
+        else // 7 or 8 bytes - generate 64bit number
         {
-            /** TODO benchmark if throwing away 2 bytes is faster, than logic
-                for generating 4+2
-            */
             if (rdrand_get_uint64_retry(&tmpRand,retry_limit) == 0)
                 return 0;
             memcpy((void*)restStart,(void*)&tmpRand,rest);
