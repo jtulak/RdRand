@@ -182,56 +182,56 @@ int main(void) {
     printf("\nA 18-bytes array (aligned):\n");
     // to make potential non-generated numbers visible
     memset(buf,0,threads * size * sizeof(uint64_t) );
-    rdrand_get_bytes_retry(18,((unsigned char *)(buf)),RETRY_LIMIT);
+    rdrand_get_bytes_retry(((unsigned char *)(buf)),18,RETRY_LIMIT);
     print_numbers( (char *)buf,18);
     print_bin( (char *)buf,18);
 
     printf("\nA 18-bytes array (misaligned by one byte shift):\n");
     // to make potential non-generated numbers visible
     memset(buf,0,threads * size * sizeof(uint64_t) );
-    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+1,RETRY_LIMIT);
+    rdrand_get_bytes_retry(((unsigned char *)(buf))+1,18,RETRY_LIMIT);
     print_numbers( (char *)buf+1,18);
     print_bin( (char *)buf+1,18);
 
     printf("\nA 18-bytes array (misaligned by 2 byte shift):\n");
     // to make potential non-generated numbers visible
     memset(buf,0,threads * size * sizeof(uint64_t) );
-    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+2,RETRY_LIMIT);
+    rdrand_get_bytes_retry(((unsigned char *)(buf))+2,18,RETRY_LIMIT);
     print_numbers( (char *)buf+2,18);
     print_bin( (char *)buf+2,18);
 
     printf("\nA 18-bytes array (misaligned by 3 byte shift):\n");
     // to make potential non-generated numbers visible
     memset(buf,0,threads * size * sizeof(uint64_t) );
-    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+3,RETRY_LIMIT);
+    rdrand_get_bytes_retry(((unsigned char *)(buf))+3,18,RETRY_LIMIT);
     print_numbers( (char *)buf+3,18);
     print_bin( (char *)buf+3,18);
 
     printf("\nA 18-bytes array (misaligned by 2 byte shift):\n");
     // to make potential non-generated numbers visible
     memset(buf,0,threads * size * sizeof(uint64_t) );
-    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+4,RETRY_LIMIT);
+    rdrand_get_bytes_retry(((unsigned char *)(buf))+4,18,RETRY_LIMIT);
     print_numbers( (char *)buf+4,18);
     print_bin( (char *)buf+4,18);
 
     printf("\nA 18-bytes array (misaligned by 2 byte shift):\n");
     // to make potential non-generated numbers visible
     memset(buf,0,threads * size * sizeof(uint64_t) );
-    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+5,RETRY_LIMIT);
+    rdrand_get_bytes_retry(((unsigned char *)(buf))+5,18,RETRY_LIMIT);
     print_numbers( (char *)buf+5,18);
     print_bin( (char *)buf+5,18);
 
     printf("\nA 18-bytes array (misaligned by 6 byte shift):\n");
     // to make potential non-generated numbers visible
     memset(buf,0,threads * size * sizeof(uint64_t) );
-    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+6,RETRY_LIMIT);
+    rdrand_get_bytes_retry(((unsigned char *)(buf))+6,18,RETRY_LIMIT);
     print_numbers( (char *)buf+6,18);
     print_bin( (char *)buf+6,18);
 
     printf("\nA 18-bytes array (misaligned by 7 byte shift):\n");
     // to make potential non-generated numbers visible
     memset(buf,0,threads * size * sizeof(uint64_t) );
-    rdrand_get_bytes_retry(18,((unsigned char *)(buf))+7,RETRY_LIMIT);
+    rdrand_get_bytes_retry(((unsigned char *)(buf))+7,18,RETRY_LIMIT);
     print_numbers( (char *)buf+7,18);
     print_bin( (char *)buf+7,18);
 
@@ -239,7 +239,7 @@ int main(void) {
     printf("\nA 26-bytes array (misaligned):\n");
     // to make potential non-generated numbers visible
     memset(buf,0,threads * size * sizeof(uint64_t) );
-    rdrand_get_bytes_retry(26,((unsigned char *)(buf))+1,RETRY_LIMIT);
+    rdrand_get_bytes_retry(((unsigned char *)(buf))+1,26,RETRY_LIMIT);
     print_numbers( (char *)buf+1,26);
     print_bin( (char *)buf+1,26);
 

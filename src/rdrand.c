@@ -418,7 +418,7 @@ implies default retry_limit RETRY_LIMIT
 Returns the number of bytes successfuly acquired.
 Uses rdrand64_step for the higher speed.
 */
-size_t rdrand_get_bytes_retry(unsigned int count, void *dest, int retry_limit)
+size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit)
 {
     uint64_t *start = dest;
     uint64_t *alignedStart;
