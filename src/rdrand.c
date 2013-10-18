@@ -182,12 +182,12 @@ int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit) {
     ++count;
   } while((rc == 0) && (count < retry_limit));
 
-  if (rc == RDRAND_SUCCESS) {
-    *dest = x;
-    return RDRAND_SUCCESS;
-  } else {
-    return RDRAND_FAILURE;
+  if(rc == RDRAND_SUCCESS)
+  {
+      *dest = x;
+      return RDRAND_SUCCESS;
   }
+  return RDRAND_FAILURE;
 }
 
 /*
@@ -209,12 +209,12 @@ int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit) {
     ++count;
   } while((rc == 0) && (count < retry_limit));
 
-  if (rc == RDRAND_SUCCESS) {
-    *dest = x;
-    return RDRAND_SUCCESS;
-  } else {
-    return RDRAND_FAILURE;
+  if(rc == RDRAND_SUCCESS)
+  {
+      *dest = x;
+      return RDRAND_SUCCESS;
   }
+  return RDRAND_FAILURE;
 }
 
 /*
@@ -236,12 +236,12 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit) {
     ++count;
   } while((rc == 0) && (count < retry_limit));
 
-  if (rc == RDRAND_SUCCESS) {
-    *dest = x;
-    return RDRAND_SUCCESS;
-  } else {
-    return RDRAND_FAILURE;
+  if(rc == RDRAND_SUCCESS)
+  {
+      *dest = x;
+      return RDRAND_SUCCESS;
   }
+  return RDRAND_FAILURE;
 }
 
 
@@ -394,13 +394,15 @@ size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
   dest_64 = (uint64_t* ) dest;
 
   for ( i=0; i<count_64; ++i) {
-  /*  retry_count = 0;
+#if 0
+    retry_count = 0;
     do {
       rc=rdrand64_step( &x_64 );
       ++retry_count;
     } while((rc == 0) && (retry_count < retry_limit));
-    */
+#else
     rc = rdrand_get_uint64_retry(&x_64, retry_limit);
+#endif
     if (rc == 1) {
       *dest_64 = x_64;
       ++dest_64;
