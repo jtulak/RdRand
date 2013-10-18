@@ -56,13 +56,17 @@ inline int rdrand32_step(uint32_t *x) { return _rdrand32_step ( (unsigned int*) 
 inline int rdrand64_step(uint64_t *x) { return _rdrand64_step ( (unsigned long long*) x ); }
 #else
 
+
+
 struct cpuid
 {
     uint32_t eax,ebx,ecx,edx;
 };
 typedef struct cpuid cpuid_t;
 
-
+/**
+ *  cpuid ASM wrapper
+ */
 void cpuid(cpuid_t *result,uint32_t eax)
 {
     __asm__ __volatile__("cpuid"
@@ -73,6 +77,7 @@ void cpuid(cpuid_t *result,uint32_t eax)
 				: "a"  (eax)
 				: "memory");
 }
+
 /**
  * Detect if the CPU support RdRand instruction.
  * Returns RDRAND_SUPPORTED  or RDRAND_UNSUPPORTED.
@@ -99,12 +104,13 @@ int rdrand_testSupport()
     return RDRAND_UNSUPPORTED;
 }
 
-/*
-16 bits of entropy through RDRAND
-The 16 bit result is zero extended to 32 bits
-Returns 1 on success, or 0 on underflow
-*/
 
+/**
+ * 16 bits of entropy through RDRAND
+ *
+ * The 16 bit result is zero extended to 32 bits.
+ * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
+ */
 int rdrand16_step(uint16_t *x) {
   unsigned char err = 1;
 #if EMULATE_RNG == 0
@@ -120,11 +126,12 @@ int rdrand16_step(uint16_t *x) {
 	return RDRAND_FAILURE;
 }
 
-/*
-32 bits of entropy through RDRAND
-Returns 1 on success, or 0 on underflow.
-*/
 
+/**
+ * 32 bits of entropy through RDRAND
+ *
+ * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
+ */
 int rdrand32_step(uint32_t *x) {
 	unsigned char err = 1;
 #if EMULATE_RNG == 0
@@ -141,11 +148,11 @@ int rdrand32_step(uint32_t *x) {
 }
 
 
-/*
-64 bits of entropy through RDRAND
-Returns 1 on success, or 0 on underflow
-*/
-
+/**
+ * 64 bits of entropy through RDRAND
+ *
+ * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
+ */
 int rdrand64_step(uint64_t *x) {
 	unsigned char err = 1;
 #if EMULATE_RNG == 0
@@ -163,13 +170,14 @@ int rdrand64_step(uint64_t *x) {
 #endif /* HAVE_X86INTRIN_H */
 
 
-/*
-Get a 16 bit random number
-Will retry up to retry_limit times. Negative retry_limit
-implies default retry_limit RETRY_LIMIT
-Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow
-*/
-
+/**
+ * Get a 16 bit random number
+ *
+ * The 16 bit result is zero extended to 32 bits.
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT.
+ * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
+ */
 int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit) {
   int rc;
   int count;
@@ -190,13 +198,14 @@ int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit) {
   return RDRAND_FAILURE;
 }
 
-/*
-Get a 32 bit random number
-Will retry up to retry_limit times. Negative retry_limit
-implies default retry_limit RETRY_LIMIT
-Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow
-*/
 
+/**
+ * Get a 32 bit random number
+ *
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT.
+ * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
+ */
 int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit) {
   int rc;
   int count;
@@ -207,7 +216,7 @@ int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit) {
   do {
     rc=rdrand32_step( &x );
     ++count;
-  } while((rc == 0) && (count < retry_limit));
+  } while((rc == RDRAND_FAILURE) && (count < retry_limit));
 
   if(rc == RDRAND_SUCCESS)
   {
@@ -217,13 +226,14 @@ int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit) {
   return RDRAND_FAILURE;
 }
 
-/*
-Get a 64 bit random number
-Will retry up to retry_limit times. Negative retry_limit
-implies default retry_limit RETRY_LIMIT
-Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow
-*/
 
+/**
+ * Get a 64 bit random number
+ *
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT.
+ * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
+ */
 int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit) {
   int rc;
   int count;
@@ -234,7 +244,7 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit) {
   do {
     rc=rdrand64_step( &x );
     ++count;
-  } while((rc == 0) && (count < retry_limit));
+  } while((rc == RDRAND_FAILURE) && (count < retry_limit));
 
   if(rc == RDRAND_SUCCESS)
   {
@@ -245,14 +255,13 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit) {
 }
 
 
-/*
-Get an array of 32 bit random numbers
-Will retry up to retry_limit times. Negative retry_limit
-implies default retry_limit RETRY_LIMIT
-Returns the number of units successfuly acquired
-Uses rdrand64_step for the higher speed
-*/
-
+/**
+ * Get an array of 32 bit random numbers
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfuly acquired
+ * For higher speed, uses 64bit generating when possible.
+ */
 size_t rdrand_get_uint32_array_retry(uint32_t *dest, size_t size, int retry_limit) {
   int rc;
   int retry_count;
@@ -274,9 +283,9 @@ size_t rdrand_get_uint32_array_retry(uint32_t *dest, size_t size, int retry_limi
     do {
       rc=rdrand32_step( &x_32 );
       ++retry_count;
-    } while((rc == 0) && (retry_count < retry_limit));
+    } while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
 
-    if (rc == 1) {
+    if (rc == RDRAND_SUCCESS) {
       *dest = x_32;
       ++dest;
       ++generated_32;
@@ -292,9 +301,9 @@ size_t rdrand_get_uint32_array_retry(uint32_t *dest, size_t size, int retry_limi
     do {
       rc=rdrand64_step( &x_64 );
       ++retry_count;
-    } while((rc == 0) && (retry_count < retry_limit));
+    } while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
 
-    if (rc == 1) {
+    if (rc == RDRAND_SUCCESS) {
       *dest_64 = x_64;
       ++dest_64;
       ++generated_64;
@@ -306,14 +315,14 @@ size_t rdrand_get_uint32_array_retry(uint32_t *dest, size_t size, int retry_limi
   generated_32 += 2 * generated_64;
   return generated_32;
 }
-/*
-Get an array of 64 bit random numbers
-Will retry up to retry_limit times. Negative retry_limit
-implies default retry_limit RETRY_LIMIT
-Returns the number of units successfuly acquired
-*/
 
 
+/**
+ * Get an array of 64 bit random numbers
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfuly acquired
+ */
 size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limit) {
   int rc;
   int retry_count;
@@ -328,9 +337,9 @@ size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limi
     do {
       rc=rdrand64_step( &x_64 );
       ++retry_count;
-    } while((rc == 0) && (retry_count < retry_limit));
+    } while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
 
-    if (rc == 1) {
+    if (rc == RDRAND_SUCCESS) {
       *dest = x_64;
       ++dest;
       ++generated_64;
@@ -341,14 +350,14 @@ size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limi
   return generated_64;
 }
 
-/*
-Get an array of 8 bit random numbers
-Will retry up to retry_limit times. Negative retry_limit
-implies default retry_limit RETRY_LIMIT
-Returns the number of bytes successfuly acquired
-Uses rdrand64_step for the higher speed
-*/
 
+/**
+ * Get an array of 8 bit random numbers
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfuly acquired
+ * For higher speed, uses 64bit generating when possible.
+ */
 size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit) {
   int rc;
   int retry_count;
@@ -365,27 +374,20 @@ size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
   if ( retry_limit < 0 ) retry_limit = RETRY_LIMIT;
 
   if ( count_8 > 0 ) {
-    /*
+      // TODO: decide what of the two following variant should be used in all functions above.
+#if 0 // little faster, but making duplicities in every function
     retry_count = 0;
     do {
       rc=rdrand64_step( &x_64 );
       ++retry_count;
-    } while((rc == 0) && (retry_count < retry_limit));
-    */
+    } while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
+#else // little slower, but cleaner code
     rc = rdrand_get_uint64_retry(&x_64, retry_limit);
-    if (rc == 1) {
-#if 0
-      for (i=0; i<count_8;++i) {
-        *dest = (uint8_t)(x_64 & 0xff);
-        x_64 = x_64 >> 8;
-        ++dest;
-        ++generated_8;
-      }
-#else
+#endif
+    if (rc == RDRAND_SUCCESS) {
       memcpy((void*) dest, (void*) &x_64, count_8);
       dest += count_8;
       generated_8 = count_8;
-#endif
     } else {
       return generated_8;
     }
@@ -394,16 +396,16 @@ size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
   dest_64 = (uint64_t* ) dest;
 
   for ( i=0; i<count_64; ++i) {
-#if 0
+#if 0 // little faster, but making duplicities in every function
     retry_count = 0;
     do {
       rc=rdrand64_step( &x_64 );
       ++retry_count;
-    } while((rc == 0) && (retry_count < retry_limit));
-#else
+    } while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
+#else // little slower, but cleaner code
     rc = rdrand_get_uint64_retry(&x_64, retry_limit);
 #endif
-    if (rc == 1) {
+    if (rc == RDRAND_SUCCESS) {
       *dest_64 = x_64;
       ++dest_64;
       ++generated_64;
@@ -416,13 +418,14 @@ size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
   return generated_8;
 }
 
-/*
-Get count bytes of random values.
-Will retry up to retry_limit times. Negative retry_limit
-implies default retry_limit RETRY_LIMIT
-Returns the number of bytes successfuly acquired.
-Uses rdrand64_step for the higher speed.
-*/
+
+/**
+ * Get bytes of random values.
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfuly acquired.
+ * For higher speed, uses 64bit generating when possible.
+ */
 size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit)
 {
     uint64_t *start = dest;
@@ -473,32 +476,32 @@ size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit)
     if(offset != 0)
     {
         /* generate only the minimum bytes needed*/
-        if(offset < 3)
+        if(offset < 3) // 1 or 2 bytes - generate 16 bits
         {
-            if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == 0)
-                return 0;
+            if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == RDRAND_FAILURE)
+                return generatedBytes;
             memcpy((void*)start,(void*)&tmpRand,offset);
         }
-        else if(offset < 5)
+        else if(offset < 5) // 3 or 4 bytes - generate 32 bits
         {
-            if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == 0)
-                return 0;
+            if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == RDRAND_FAILURE)
+                return generatedBytes;
             memcpy((void*)start,(void*)&tmpRand,offset);
         }
-        else if(offset < 7)
+        else if(offset < 7) // 5 or 6 bytes - generate 32 + 16 bits
         {
-            if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == 0)
-                return 0;
+            if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == RDRAND_FAILURE)
+                return generatedBytes;
             memcpy((void*)start,(void*)&tmpRand,4);
 
-            if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == 0)
-                return 0;
+            if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == RDRAND_FAILURE)
+                return generatedBytes;
             memcpy(((void*)start+4),(void*)&tmpRand,offset-4);
         }
-        else
+        else // 7 or 8 bytes - generate once 64 bits
         {
-            if (rdrand_get_uint64_retry(&tmpRand,retry_limit) == 0)
-                return 0;
+            if (rdrand_get_uint64_retry(&tmpRand,retry_limit) == RDRAND_FAILURE)
+                return generatedBytes;
             memcpy((void*)start,(void*)&tmpRand,offset);
             generatedBytes = offset;
         }
@@ -510,7 +513,7 @@ size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit)
     for(i=0; i<qWords;i++)
     {
         if (rdrand_get_uint64_retry(&(alignedStart[i]),retry_limit) == 0)
-            return 0;
+            return generatedBytes;
         generatedBytes += 8;
         DEBUG_PRINT_9("DEBUG 9:  Generating 64bit blocks. Total generated bytes: %u\n",  (unsigned int)generatedBytes);
 
@@ -525,32 +528,32 @@ size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit)
         /* generate only minimum bytes - no more than one will be wasted */
         if(rest < 3) // 1 or 2 bytes - generate 16bit number
         {
-            if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == 0)
-                return 0;
+            if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == RDRAND_FAILURE)
+                return generatedBytes;
             memcpy((void*)restStart,(void*)&tmpRand,rest);
         }
         else if(rest < 5) // 3 or 4 bytes - generate 32bit number
         {
-            if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == 0)
-                return 0;
+            if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == RDRAND_FAILURE)
+                return generatedBytes;
             memcpy((void*)restStart,(void*)&tmpRand,rest);
         }
         else if(offset < 7) // 5 or 6 bytes - generate one 32bit and one 16 bit number
         {
             // generate first 32 bits
-            if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == 0)
-                return 0;
+            if (rdrand_get_uint32_retry((uint32_t *)&tmpRand,retry_limit) == RDRAND_FAILURE)
+                return generatedBytes;
             memcpy((void*)restStart,(void*)&tmpRand,4);
 
             // generate next 16bit number
-            if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == 0)
-                return 0;
+            if (rdrand_get_uint16_retry((uint16_t *)&tmpRand,retry_limit) == RDRAND_FAILURE)
+                return generatedBytes;
             //memcpy(((void*)start+4),(void*)&tmpRand,offset-4);
             memcpy((void*)restStart+4,(void*)&tmpRand,rest-4);
         }
         else // 7 or 8 bytes - generate 64bit number
         {
-            if (rdrand_get_uint64_retry(&tmpRand,retry_limit) == 0)
+            if (rdrand_get_uint64_retry(&tmpRand,retry_limit) == RDRAND_FAILURE)
                 return 0;
             memcpy((void*)restStart,(void*)&tmpRand,rest);
         }
@@ -562,8 +565,9 @@ size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit)
     return generatedBytes;
 }
 
+
 /**
- * Write count bytes of random data to a binary file.
+ * Write count bytes of random data to a file.
  * implies default retry_limit RETRY_LIMIT
  * Returns the number of bytes successfuly acquired.
  */
@@ -572,7 +576,7 @@ size_t rdrand_fwrite(FILE *f, size_t count, int retry_limit)
     uint64_t tmprand;
     size_t count64;
     size_t count8;
-    size_t generated;
+    size_t generated = 0;
 
     generated = 0;
 
@@ -600,132 +604,6 @@ size_t rdrand_fwrite(FILE *f, size_t count, int retry_limit)
 
 
 #if 0
-
-/****************************************************************/
-/* Uses RdRand to acquire a block of n 32 bit random numbers    */
-/*   Will uses RdRand64 and RdRand32 to optimize speed          */
-/*   Writes that entropy to (unsigned int *)dest[0+].           */
-/*   Will retry up to retry_limit times                         */
-/*   Returns the number of units successfuly acquired           */
-/****************************************************************/
-
-int _rdrand_get_n_uints_retry(unsigned int n, unsigned int retry_limit, unsigned int *dest)
-{
-	int qwords;
-	int dwords;
-	int i;
-
-	unsigned long long int qrand;
-	unsigned int drand;
-
-	int success;
-	int count;
-
-	int total_uints;
-
-	unsigned long int *qptr;
-
-	total_uints = 0;
-	qptr = (unsigned long int*)dest;
-
-	qwords = n/2;
-	dwords = n -(qwords*2);
-
-	for (i=0; i<qwords; i++)
-	{
-		count = 0;
-		do
-		{
-        		success=_rdrand64_step(&qrand);
-		} while((success == 0) || (count++ < retry_limit));
-
-		if (success == 1)
-		{
-			*qptr = qrand;
-			qptr++;
-			total_uints+=2;
-		}
-		else (i = qwords);
-	}
-	if ((qwords > 0) && (success == 0)) return total_uints;
-
-	dest = (unsigned int*)qptr;
-        for (i=0; i<dwords; i++)
-        {
-		count = 0;
-                do
-                {
-                	success=_rdrand32_step(&drand);
-                } while((success == 0) || (count++ < retry_limit));
-
-                if (success == 1)
-                {
-                        *dest = qrand;
-			dest++;
-                        total_uints++;
-                }
-		else (i = dwords);
-        }
-        return total_uints;
-}
-
-
-/****************************************************************/
-/* Uses RdRand to acquire a block of n 32 bit random numbers    */
-/*   Will uses RdRand64 and RdRand32 to optimize speed          */
-/*   Writes that entropy to (unsigned int *)dest[0+].           */
-/*   Will not attempt retry on underflow                        */
-/*   Returns the number of units successfuly acquired           */
-/****************************************************************/
-
-int _rdrand_get_n_uints(int n, unsigned int *dest)
-{
-        int qwords;
-        int dwords;
-        int i;
-
-        unsigned long long int qrand;
-        unsigned int drand;
-
-        int success;
-
-        int total_uints;
-
-        unsigned long int *qptr;
-
-        total_uints = 0;
-        qptr = (unsigned long int*)dest;
-
-        qwords = n/2;
-        dwords = n -(qwords*2);
-
-        for (i=0; i<qwords; i++)
-        {
-                if (_rdrand64_step(&qrand))
-                {
-                        *qptr = qrand;
-                        qptr++;
-                        total_uints+=2;
-                }
-		else (i = qwords);
-        }
-        if ((qwords > 0) && (success == 0)) return total_uints;
-
-        dest = (unsigned int*)qptr;
-        for (i=0; i<dwords; i++)
-        {
-                if (_rdrand32_step(&drand))
-                {
-                        *dest = drand;
-                        dest++;
-                        total_uints++;
-                }
-		else (i = dwords);
-        }
-        return total_uints;
-
-}
-
 
 /***************************************************************/
 /* Two methods of computing a reseed key                       */
