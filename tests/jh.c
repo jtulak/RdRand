@@ -28,13 +28,15 @@
 
 
 #define THREADS     2 // in how many threads to run
-#define CYCLES      5 // how many times all methods should be run
-#define SECONDS     5 // how long should be each method generating before stopped
+#define CYCLES      1 // how many times all methods should be run
+#define SECONDS     1 // how long should be each method generating before stopped
 #define CHUNK       2*1024 // size of chunk (how many bytes will be generated in each run)
 
 
 /**
- * List of methods for testing
+ * List of methods available for testing.
+ * THIS IS LIST OF EXISTING METHODS,
+ * NOT METHODS USED IN THE TEST!
  */
 enum
 {
@@ -76,9 +78,9 @@ const char *METHOD_NAMES[] =
 
 const int tested_methods[METHODS_COUNT+1] =
 /************************************************************************
-* What method should be tested - GET_BYTES, ...                        *
-* Set -1 as the last item if not all accessible methods are tested     *
-************************************************************************/
+ * What method should be tested - GET_BYTES, ...                        *
+ * Set -1 as the last item so the program can find where the list ends  *
+ ************************************************************************/
 {
 
 	GET_BYTES,
@@ -287,7 +289,7 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 			   ( (double)(t[1].tv_nsec) - (double)(t[0].tv_nsec) ) / 1.0E9;
 	}
 	throughput = (double) (total) * sizeof(buf[0]) / run_time/1024.0/1024.0;
-	fprintf(stderr, "\r  Runtime %g sec, throughput %g MiB/s\n", run_time, throughput);
+	fprintf(stderr, "\r  Runtime %.2f sec, throughput %.3f MiB/s\n", run_time, throughput);
 
 	return throughput;
 }
@@ -321,7 +323,9 @@ int main(int argc, char **argv)
 
 
 	double throughputs [cycles][METHODS_COUNT];
-	double sum;
+	double averages [METHODS_COUNT];
+	double sum, max_throughput = 0;
+	int max_throughput_method;
 	const int tested_methods_count = compute_tests_amount(tested_methods);
 
 	if ( argc != 2)
@@ -358,7 +362,6 @@ int main(int argc, char **argv)
 	/************** PRINT OVERALL RESULTS **********************************/
 
 	fprintf(stderr,"\n-------------------------------------------------------------------\n");
-	fprintf(stderr,"Average throughputs in %d runs:\n", cycles);
 	for(int method = 0; method< tested_methods_count; method++)
 	{
 		sum = 0;
@@ -366,8 +369,27 @@ int main(int argc, char **argv)
 		{
 			sum += throughputs[cycle][method];
 		}
-		fprintf(stderr,"  Method %s: %g MiB/s\n", METHOD_NAMES[tested_methods[method]], sum/cycles);
+		averages[method] = sum/CYCLES;
+		// find the maximum throughput
+		if(max_throughput < averages[method])
+        {
+            max_throughput = averages[method];
+            max_throughput_method = tested_methods[method];
+        }
 	}
+	fprintf(stderr,"The fastest method (%g MiB/s) was: %s\n",max_throughput, METHOD_NAMES[max_throughput_method]);
+
+	fprintf(stderr,"Average throughputs in %d runs:\n", cycles);
+	for(int method = 0; method< tested_methods_count; method++)
+	{
+		fprintf(stderr,"  (%.2f %%) Method %s: %.3f MiB/s  \n",
+
+          (averages[method]/max_throughput)*100,// percents of max throughput
+          METHOD_NAMES[tested_methods[method]],
+          averages[method]
+          );
+	}
+
 
 
 	fclose(stream);
