@@ -50,6 +50,9 @@ int fill(uint64_t* buf, int size, int retry_limit)
 }
 #endif
 
+/**
+ * List of methods for testing
+ */
 enum
 {
 	GET_BYTES,
@@ -57,9 +60,14 @@ enum
 	GET_UINT32_ARRAY,
 	GET_UINT64_ARRAY,
 
-	AMOUNT_OF_METHODS
+    // helper constants
+	METHODS_COUNT,
+	METHODS_ALL
 };
-
+/**
+ * List of names of methods for printing.
+ * Has to be in the same order as in the enum.
+ */
 const char *METHOD_NAMES[] =
 {
 	"get_bytes",
@@ -124,8 +132,14 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 #pragma omp parallel for reduction(+:written)
 		for (int i=0; i<threads; ++i)
 		{
+		    /****************************************************************
+             *                      TESTED METHODS INSERT HERE              *
+             ****************************************************************/
 			switch(type)
 			{
+			case GET_BYTES:
+				written += rdrand_get_bytes_retry(&buf[i*chunk], chunk,1);
+				break;
 			case GET_UINT8_ARRAY:
 				written += rdrand_get_uint8_array_retry((uint8_t*)&buf[i*chunk], chunk, 1);
 				break;
@@ -134,9 +148,6 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 				break;
 			case GET_UINT64_ARRAY:
 				written += rdrand_get_uint64_array_retry(&buf[i*chunk], chunk, 1);
-				break;
-			case GET_BYTES:
-				written += rdrand_get_bytes_retry(&buf[i*chunk], chunk,1);
 				break;
 			}
 		}
@@ -190,23 +201,42 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 	}
 	throughput = (double) (total) * sizeof(buf[0]) / run_time/1024.0/1024.0;
 	//fprintf(stderr,"\33[2K\r");
-	fprintf(stderr, "\r- Runtime %g sec, throughput %g MiB/s\n", run_time, throughput);
+	fprintf(stderr, "\r  Runtime %g sec, throughput %g MiB/s\n", run_time, throughput);
 
 	return throughput;
 }
 
+int compute_tests_amount(const int *methods)
+{
+    int amount;
+    for(amount=0;amount < METHODS_COUNT; amount++)
+    {
+        if(methods[amount] == -1)
+            break;
+    }
+    return amount;
+}
 
 int main(int argc, char **argv)
 {
 	const int threads=2;
 	const size_t chunk = 2*1024;
 	const int test_length = 2;  /* how many seconds before stopping generation
-	                             * negative to infinite (until ESC)
-	                             */
+	                             * negative to infinite (until ESC) */
 	const int cycles = 2; // how many times to run generators to get average throughput
+	const int tested_methods[METHODS_COUNT] =
+	/* What method should be tested - GET_BYTES, ... or METHODS_ALL (see enum)
+	 * Set -1 as the last item if not all accessible methods are tested */
+	{
+        GET_UINT8_ARRAY,
+        GET_BYTES,
+        -1,
+	};
 
-	double throughputs [cycles][AMOUNT_OF_METHODS];
+
+	double throughputs [cycles][METHODS_COUNT];
 	double sum;
+	const int tested_methods_count = compute_tests_amount(tested_methods);
 
 	if ( argc != 2)
 	{
@@ -221,37 +251,38 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	printf("This test will run %d methods for %d times. Each method will run for %d seconds.\n",
-	       AMOUNT_OF_METHODS, cycles, test_length );
-	printf("-------------------------------------------------------------------\n");
+    printf("This test will run %d methods for %d times. Each method will run for %d seconds.\n",
+           tested_methods_count, cycles, test_length );
+    printf("-------------------------------------------------------------------\n");
 
-	/************** DO THE TESTING ******************************************/
-	/* run all methods in required count */
-	for (int cycle = 0; cycle < cycles; cycle++)
-	{
-		printf("\nDoing %d. run:\n",cycle+1);
-		/* run all methods */
-		for(int method = 0; method < AMOUNT_OF_METHODS; method++)
-		{
-			printf("Using method: %s\n",METHOD_NAMES[method]);
-			throughputs[cycle][method] = test_throughput(threads, chunk, test_length, stream, method);
-		}
-	}
+    /************** DO THE TESTING ******************************************/
+    /* run all methods in required count */
+    for (int cycle = 0; cycle < cycles; cycle++)
+    {
+        printf("\nDoing %d. run:\n",cycle+1);
+        /* run all methods */
+        for(int method = 0; method < tested_methods_count; method++)
+        {
+            printf("%s:\n",METHOD_NAMES[tested_methods[method]]);
+            throughputs[cycle][method] = test_throughput(threads, chunk, test_length, stream, tested_methods[method]);
+        }
+    }
+
+    /************** PRINT OVERALL RESULTS **********************************/
+
+    printf("\n-------------------------------------------------------------------\n");
+    printf("Average throughputs in %d runs:\n", cycles);
+    for(int method = 0; method< tested_methods_count; method++)
+    {
+        sum = 0;
+        for(int cycle = 0; cycle < cycles; cycle++)
+        {
+            sum += throughputs[cycle][method];
+        }
+        printf("  Method %s: %g MiB/s\n", METHOD_NAMES[tested_methods[method]], sum/cycles);
+    }
+
+
 	fclose(stream);
-
-	/************** PRINT OVERALL RESULTS **********************************/
-
-	printf("\n-------------------------------------------------------------------\n");
-	printf("Average throughputs in %d runs:\n", cycles);
-	for(int method = 0; method< AMOUNT_OF_METHODS; method++)
-	{
-		sum = 0;
-		for(int cycle = 0; cycle < cycles; cycle++)
-		{
-			sum += throughputs[cycle][method];
-		}
-		printf("Method %s: %g MiB/s\n", METHOD_NAMES[method], sum/cycles);
-	}
-
 	return 1;
 }
