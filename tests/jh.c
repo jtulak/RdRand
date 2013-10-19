@@ -25,30 +25,13 @@
 
 #define SIZEOF(a) ( sizeof (a) / sizeof (a[0]) )
 
-#define RDRAND_LIBRARY
 
-#ifndef RDRAND_LIBRARY
-#include <x86intrin.h>
-int fill(uint64_t* buf, int size, int retry_limit)
-{
-	int j,k;
-	int rc;
 
-	for (j=0; j<size; ++j)
-	{
-		k = 0;
-		do
-		{
-			rc = _rdrand64_step ( (long long unsigned*)&buf[j] );
-			++k;
-		}
-		while ( rc == 0 && k < retry_limit);
-		if ( rc == 0 )
-			return 1;
-	}
-	return 0;
-}
-#endif
+#define THREADS     2 // in how many threads to run
+#define CYCLES      2 // how many times all methods should be run
+#define SECONDS     2 // how long should be each method generating before stopped
+#define CHUNK       2*1024 // size of chunk (how many bytes will be generated in each run)
+
 
 /**
  * List of methods for testing
@@ -60,9 +43,16 @@ enum
 	GET_UINT32_ARRAY,
 	GET_UINT64_ARRAY,
 
-    // helper constants
-	METHODS_COUNT,
-	METHODS_ALL
+	GET_RDRAND16_STEP,
+	GET_RDRAND32_STEP,
+	GET_RDRAND64_STEP,
+
+	GET_RDRAND16_RETRY,
+	GET_RDRAND32_RETRY,
+	GET_RDRAND64_RETRY,
+
+	// helper constants
+	METHODS_COUNT
 };
 /**
  * List of names of methods for printing.
@@ -73,10 +63,107 @@ const char *METHOD_NAMES[] =
 	"get_bytes",
 	"get_uint8_array",
 	"get_uint32_array",
-	"get_uint64_array"
+	"get_uint64_array",
+
+	"rdrand16_step",
+	"rdrand32_step",
+	"rdrand64_step",
+
+	"rdrand16_retry",
+	"rdrand32_retry",
+	"rdrand64_retry",
 };
 
+const int tested_methods[METHODS_COUNT+1] =
+/************************************************************************
+* What method should be tested - GET_BYTES, ...                        *
+* Set -1 as the last item if not all accessible methods are tested     *
+************************************************************************/
+{
 
+	GET_BYTES,
+	GET_UINT8_ARRAY,
+	GET_UINT32_ARRAY,
+	GET_UINT64_ARRAY,
+
+	GET_RDRAND16_STEP,
+	GET_RDRAND32_STEP,
+	GET_RDRAND64_STEP,
+
+	GET_RDRAND16_RETRY,
+	GET_RDRAND32_RETRY,
+	GET_RDRAND64_RETRY,
+	-1,
+};
+
+/************************************************************************
+*                           METHODS DEFINITIONS                        *
+************************************************************************/
+
+/** ***************************************************************
+ * fill with _step functions
+ */
+int fill(uint64_t* buf, const int method, int size, int retry_limit)
+{
+	int j,k;
+	int rc;
+
+	for (j=0; j<size; ++j)
+	{
+		k = 0;
+		do
+		{
+			switch(method)
+			{
+			case GET_RDRAND16_STEP:
+				rc = rdrand16_step ((uint16_t*) &buf[j] );
+				break;
+			case GET_RDRAND32_STEP:
+				rc = rdrand32_step ((uint32_t*) &buf[j] );
+				break;
+			case GET_RDRAND64_STEP:
+				rc = rdrand64_step ( &buf[j] );
+				break;
+			}
+			++k;
+		}
+		while ( rc == 0 && k < retry_limit);
+	}
+	return size;
+}
+
+/** ***************************************************************
+ * fill with _retry functions
+ */
+int fill_retry(uint64_t* buf, const int method, int size, int retry_limit)
+{
+	int j;
+	int rc;
+
+	for (j=0; j<size; ++j)
+	{
+		switch(method)
+		{
+		case GET_RDRAND16_RETRY:
+			rc = rdrand_get_uint16_retry ((uint16_t*) &buf[j], retry_limit);
+			break;
+		case GET_RDRAND32_RETRY:
+			rc = rdrand_get_uint32_retry ((uint32_t*) &buf[j], retry_limit);
+			break;
+		case GET_RDRAND64_RETRY:
+			rc = rdrand_get_uint64_retry ( &buf[j], retry_limit);
+			break;
+		}
+		if (rc == RDRAND_FAILURE)
+			break;
+	}
+	return size;
+}
+
+
+/** ***************************************************************
+ * get pressed key
+ */
 int getkey()
 {
 	int character;
@@ -127,14 +214,13 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 	fprintf(stderr, "Press [Esc] to stop the loop");
 	do
 	{
-#ifdef RDRAND_LIBRARY
 		written = 0;
 #pragma omp parallel for reduction(+:written)
 		for (int i=0; i<threads; ++i)
 		{
-		    /****************************************************************
-             *                      TESTED METHODS INSERT HERE              *
-             ****************************************************************/
+			/****************************************************************
+			*                      TESTED METHODS INSERT HERE              *
+			****************************************************************/
 			switch(type)
 			{
 			case GET_BYTES:
@@ -149,27 +235,28 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 			case GET_UINT64_ARRAY:
 				written += rdrand_get_uint64_array_retry(&buf[i*chunk], chunk, 1);
 				break;
+
+
+			case GET_RDRAND16_STEP:
+			case GET_RDRAND32_STEP:
+			case GET_RDRAND64_STEP:
+				written += fill(&buf[i*chunk], type, chunk, 1);
+				break;
+			case GET_RDRAND16_RETRY:
+			case GET_RDRAND32_RETRY:
+			case GET_RDRAND64_RETRY:
+				written += fill_retry(&buf[i*chunk], type, chunk, 1);
+				break;
 			}
 		}
+		/* test generated amount */
 		if ( written != SIZEOF(buf) )
 		{
-			fprintf(stderr, "ERROR:rdrand_get_uint64_array_retry	- bytes generated %zu, bytes expected %zu\n", written, SIZEOF(buf));
-			break;
-		}
-#else
-		int rc=0;
-#pragma omp parallel for reduction(+:rc)
-		for (int i=0; i<threads; ++i)
-		{
-			rc += fill(&buf[i*chunk], chunk, 1);
-		}
-		if ( rc > 0 )
-		{
-			fprintf(stderr, "ERROR: \"fill\" function\n");
+			fprintf(stderr, "ERROR: bytes generated %zu, bytes expected %zu\n", written, SIZEOF(buf));
 			break;
 		}
 
-#endif
+		/* Test written amount */
 		written = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), stream);
 		total += written;
 		if ( written <  SIZEOF(buf) )
@@ -200,38 +287,37 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 			   ( (double)(t[1].tv_nsec) - (double)(t[0].tv_nsec) ) / 1.0E9;
 	}
 	throughput = (double) (total) * sizeof(buf[0]) / run_time/1024.0/1024.0;
-	//fprintf(stderr,"\33[2K\r");
 	fprintf(stderr, "\r  Runtime %g sec, throughput %g MiB/s\n", run_time, throughput);
 
 	return throughput;
 }
 
+/** ***************************************************************
+ * Compute amount of tests according to content of methods array
+ */
 int compute_tests_amount(const int *methods)
 {
-    int amount;
-    for(amount=0;amount < METHODS_COUNT; amount++)
-    {
-        if(methods[amount] == -1)
-            break;
-    }
-    return amount;
+	int amount;
+	for(amount=0; amount < METHODS_COUNT; amount++)
+	{
+		if(methods[amount] == -1)
+			break;
+	}
+	return amount;
 }
 
+/** ***************************************************************
+ * MAIN
+ */
 int main(int argc, char **argv)
 {
-	const int threads=2;
-	const size_t chunk = 2*1024;
-	const int test_length = 2;  /* how many seconds before stopping generation
-	                             * negative to infinite (until ESC) */
-	const int cycles = 2; // how many times to run generators to get average throughput
-	const int tested_methods[METHODS_COUNT] =
-	/* What method should be tested - GET_BYTES, ... or METHODS_ALL (see enum)
-	 * Set -1 as the last item if not all accessible methods are tested */
-	{
-        GET_UINT8_ARRAY,
-        GET_BYTES,
-        -1,
-	};
+	const int threads=THREADS;
+	const size_t chunk = CHUNK;
+	const int test_length = SECONDS;  /* how many seconds before stopping generation
+	                                   * negative to infinite (until ESC) */
+	const int cycles = CYCLES; // how many times to run generators to get average throughput
+
+
 
 
 	double throughputs [cycles][METHODS_COUNT];
@@ -251,36 +337,37 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-    printf("This test will run %d methods for %d times. Each method will run for %d seconds.\n",
-           tested_methods_count, cycles, test_length );
-    printf("-------------------------------------------------------------------\n");
+	fprintf(stderr,"This test will run %d methods for %d times in %d threads.\n", tested_methods_count, CYCLES, THREADS);
+	fprintf(stderr,"Each method will run for %d seconds, the overall time of this test is %d seconds.\n",
+		SECONDS, SECONDS*CYCLES*tested_methods_count );
+	fprintf(stderr,"-------------------------------------------------------------------\n");
 
-    /************** DO THE TESTING ******************************************/
-    /* run all methods in required count */
-    for (int cycle = 0; cycle < cycles; cycle++)
-    {
-        printf("\nDoing %d. run:\n",cycle+1);
-        /* run all methods */
-        for(int method = 0; method < tested_methods_count; method++)
-        {
-            printf("%s:\n",METHOD_NAMES[tested_methods[method]]);
-            throughputs[cycle][method] = test_throughput(threads, chunk, test_length, stream, tested_methods[method]);
-        }
-    }
+	/************** DO THE TESTING ******************************************/
+	/* run all methods in required count */
+	for (int cycle = 0; cycle < cycles; cycle++)
+	{
+		fprintf(stderr,"\nDoing %d. run:\n",cycle+1);
+		/* run all methods */
+		for(int method = 0; method < tested_methods_count; method++)
+		{
+			fprintf(stderr,"%s:\n",METHOD_NAMES[tested_methods[method]]);
+			throughputs[cycle][method] = test_throughput(threads, chunk, test_length, stream, tested_methods[method]);
+		}
+	}
 
-    /************** PRINT OVERALL RESULTS **********************************/
+	/************** PRINT OVERALL RESULTS **********************************/
 
-    printf("\n-------------------------------------------------------------------\n");
-    printf("Average throughputs in %d runs:\n", cycles);
-    for(int method = 0; method< tested_methods_count; method++)
-    {
-        sum = 0;
-        for(int cycle = 0; cycle < cycles; cycle++)
-        {
-            sum += throughputs[cycle][method];
-        }
-        printf("  Method %s: %g MiB/s\n", METHOD_NAMES[tested_methods[method]], sum/cycles);
-    }
+	fprintf(stderr,"\n-------------------------------------------------------------------\n");
+	fprintf(stderr,"Average throughputs in %d runs:\n", cycles);
+	for(int method = 0; method< tested_methods_count; method++)
+	{
+		sum = 0;
+		for(int cycle = 0; cycle < cycles; cycle++)
+		{
+			sum += throughputs[cycle][method];
+		}
+		fprintf(stderr,"  Method %s: %g MiB/s\n", METHOD_NAMES[tested_methods[method]], sum/cycles);
+	}
 
 
 	fclose(stream);
