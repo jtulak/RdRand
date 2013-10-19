@@ -30,7 +30,8 @@
 
 #ifndef RDRAND_LIBRARY
 #include <x86intrin.h>
-int fill(uint64_t* buf, int size, int retry_limit) {
+int fill(uint64_t* buf, int size, int retry_limit)
+{
 	int j,k;
 	int rc;
 
@@ -50,7 +51,8 @@ int fill(uint64_t* buf, int size, int retry_limit) {
 }
 #endif
 
-int getkey() {
+int getkey()
+{
 	int character;
 	struct termios orig_term_attr;
 	struct termios new_term_attr;
@@ -74,7 +76,8 @@ int getkey() {
 }
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	size_t written, total;
 	const int threads=2;
 	const size_t chunk = 2*1024;
