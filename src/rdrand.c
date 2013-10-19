@@ -31,7 +31,7 @@
  *
  */
 #define EMULATE_RNG 0
-#define DEBUG_VERBOSE 9
+#define DEBUG_VERBOSE 0
 
 #if EMULATE_RNG == 1
 //#include <openssl/rand.h>
