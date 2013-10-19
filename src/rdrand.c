@@ -286,15 +286,15 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit)
  * Returns the number of bytes successfully acquired
  * For higher speed, uses 64bit generating when possible.
  */
-size_t rdrand_get_uint32_array_retry(uint32_t *dest, size_t size, int retry_limit)
+size_t rdrand_get_uint32_array_retry(uint32_t *dest,  const unsigned int count, int retry_limit)
 {
 	int rc;
 	int retry_count;
 	size_t generated_32 = 0;
 	size_t generated_64 = 0;
 
-	size_t count_64 = size / 2;;
-	size_t count_32 = size - 2 * count_64;
+	size_t count_64 = count / 2;;
+	size_t count_32 = count - 2 * count_64;
 	size_t i;
 
 	uint32_t x_32;
@@ -361,7 +361,7 @@ size_t rdrand_get_uint32_array_retry(uint32_t *dest, size_t size, int retry_limi
  * implies default retry_limit RETRY_LIMIT
  * Returns the number of bytes successfully acquired
  */
-size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limit)
+size_t rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int count, int retry_limit)
 {
 	int rc;
 	int retry_count;
@@ -371,7 +371,7 @@ size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limi
 
 	if ( retry_limit < 0 )
 		retry_limit = RETRY_LIMIT;
-
+#if 0
 	for ( i=0; i<size; ++i)
 	{
 		retry_count = 0;
@@ -393,6 +393,21 @@ size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limi
 			return generated_64;
 		}
 	}
+#else
+    //printf("count 64b: %u\n",count);
+	for ( i=0; i<count; ++i)
+	{
+		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
+
+		if (rc == RDRAND_SUCCESS)
+		{
+			*dest = x_64;
+			++dest;
+			++generated_64;
+		}
+
+	}
+#endif
 	return generated_64;
 }
 
@@ -404,19 +419,20 @@ size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limi
  * Returns the number of bytes successfully acquired
  * For higher speed, uses 64bit generating when possible.
  */
-size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
+size_t rdrand_get_uint8_array_retry(uint64_t *dest, const unsigned int count, int retry_limit)
 {
 	int rc;
 	int retry_count;
-	size_t generated_8 = 0;
-	size_t generated_64 = 0;
+	unsigned int  generated_8 = 0;
+	unsigned int  generated_64 = 0;
 
-	size_t count_64 = size / 8;
-	size_t count_8 = size % 8;
-	size_t i;
+	unsigned int  count_64 = count / (unsigned int)8;
+	unsigned int  count_8 = count % (unsigned int)8;
+	unsigned int  i;
 
 	uint64_t x_64;
 	uint64_t* dest_64;
+	//printf("count 8b overall: %u, count 64b: %u, count 8b: %u\n",count,count_64, count_8);
 
 	if ( retry_limit < 0 )
 		retry_limit = RETRY_LIMIT;
@@ -486,7 +502,7 @@ size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit)
  * Returns the number of bytes successfully acquired.
  * For higher speed, uses 64bit generating when possible.
  */
-size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit)
+size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit)
 {
 	uint64_t *start = dest;
 	uint64_t *alignedStart;
@@ -515,13 +531,13 @@ size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit)
 	if(offset == 0)
 	{
 		alignedStart = (uint64_t *)start;
-		alignedBytes = count;
+		alignedBytes = size;
 		DEBUG_PRINT_9("DEBUG 9: No align needed - start: %p\n", (void *)start);
 	}
 	else
 	{
 		alignedStart = (uint64_t *)(((uint64_t)start & ~(uint64_t)7)+(uint64_t)8);
-		alignedBytes = count - offset;
+		alignedBytes = size - offset;
 		DEBUG_PRINT_9("DEBUG 9:  Aligning needed - start: %p, alignedStart: %p\n", (void *)start, (void *)alignedStart);
 	}
 
@@ -628,7 +644,7 @@ size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit)
  * implies default retry_limit RETRY_LIMIT
  * Returns the number of bytes successfully acquired.
  */
-size_t rdrand_fwrite(FILE *f, size_t count, int retry_limit)
+size_t rdrand_fwrite(FILE *f, const size_t count, int retry_limit)
 {
 	uint64_t tmprand;
 	size_t count64;

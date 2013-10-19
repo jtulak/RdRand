@@ -28,8 +28,8 @@
 
 
 #define THREADS     2 // in how many threads to run
-#define CYCLES      2 // how many times all methods should be run
-#define SECONDS     2 // how long should be each method generating before stopped
+#define CYCLES      5 // how many times all methods should be run
+#define SECONDS     5 // how long should be each method generating before stopped
 #define CHUNK       2*1024 // size of chunk (how many bytes will be generated in each run)
 
 
@@ -224,13 +224,13 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 			switch(type)
 			{
 			case GET_BYTES:
-				written += rdrand_get_bytes_retry(&buf[i*chunk], chunk,1);
+				written += rdrand_get_bytes_retry((uint8_t*)&buf[i*chunk], chunk*8,1)/8;
 				break;
 			case GET_UINT8_ARRAY:
-				written += rdrand_get_uint8_array_retry((uint8_t*)&buf[i*chunk], chunk, 1);
+				written += rdrand_get_uint8_array_retry((uint64_t*)&buf[i*chunk], chunk*8, 1)/8;
 				break;
 			case GET_UINT32_ARRAY:
-				written += rdrand_get_uint32_array_retry((uint32_t*)&buf[i*chunk], chunk, 1);
+				written += rdrand_get_uint32_array_retry((uint32_t*)&buf[i*chunk], chunk*2, 1)/2;
 				break;
 			case GET_UINT64_ARRAY:
 				written += rdrand_get_uint64_array_retry(&buf[i*chunk], chunk, 1);

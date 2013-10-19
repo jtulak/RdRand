@@ -87,43 +87,43 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit);
  * Get an array of 32 bit random numbers
  * Will retry up to retry_limit times. Negative retry_limit
  * implies default retry_limit RETRY_LIMIT
- * Returns the number of bytes successfuly acquired
+ * Returns the number of bytes successfully acquired
  * For higher speed, uses 64bit generating when possible.
  */
-size_t rdrand_get_uint32_array_retry(uint32_t *dest, size_t size, int retry_limit);
+size_t rdrand_get_uint32_array_retry(uint32_t *dest, const unsigned int count, int retry_limit);
 
 /**
  * Get an array of 64 bit random numbers
  * Will retry up to retry_limit times. Negative retry_limit
  * implies default retry_limit RETRY_LIMIT
- * Returns the number of bytes successfuly acquired
+ * Returns the number of bytes successfully acquired
  */
-size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limit);
+size_t rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int count, int retry_limit);
 
 /**
  * Get an array of 8 bit random numbers
  * Will retry up to retry_limit times. Negative retry_limit
  * implies default retry_limit RETRY_LIMIT
- * Returns the number of bytes successfuly acquired
+ * Returns the number of bytes successfully acquired
  * For higher speed, uses 64bit generating when possible.
  */
-size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit);
+size_t rdrand_get_uint8_array_retry(uint64_t *dest,  const unsigned int count, int retry_limit);
 
 /**
  * Get bytes of random values.
  * Will retry up to retry_limit times. Negative retry_limit
  * implies default retry_limit RETRY_LIMIT
- * Returns the number of bytes successfuly acquired.
+ * Returns the number of bytes successfully acquired.
  * For higher speed, uses 64bit generating when possible.
  */
-size_t rdrand_get_bytes_retry(void *dest, unsigned int count, int retry_limit);
+size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit);
 
 /**
  * Write count bytes of random data to a file.
  * implies default retry_limit RETRY_LIMIT
- * Returns the number of bytes successfuly acquired.
+ * Returns the number of bytes successfully acquired.
  */
-size_t rdrand_fwrite(FILE *f, size_t count,int retry_limit);
+size_t rdrand_fwrite(FILE *f, const size_t count, int retry_limit);
 
 
 #endif
