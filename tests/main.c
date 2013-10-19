@@ -28,7 +28,8 @@ int test(int expr)
 	return expr;
 }
 
-int fill(uint64_t* buf, int size) {
+int fill(uint64_t* buf, int size)
+{
 	int j,k;
 	int rc;
 
@@ -98,7 +99,8 @@ void print_bin(char *ptr, uint64_t bytes)
 	printf("\n");
 }
 
-int main(void) {
+int main(void)
+{
 	uint64_t* buf;
 	const int size=2048;
 	const int threads=4;

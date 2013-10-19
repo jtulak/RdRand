@@ -28,8 +28,8 @@
 
 
 #define THREADS     2 // in how many threads to run
-#define CYCLES      1 // how many times all methods should be run
-#define SECONDS     1 // how long should be each method generating before stopped
+#define CYCLES      2 // how many times all methods should be run
+#define SECONDS     2 // how long should be each method generating before stopped
 #define CHUNK       2*1024 // size of chunk (how many bytes will be generated in each run)
 
 
@@ -42,6 +42,7 @@ enum
 {
 	GET_BYTES,
 	GET_UINT8_ARRAY,
+	GET_UINT16_ARRAY,
 	GET_UINT32_ARRAY,
 	GET_UINT64_ARRAY,
 
@@ -64,6 +65,7 @@ const char *METHOD_NAMES[] =
 {
 	"get_bytes",
 	"get_uint8_array",
+	"get_uint16_array",
 	"get_uint32_array",
 	"get_uint64_array",
 
@@ -78,13 +80,14 @@ const char *METHOD_NAMES[] =
 
 const int tested_methods[METHODS_COUNT+1] =
 /************************************************************************
- * What method should be tested - GET_BYTES, ...                        *
- * Set -1 as the last item so the program can find where the list ends  *
- ************************************************************************/
+* What method should be tested - GET_BYTES, ...                        *
+* Set -1 as the last item so the program can find where the list ends  *
+************************************************************************/
 {
 
 	GET_BYTES,
 	GET_UINT8_ARRAY,
+	GET_UINT16_ARRAY,
 	GET_UINT32_ARRAY,
 	GET_UINT64_ARRAY,
 
@@ -229,7 +232,10 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 				written += rdrand_get_bytes_retry((uint8_t*)&buf[i*chunk], chunk*8,1)/8;
 				break;
 			case GET_UINT8_ARRAY:
-				written += rdrand_get_uint8_array_retry((uint64_t*)&buf[i*chunk], chunk*8, 1)/8;
+				written += rdrand_get_uint8_array_retry((uint8_t*)&buf[i*chunk], chunk*8, 1)/8;
+				break;
+			case GET_UINT16_ARRAY:
+				written += rdrand_get_uint16_array_retry((uint16_t*)&buf[i*chunk], chunk*4, 1)/4;
 				break;
 			case GET_UINT32_ARRAY:
 				written += rdrand_get_uint32_array_retry((uint32_t*)&buf[i*chunk], chunk*2, 1)/2;
@@ -372,10 +378,10 @@ int main(int argc, char **argv)
 		averages[method] = sum/CYCLES;
 		// find the maximum throughput
 		if(max_throughput < averages[method])
-        {
-            max_throughput = averages[method];
-            max_throughput_method = tested_methods[method];
-        }
+		{
+			max_throughput = averages[method];
+			max_throughput_method = tested_methods[method];
+		}
 	}
 	fprintf(stderr,"The fastest method (%g MiB/s) was: %s\n",max_throughput, METHOD_NAMES[max_throughput_method]);
 
@@ -384,10 +390,10 @@ int main(int argc, char **argv)
 	{
 		fprintf(stderr,"  (%.2f %%) Method %s: %.3f MiB/s  \n",
 
-          (averages[method]/max_throughput)*100,// percents of max throughput
-          METHOD_NAMES[tested_methods[method]],
-          averages[method]
-          );
+			(averages[method]/max_throughput)*100, // percents of max throughput
+			METHOD_NAMES[tested_methods[method]],
+			averages[method]
+			);
 	}
 
 
