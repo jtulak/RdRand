@@ -109,7 +109,6 @@ size_t rdrand_get_uint64_array_retry(uint64_t *dest, size_t size, int retry_limi
  */
 size_t rdrand_get_uint8_array_retry(uint8_t *dest, size_t size, int retry_limit);
 
-
 /**
  * Get bytes of random values.
  * Will retry up to retry_limit times. Negative retry_limit

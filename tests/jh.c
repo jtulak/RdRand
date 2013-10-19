@@ -1,17 +1,17 @@
 /* vim: set expandtab cindent fdm=marker ts=2 sw=2: */
 
 /*
-gcc -DRDRAND_LIBRARY -DHAVE_X86INTRIN_H -Wall -Wextra -std=gnu99 -fopenmp -mrdrnd -I../src -O3 -o jh_with_library jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
+   gcc -DRDRAND_LIBRARY -DHAVE_X86INTRIN_H -Wall -Wextra -std=gnu99 -fopenmp -mrdrnd -I../src -O3 -o jh_with_library jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
 
-gcc -DHAVE_X86INTRIN_H -Wall -Wextra -std=gnu99 -fopenmp -mrdrnd -I../src -O3 -o jh_standalone jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
+   gcc -DHAVE_X86INTRIN_H -Wall -Wextra -std=gnu99 -fopenmp -mrdrnd -I../src -O3 -o jh_standalone jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
 
 
-./jh_standalone >(pv >/dev/null )
-./jh_with_library >(pv >/dev/null )
+   ./jh_standalone >(pv >/dev/null )
+   ./jh_with_library >(pv >/dev/null )
 
-./jh_standalone /dev/null
-./jh_with_library /dev/null
-*/
+   ./jh_standalone /dev/null
+   ./jh_with_library /dev/null
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,13 +34,17 @@ int fill(uint64_t* buf, int size, int retry_limit) {
 	int j,k;
 	int rc;
 
-	for (j=0; j<size; ++j) {
+	for (j=0; j<size; ++j)
+	{
 		k = 0;
-		do {
+		do
+		{
 			rc = _rdrand64_step ( (long long unsigned*)&buf[j] );
 			++k;
-		} while ( rc == 0 && k < retry_limit);
-		if ( rc == 0 ) return 1;
+		}
+		while ( rc == 0 && k < retry_limit);
+		if ( rc == 0 )
+			return 1;
 	}
 	return 0;
 }
@@ -80,13 +84,15 @@ int main(int argc, char **argv) {
 	double run_time, throughput;
 	int key;
 
-	if ( argc != 2) {
+	if ( argc != 2)
+	{
 		fprintf(stderr, "Usage %s output_file\n", argv[0]);
 		return 1;
 	}
 
 	FILE *stream = fopen(argv[1], "w");
-	if ( !stream ) {
+	if ( !stream )
+	{
 		fprintf(stderr, "Error on fopen for file in argv[1] \"%s\"\n", argv[1]);
 		return 1;
 	}
@@ -95,27 +101,32 @@ int main(int argc, char **argv) {
 	clock_gettime(CLOCK_REALTIME, &t[0]);
 
 	fprintf(stderr, "Press [Esc] to stop the loop\n");
-	do {
+	do
+	{
 #ifdef RDRAND_LIBRARY
 		written = 0;
 #pragma omp parallel for reduction(+:written)
-		for (int i=0; i<threads; ++i) {
+		for (int i=0; i<threads; ++i)
+		{
 			written += rdrand_get_uint8_array_retry((uint8_t*)&buf[i*chunk], chunk, 1);
 			//written += rdrand_get_uint32_array_retry((uint32_t*)&buf[i*chunk], chunk, 1);
 			//written += rdrand_get_uint64_array_retry(&buf[i*chunk], chunk, 1);
 			//written += rdrand_get_bytes_retry(&buf[i*chunk], chunk,1);
 		}
-		if ( written != SIZEOF(buf) ) {
-			fprintf(stderr, "ERROR:rdrand_get_uint64_array_retry	- bytes generated %zu, bytes expected %zu\n", written , SIZEOF(buf));
+		if ( written != SIZEOF(buf) )
+		{
+			fprintf(stderr, "ERROR:rdrand_get_uint64_array_retry	- bytes generated %zu, bytes expected %zu\n", written, SIZEOF(buf));
 			break;
 		}
 #else
 		int rc=0;
 #pragma omp parallel for reduction(+:rc)
-		for (int i=0; i<threads; ++i) {
+		for (int i=0; i<threads; ++i)
+		{
 			rc += fill(&buf[i*chunk], chunk, 1);
 		}
-		if ( rc > 0 ) {
+		if ( rc > 0 )
+		{
 			fprintf(stderr, "ERROR: \"fill\" function\n");
 			break;
 		}
@@ -123,17 +134,19 @@ int main(int argc, char **argv) {
 #endif
 		written = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), stream);
 		total += written;
-		if ( written <	SIZEOF(buf) ) {
+		if ( written <  SIZEOF(buf) )
+		{
 			perror("fwrite");
-			fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written , sizeof(buf));
+			fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written, sizeof(buf));
 			break;
 		}
 		key = getkey();
-	} while (key != 0x1B);
+	}
+	while (key != 0x1B);
 
 	clock_gettime(CLOCK_REALTIME, &t[1]);
 	run_time = (double)(t[1].tv_sec) - (double)(t[0].tv_sec) +
-		( (double)(t[1].tv_nsec) - (double)(t[0].tv_nsec) ) / 1.0E9;
+		   ( (double)(t[1].tv_nsec) - (double)(t[0].tv_nsec) ) / 1.0E9;
 	throughput = (double) (total) * sizeof(buf[0]) / run_time/1024.0/1024.0;
 	fprintf(stderr, "Runtime %g, throughput %gMiB/s\n", run_time, throughput);
 
