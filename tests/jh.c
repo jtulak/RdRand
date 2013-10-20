@@ -54,6 +54,9 @@ enum
 	GET_RDRAND32_RETRY,
 	GET_RDRAND64_RETRY,
 
+	GET_RESEED64_DELAY,
+	GET_RESEED64_SKIP,
+
 	// helper constants
 	METHODS_COUNT
 };
@@ -76,6 +79,9 @@ const char *METHOD_NAMES[] =
 	"rdrand16_retry",
 	"rdrand32_retry",
 	"rdrand64_retry",
+
+	"uint64_reseed_delay",
+	"uint64_reseed_skip_1024",
 };
 
 const int tested_methods[METHODS_COUNT+1] =
@@ -98,6 +104,11 @@ const int tested_methods[METHODS_COUNT+1] =
 	GET_RDRAND16_RETRY,
 	GET_RDRAND32_RETRY,
 	GET_RDRAND64_RETRY,
+
+
+	GET_RESEED64_DELAY,
+	GET_RESEED64_SKIP,
+
 	-1,
 };
 
@@ -254,6 +265,13 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 			case GET_RDRAND32_RETRY:
 			case GET_RDRAND64_RETRY:
 				written += fill_retry(&buf[i*chunk], type, chunk, 1);
+				break;
+
+			case GET_RESEED64_DELAY:
+				written += rdrand_get_uint64_array_reseed_delay(&buf[i*chunk], chunk, 1);
+				break;
+			case GET_RESEED64_SKIP:
+				written += rdrand_get_uint64_array_reseed_skip(&buf[i*chunk], chunk, 1);
 				break;
 			}
 		}

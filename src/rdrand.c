@@ -9,6 +9,8 @@
 #include <string.h>
 #include <omp.h>
 #include <stdio.h>
+#include <unistd.h> // usleep
+#include <crypt.h>
 
 #include <cpuid.h>
 
@@ -406,7 +408,7 @@ unsigned int rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int co
 
 	for ( i=0; i<count; ++i)
 	{
-	    #if 1
+#if 1
 		retry_count = 0;
 		do
 		{
@@ -605,7 +607,6 @@ size_t rdrand_fwrite(FILE *f, const size_t count, int retry_limit)
 
 
 #if 0
-
 /***************************************************************/
 /* Two methods of computing a reseed key                       */
 /*   The first takes multiple random numbers through RdRand    */
@@ -652,7 +653,7 @@ int _rdrand_get_seed128_retry(unsigned int retry_limit, void *buffer)
 	for (i=0; i<32; i++)
 	{
 		usleep(10);
-		if(_rdrand_get_n_qints_retry(2,retry_limit,(unsigned long long int*)m) == 0)
+		if(rdrand_get_uint64_array_retry((unsigned long long int*)m, 2,retry_limit) == RDRAND_FAILURE)
 			return 0;
 		xor_128(m,ffv,xored);
 		aes128k128d(key,xored,ffv);
@@ -687,7 +688,7 @@ int _rdrand_get_seed128_method2_retry(unsigned int retry_limit, void *buffer)
 
 	for (i=0; i<2048; i++)
 	{
-		if(_rdrand_get_n_qints_retry(2,retry_limit,(unsigned long long int*)m) == 0)
+		if(rdrand_get_uint64_array_retry((unsigned long long int*)m, 2,retry_limit) == RDRAND_FAILURE)
 			return 0;
 		xor_128(m,ffv,xored);
 		aes128k128d(key,xored,ffv);
@@ -698,4 +699,92 @@ int _rdrand_get_seed128_method2_retry(unsigned int retry_limit, void *buffer)
 	return 1;
 }
 
+
 #endif
+
+
+/**
+ * Get an array of 64 bit random values.
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfully acquired.
+ *
+ * Force reseed by waiting few microseconds before each generating.
+ */
+unsigned int rdrand_get_uint64_array_reseed_delay(uint64_t *dest, const unsigned int count, int retry_limit)
+{
+	int rc;
+	int retry_count;
+	unsigned int generated_64 = 0;
+	unsigned int i;
+	uint64_t x_64;
+
+	if ( retry_limit < 0 )
+		retry_limit = RETRY_LIMIT;
+
+	for ( i=0; i<count; ++i)
+	{
+		usleep(10);
+		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
+
+		if (rc == RDRAND_SUCCESS)
+		{
+			*dest = x_64;
+			++dest;
+			++generated_64;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return generated_64;
+}
+
+
+/**
+ * Get an array of 64 bit random values.
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfully acquired.
+ *
+ * Force reseed by generating and throwing away 1024 values per one saved.
+ */
+unsigned int rdrand_get_uint64_array_reseed_skip(uint64_t *dest, const unsigned int count, int retry_limit)
+{
+	int rc;
+	int retry_count;
+	unsigned int generated_64 = 0;
+	unsigned int i,n;
+	uint64_t x_64;
+
+	if ( retry_limit < 0 )
+		retry_limit = RETRY_LIMIT;
+
+	for ( i=0; i<count; ++i)
+	{
+
+		// load 1024 numbers to force reseed
+		for(n=0; n< 1024; n++)
+		{
+			rdrand64_step( &x_64 );
+		}
+		// load unique number
+		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
+
+		if (rc == RDRAND_SUCCESS)
+		{
+			*dest = x_64;
+			++dest;
+			++generated_64;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return generated_64;
+}
+

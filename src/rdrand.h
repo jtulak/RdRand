@@ -135,5 +135,26 @@ size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit);
 size_t rdrand_fwrite(FILE *f, const size_t count, int retry_limit);
 
 
+/**
+ * Get an array of 64 bit random values.
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfully acquired.
+ *
+ * Force reseed by waiting few microseconds before each generating.
+ */
+unsigned int rdrand_get_uint64_array_reseed_delay(uint64_t *dest, const unsigned int count, int retry_limit);
+
+
+/**
+ * Get an array of 64 bit random values.
+ * Will retry up to retry_limit times. Negative retry_limit
+ * implies default retry_limit RETRY_LIMIT
+ * Returns the number of bytes successfully acquired.
+ *
+ * Force reseed by generating and throwing away 1024 values per one saved.
+ */
+unsigned int rdrand_get_uint64_array_reseed_skip(uint64_t *dest, const unsigned int count, int retry_limit);
+
 #endif
 
