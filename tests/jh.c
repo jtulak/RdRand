@@ -558,7 +558,7 @@ void get_opts(int argc,
 			fprintf(stderr, "Data will be saved to %s.\n", argv[argc-1]);
 		if ( !*stream )
 		{
-			fprintf(stderr, "Error on fopen for file in argv[1] \"%s\"\n", argv[argc-1]);
+			fprintf(stderr, "Error on fopen for file in \"%s\"\n", argv[argc-1]);
 			exit (EXIT_FAILURE);
 		}
 	}
