@@ -466,6 +466,7 @@ unsigned int rdrand_get_uint8_array_retry(uint8_t *dest,  const unsigned int cou
 /* TODO: decide what of the two following variant should be used in all functions above.
  * With calling the _retry function, the performance is about 6-7 percent lower than
  * with _step.
+ * Possibly solution: use macro for the shared code?
  */
 #if 1 // little faster, but making duplicities in every function
 		retry_count = 0;
@@ -714,7 +715,6 @@ int _rdrand_get_seed128_method2_retry(unsigned int retry_limit, void *buffer)
 unsigned int rdrand_get_uint64_array_reseed_delay(uint64_t *dest, const unsigned int count, int retry_limit)
 {
 	int rc;
-	int retry_count;
 	unsigned int generated_64 = 0;
 	unsigned int i;
 	uint64_t x_64;
@@ -754,7 +754,6 @@ unsigned int rdrand_get_uint64_array_reseed_delay(uint64_t *dest, const unsigned
 unsigned int rdrand_get_uint64_array_reseed_skip(uint64_t *dest, const unsigned int count, int retry_limit)
 {
 	int rc;
-	int retry_count;
 	unsigned int generated_64 = 0;
 	unsigned int i,n;
 	uint64_t x_64;
