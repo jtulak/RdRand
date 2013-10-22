@@ -40,7 +40,8 @@ fi
 echo "Will test from $MIN to $MAX threads."
 
 for ((THREADS=$MIN ; THREADS<=$MAX ; THREADS++ )); do
-  echo "Currently testing $THREADS threads."
+  printf "Currently testing $THREADS threads:  "
+  date 
   
   CMD="'$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS"
   if [ -z "$THROUGHPUT_FILE"  ]; then
