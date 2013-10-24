@@ -1,0 +1,5 @@
+ExampleLib
+----------
+
+This project demonstrates how to use autoconf, automake and libtool to build a
+library.

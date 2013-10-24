@@ -3,7 +3,7 @@
 /*
    gcc -DRDRAND_LIBRARY -DHAVE_X86INTRIN_H -Wall -Wextra -std=gnu99 -fopenmp -mrdrnd -I../src -O3 -o jh_with_library jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
 
-   gcc -DHAVE_X86INTRIN_H -Wall -Wextra -std=gnu99 -fopenmp -mrdrnd -I../src -O3 -o jh_standalone jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
+   gcc -DHAVE_X86INTRIN_H -Wall -Wextra -fopenmp -mrdrnd -I../src -O3 -o jh_standalone jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
 
 
    ./jh_standalone >(pv >/dev/null )
@@ -27,6 +27,8 @@
 #include <inttypes.h>
 //#include <rdrand.h>
 #include "../src/rdrand.h"
+//#include <rdrand-0.1/rdrand.h>
+
 
 #define SIZEOF(a) ( sizeof (a) / sizeof (a[0]) )
 
