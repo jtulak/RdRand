@@ -20,6 +20,9 @@ of `_test-threads.sh` (threads count, single test run duration, ...).
 The result is saved to file `output_DATETIME.xml` and  if gnuplot is installed, 
 then also graph is created.
 
+*Currently, the automated test is set to run from 1 to 30 threads 
+and is limiting all threads to only one socket.*
+
 **Example**
 
     $ cd tests
