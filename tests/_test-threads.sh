@@ -8,7 +8,7 @@ BIN="./RdRand"
 
 # Minimum and maximum count of threads tested
 MIN=1 
-MAX=200
+MAX=30
 
 # Duration of each single tested method
 DURATION=2
@@ -43,8 +43,8 @@ for ((THREADS=$MIN ; THREADS<=$MAX ; THREADS++ )); do
   printf "Currently testing $THREADS threads:  "
   date 
   
-  CMD="'$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
-  #CMD="numactl -N 1 '$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
+  #CMD="'$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
+  CMD="numactl -N 1 '$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
   if [ -z "$THROUGHPUT_FILE"  ]; then
     eval $CMD
   else
