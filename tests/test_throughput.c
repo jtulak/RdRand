@@ -585,7 +585,7 @@ void get_opts(int argc,
 	else
 	{
 		*stream = stdout;
-		fprintf(stderr, "Data will printed to stdout.\n");
+		fprintf(stderr, "Data will be printed to stdout if -p is specified.\n");
 	}
 }
 
