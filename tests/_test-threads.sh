@@ -11,14 +11,14 @@ MIN=1
 MAX=200
 
 # Duration of each single tested method
-DURATION=3
+DURATION=2
 
 # size of array of 64bit values to be generated at once
 CHUNK=2048
 
 # How many times should be the test run for all methods 
 # before computing an average throughput
-REPETITION=3
+REPETITION=2
 
 
 ##################################################################
@@ -44,6 +44,7 @@ for ((THREADS=$MIN ; THREADS<=$MAX ; THREADS++ )); do
   date 
   
   CMD="'$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
+  #CMD="numactl -N 1 '$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
   if [ -z "$THROUGHPUT_FILE"  ]; then
     eval $CMD
   else

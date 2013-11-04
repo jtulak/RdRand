@@ -3,8 +3,7 @@
 /*
    gcc -DRDRAND_LIBRARY -DHAVE_X86INTRIN_H -Wall -Wextra -std=gnu99 -fopenmp -mrdrnd -I../src -O3 -o jh_with_library jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
 
-   gcc -DHAVE_X86INTRIN_H -Wall -Wextra -fopenmp -mrdrnd -I../src -O3 -o jh_standalone jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
-
+   gcc -DHAVE_X86INTRIN_H -Wall -Wextra -fopenmp -mrdrnd -I../src -O3 -o RdRand jh.c ../src/rdrand.c
 
    ./jh_standalone >(pv >/dev/null )
    ./jh_with_library >(pv >/dev/null )
@@ -31,7 +30,6 @@
 
 
 #define SIZEOF(a) ( sizeof (a) / sizeof (a[0]) )
-
 
 // TODO as parameters
 // shell commands numactl, taskset - what is effect on performance?
@@ -125,17 +123,19 @@ static const char* HELP_TEXT =
 	"Usage: %s [OUTPUT_FILE] [OPTIONS]\n"
 	"If no OUTPUT_FILE is specified, the program will print numbers to stdout.\n\n"
 	"OPTIONS\n"
-	"\t--help\t\t-h\tPrint this help\n"
-	"\t--verbose\t-v\tBe verbose\n"
-	"\t--numbers\t-n\tPrint generated values as numbers, not raw, MAY IMPACT PERFORMANCE (default will print raw)\n"
-	"\t--method\t-m NAME\tWill test only method NAME (default all)\n"
-	"\t--threads\t-t NUM\tWill run the generator in NUM threads (default %u)\n"
-	"\t--duration\t-d NUM\tEach tested method will run for NUM seconds (default %u)\n"
-	"\t--repetition\t-r NUM\tAll tests will be run for NUM times (default %u)\n"
-	"\t--chunk-size\t-c NUM\tThe size of the chunk generated at once as count of 64 bit numbers (default %u)\n"
+	"  --help       -h      Print this help\n"
+	"  --verbose    -v      Be verbose\n"
+	"  --no-print   -p      Do NOT print the generated numbers, just measure speed.\n"
+	"  --numbers    -n      Print generated values as numbers, not raw, MAY IMPACT PERFORMANCE (default will print raw)\n"
+	"  --method     -m NAME Will test only method NAME (default all)\n"
+	"  --threads    -t NUM  Will run the generator in NUM threads (default %u)\n"
+	"  --duration   -d NUM  Each tested method will run for NUM seconds (default %u)\n"
+	"  --repetition -r NUM  All tests will be run for NUM times (default %u)\n"
+	"  --chunk-size -c NUM  The size of the chunk generated at once as count of 64 bit numbers (default %u)\n"
 	"";
 static int verbose_flag = 0;
 static int print_numbers_flag = 0;
+static int no_print_flag = 0;
 
 /************************************************************************
 *                           METHODS DEFINITIONS                        *
@@ -368,22 +368,29 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 			break;
 		}
 
-		/* Test written amount */
-		if(print_numbers_flag == 1)
-        {
-            written = print_numbers(stream, (char *)buf,sizeof(buf))/8 ;
-           // written = fwrite(, sizeof(buf[0]), SIZEOF(buf), stream);
-        }
-        else
-        {
-            written = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), stream);
-        }
-		total += written;
-		if ( written !=  SIZEOF(buf) )
+		if(!no_print_flag)
 		{
-			perror("fwrite");
-			fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written, sizeof(buf));
-			break;
+			/* Test written amount */
+			if(print_numbers_flag == 1)
+			{
+				written = print_numbers(stream, (char *)buf,sizeof(buf))/8;
+				// written = fwrite(, sizeof(buf[0]), SIZEOF(buf), stream);
+			}
+			else
+			{
+				written = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), stream);
+			}
+			total += written;
+			if ( written !=  SIZEOF(buf) )
+			{
+				perror("fwrite");
+				fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written, sizeof(buf));
+				break;
+			}
+		}
+		else
+		{
+			total += written;
 		}
 
 		/* Stopping */
@@ -407,10 +414,11 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 			   ( (double)(t[1].tv_nsec) - (double)(t[0].tv_nsec) ) / 1.0E9;
 	}
 	throughput = (double) (total) * sizeof(buf[0]) / run_time/1024.0/1024.0;
-	if(verbose_flag){
+	if(verbose_flag)
+	{
 
 		if(print_numbers_flag == 1)
-            fprintf(stderr,"\n");
+			fprintf(stderr,"\n");
 		fprintf(stderr, "\r  Runtime %.2f sec, throughput %.3f MiB/s\n", run_time, throughput);
 	}
 
@@ -453,6 +461,7 @@ void get_opts(int argc,
 		{"verbose", no_argument,       0, 'v'},
 		{"numbers", no_argument,       0, 'n'},
 		{"help", no_argument,       0, 'h'},
+		{"no-print", no_argument,       0, 'p'},
 		{"method",  required_argument, 0, 'm'},
 		{"threads",  required_argument, 0, 't'},
 		{"duration",  required_argument, 0, 'd'},
@@ -468,7 +477,7 @@ void get_opts(int argc,
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		optC = getopt_long (argc, argv, "vhnt:d:r:c:m:",
+		optC = getopt_long (argc, argv, "vhnpt:d:r:c:m:",
 				    long_options, &option_index);
 
 		/* Detect the end of the options. */
@@ -484,6 +493,10 @@ void get_opts(int argc,
 
 		case 'h':
 			help_flag = 1;
+			break;
+
+		case 'p':
+			no_print_flag = 1;
 			break;
 
 		case 'n':
@@ -627,6 +640,9 @@ int main(int argc, char **argv)
 			fprintf(stderr,"Generated values will be print raw.\n");
 		else
 			fprintf(stderr,"Generated values will be print as readable numbers.\n");
+
+		if(no_print_flag)
+			fprintf(stderr,"Will not print generates values.\n");
 		fprintf(stderr,"-------------------------------------------------------------------\n");
 	}
 
@@ -647,8 +663,8 @@ int main(int argc, char **argv)
 	}
 
 	/************** PRINT OVERALL RESULTS **********************************/
-    if(print_numbers_flag == 1)
-        fprintf(stderr,"\n"); // to break line after numbers
+	if(print_numbers_flag == 1)
+		fprintf(stderr,"\n"); // to break line after numbers
 
 	if(verbose_flag)
 		fprintf(stderr,"\n-------------------------------------------------------------------\n");
