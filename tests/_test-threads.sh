@@ -20,6 +20,10 @@ CHUNK=2048
 # before computing an average throughput
 REPETITION=2
 
+# Limit the test to run on only one socket throught numactl -N 1
+# Set to 0 to allow all sockets
+# Set to 1 to force only socket no. 1
+FORCE_SOCKET=1
 
 ##################################################################
 # START
@@ -43,8 +47,12 @@ for ((THREADS=$MIN ; THREADS<=$MAX ; THREADS++ )); do
   printf "Currently testing $THREADS threads:  "
   date 
   
-  #CMD="'$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
-  CMD="numactl -N 1 '$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
+  if [ $FORCE_SOCKET == 0 ]; then
+    CMD="'$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
+  else
+    CMD="numactl -N 1 '$BIN' '$FILE_STDOUT' -d $DURATION -c $CHUNK -r $REPETITION -t $THREADS -m rdrand_get_bytes_retry"
+  fi
+
   if [ -z "$THROUGHPUT_FILE"  ]; then
     eval $CMD
   else
