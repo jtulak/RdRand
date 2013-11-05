@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-c -Wall  -Wextra -O3 
-LDFLAGS=-fopenmp -mrdrnd 
+LDFLAGS=-fopenmp -mrdrnd -lrt
 SOURCES=test_throughput.c ../src/rdrand.h ../src/rdrand.c
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=RdRand
