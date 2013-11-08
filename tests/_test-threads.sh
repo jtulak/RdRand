@@ -9,7 +9,7 @@ BIN="./RdRand"
 # Minimum and maximum count of threads tested
 MIN=1 
 #MAX=30
-MAX=$((2*$(cat /proc/cpuinfo | grep processor -c)))
+MAX=$((2*$( grep processor -c /proc/cpuinfo)))
 
 # Duration of each single tested method
 DURATION=2
