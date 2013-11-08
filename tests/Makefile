@@ -17,4 +17,4 @@ run:
 	./run-test.sh
 
 clean:
-	rm $(EXECUTABLE) *.o
+	rm $(EXECUTABLE) *.o ../src/*.o
