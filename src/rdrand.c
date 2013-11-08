@@ -22,6 +22,8 @@
  */
 #define RDRAND_MASK     0x40000000
 
+#define PRINT_IF_UNDERFLOW(rc, line) if(rc == RDRAND_FAILURE) fprintf(stderr,"ERROR: UNDERFLOW on line %d!!!\n",line)
+//#define PRINT_IF_UNDERFLOW(rc, line)
 
 /**
  * Debug options
@@ -207,6 +209,7 @@ int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit)
 		++count;
 	}
 	while((rc == 0) && (count < retry_limit));
+	PRINT_IF_UNDERFLOW (rc, __LINE__);
 
 	if(rc == RDRAND_SUCCESS)
 	{
@@ -239,6 +242,7 @@ int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit)
 		++count;
 	}
 	while((rc == RDRAND_FAILURE) && (count < retry_limit));
+	PRINT_IF_UNDERFLOW (rc, __LINE__);
 
 	if(rc == RDRAND_SUCCESS)
 	{
@@ -271,6 +275,7 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit)
 		++count;
 	}
 	while((rc == RDRAND_FAILURE) && (count < retry_limit));
+	PRINT_IF_UNDERFLOW (rc, __LINE__);
 
 	if(rc == RDRAND_SUCCESS)
 	{
@@ -313,6 +318,7 @@ unsigned int rdrand_get_uint16_array_retry(uint16_t *dest,  const unsigned int c
 			++retry_count;
 		}
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
+        PRINT_IF_UNDERFLOW (rc, __LINE__);
 
 		if (rc == RDRAND_SUCCESS)
 		{
@@ -367,6 +373,7 @@ unsigned int rdrand_get_uint32_array_retry(uint32_t *dest,  const unsigned int c
 			++retry_count;
 		}
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
+        PRINT_IF_UNDERFLOW (rc, __LINE__);
 
 		if (rc == RDRAND_SUCCESS)
 		{
@@ -416,6 +423,7 @@ unsigned int rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int co
 			++retry_count;
 		}
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
+        PRINT_IF_UNDERFLOW (rc, __LINE__);
 
 #else
 		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
@@ -476,6 +484,7 @@ unsigned int rdrand_get_uint8_array_retry(uint8_t *dest,  const unsigned int cou
 			++retry_count;
 		}
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
+        PRINT_IF_UNDERFLOW (rc, __LINE__);
 #else // little slower, but cleaner code
 		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
 #endif
