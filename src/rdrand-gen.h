@@ -17,11 +17,6 @@
 enum
 {
 	GET_BYTES,
-	GET_UINT8_ARRAY,
-	GET_UINT16_ARRAY,
-	GET_UINT32_ARRAY,
-	GET_UINT64_ARRAY,
-
 	GET_RESEED64_DELAY,
 	GET_RESEED64_SKIP,
 
@@ -34,15 +29,9 @@ enum
  */
 const char *METHOD_NAMES[] =
 {
-	"rdrand_get_bytes_retry",
-	"rdrand_get_uint8_array_retry",
-	"rdrand_get_uint16_array_retry",
-	"rdrand_get_uint32_array_retry",
-	"rdrand_get_uint64_array_retry",
-
-
-	"rdrand_get_uint64_array_reseed_delay",
-	"rdrand_get_uint64_array_reseed_skip",
+	"get_bytes",
+	"get_uint64_array_reseed_delay",
+	"get_uint64_array_reseed_skip",
 };
 
 typedef struct cnf {

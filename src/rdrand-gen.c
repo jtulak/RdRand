@@ -17,6 +17,9 @@
 
 #define SIZEOF(a) ( sizeof (a) / sizeof (a[0]) )
 
+#define RETRY_LIMIT 10
+#define SLOW_RETRY_LIMIT 10000
+
 static const char* HELP_TEXT =
 	"Usage: %s [OPTIONS]\n"
 	"If no output file is specified, the program will print random values to STDOUT.\n\n"
@@ -176,7 +179,7 @@ void parse_args(int argc, char** argv, cnf_t* config)
 size_t generate_chunk(cnf_t *config)
 {
 	unsigned int i, n;
-	size_t written, written_total;
+	size_t generated,written, written_total;
 	uint64_t buf[config->chunk_size*config->threads];
 	written_total = 0;
 	for(n = 0; n < config->chunk_count; n++)
@@ -189,49 +192,41 @@ size_t generate_chunk(cnf_t *config)
 			switch(config->method)
 			{
 			case GET_BYTES:
-				written += rdrand_get_bytes_retry((uint8_t*)&buf[i*config->chunk_size], config->chunk_size*8,1)/8;
-				break;
-			case GET_UINT8_ARRAY:
-				written += rdrand_get_uint8_array_retry((uint8_t*)&buf[i*config->chunk_size], config->chunk_size*8, 1)/8;
-				break;
-			case GET_UINT16_ARRAY:
-				written += rdrand_get_uint16_array_retry((uint16_t*)&buf[i*config->chunk_size], config->chunk_size*4, 1)/4;
-				break;
-			case GET_UINT32_ARRAY:
-				written += rdrand_get_uint32_array_retry((uint32_t*)&buf[i*config->chunk_size], config->chunk_size*2, 1)/2;
-				break;
-			case GET_UINT64_ARRAY:
-				written += rdrand_get_uint64_array_retry(&buf[i*config->chunk_size], config->chunk_size, 1);
+				generated = rdrand_get_bytes_retry((uint8_t*)&buf[i*config->chunk_size], config->chunk_size*8,RETRY_LIMIT)/8;
 				break;
 
 			case GET_RESEED64_DELAY:
-				written += rdrand_get_uint64_array_reseed_delay(&buf[i*config->chunk_size], config->chunk_size, 1);
+				generated = rdrand_get_uint64_array_reseed_delay(&buf[i*config->chunk_size], config->chunk_size, RETRY_LIMIT);
 				break;
 			case GET_RESEED64_SKIP:
-				written += rdrand_get_uint64_array_reseed_skip(&buf[i*config->chunk_size], config->chunk_size, 1);
+				generated = rdrand_get_uint64_array_reseed_skip(&buf[i*config->chunk_size], config->chunk_size, RETRY_LIMIT);
 				break;
 			}
+
+			if(generated < config->chunk_size )
+            {
+                fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected, trying to regenerate it\n", written, SIZEOF(buf));
+                generated = rdrand_get_bytes_retry((uint8_t*)&buf[i*config->chunk_size], config->chunk_size*8,SLOW_RETRY_LIMIT)/8;
+            }
+
+			written += generated ;
 		}
 		/* test generated amount */
 		if ( written != SIZEOF(buf) )
 		{
-			fprintf(stderr, "Warning: bytes generated %zu, bytes expected %zu, trying to regenerate it\n", written, SIZEOF(buf));
+			fprintf(stderr, "Error:  %zu bytes generated, but %zu bytes expected. Probably there is a hardware problem with your CPU.\n", written, SIZEOF(buf));
 			break;
 		}
 
-
-		// TODO recovery from missing bytes
-
 		written = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), config->output);
+		written_total += written;
+
 		if ( written !=  SIZEOF(buf) )
 		{
 			perror("fwrite");
-			fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written, sizeof(buf));
+			fprintf(stderr, "ERROR: %zu bytes written, but %zu bytes to write\n", sizeof(buf[0]) * written, sizeof(buf));
 			break;
 		}
-		written_total += written;
-
-
 	}
 	return written_total*8;
 }
