@@ -538,17 +538,15 @@ size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit)
 	 *   -----|OFFSET|QWORDS (aligned to 64bit blocks)|REST|-----
 	 */
 
-//	if(size < 8)
-//	{
-//		offset=0;
-//		alignedStart = (uint64_t *)start;
-//		alignedBytes = size;
-//	}
-//	else
-//	{
-//
-//	}
-    /* get offset of first 64bit aligned block in the target buffer */
+	if(size < 8)
+	{
+		offset=0;
+		alignedStart = (uint64_t *)start;
+		alignedBytes = size;
+	}
+	else
+	{
+		/* get offset of first 64bit aligned block in the target buffer */
 		offset = 8-(unsigned long int)start % (unsigned long int) 8;
 		if(offset == 0)
 		{
@@ -562,6 +560,8 @@ size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit)
 			alignedBytes = size - offset;
 			DEBUG_PRINT_9("DEBUG 9:  Aligning needed - start: %p, alignedStart: %p\n", (void *)start, (void *)alignedStart);
 		}
+	}
+
 
 	/* get count of 64bit blocks */
 	rest = alignedBytes % 8;
@@ -574,8 +574,13 @@ size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit)
 	{
 		generatedBytes += rdrand_get_uint8_array_retry((uint8_t *)start,offset,retry_limit);
 	}
-	/* fill the main 64bit blocks */
-	generatedBytes += 8*rdrand_get_uint64_array_retry(alignedStart,qWords, retry_limit);
+
+    /* fill the main 64bit blocks */
+	if(qWords)
+    {
+        generatedBytes += 8*rdrand_get_uint64_array_retry(alignedStart,qWords, retry_limit);
+    }
+
 	/* fill the rest */
 	if(rest != 0)
 	{
