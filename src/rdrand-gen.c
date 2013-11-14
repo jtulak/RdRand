@@ -1,5 +1,5 @@
 
-/* gcc -DHAVE_X86INTRIN_H -Wall -Wextra -fopenmp -mrdrnd -I./ -O3 -o gen rdrand-gen.c rdrand.c */
+/* gcc -DHAVE_X86INTRIN_H -Wall -Wextra -fopenmp -mrdrnd -lm -I./ -O3 -o gen rdrand-gen.c rdrand.c */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +7,7 @@
 #include <getopt.h>
 #include <omp.h>
 #include <string.h>
+#include <math.h>       /* floor */
 #include <errno.h>
 #include <inttypes.h>
 #include "../src/rdrand.h"
@@ -21,7 +22,7 @@ static const char* HELP_TEXT =
 	"If no output file is specified, the program will print random values to STDOUT.\n\n"
 	"OPTIONS\n"
 	"  --help       -h      Print this help.\n"
-	"  --amount     -n NUM  Generate given amount of bytes. Suffixes: k, M, G, T.\n"
+	"  --amount     -n NUM  Generate given amount of bytes. Suffixes: K, M, G, T.\n"
 	"                       Without the option or when 0, generate unlimited amount.\n"
 	"  --method     -m NAME Use method NAME (default is %s).\n"
 	"  --output     -o FILE Save the generated data to the file.\n"
@@ -35,6 +36,9 @@ void parse_args(int argc, char** argv, cnf_t* config)
 {
 	int i;
 	char optC;
+	double size_as_double;
+	char *size_suffix;
+
 	static struct option long_options[] =
 	{
 		{"help", no_argument,       0, 'h'},
@@ -67,7 +71,33 @@ void parse_args(int argc, char** argv, cnf_t* config)
 			break;
 
 		case 'n':
-			config->bytes = strtoumax(optarg, NULL,10);
+			size_as_double = strtod(optarg,&size_suffix);
+			if ((optarg == size_suffix) || errno == ERANGE || (size_as_double < 0) || (size_as_double >= UINT64_MAX) )
+			{
+				fprintf(stderr, "Size has to be in range <0, %lu>!\n",UINT64_MAX);
+			}
+			if(strlen(size_suffix) > 0)
+			{
+				switch(*size_suffix)
+				{
+				case 't': case 'T':
+					size_as_double *= pow(10,12);
+					break;
+				case 'g': case 'G':
+					size_as_double *= pow(10,9);
+					break;
+				case 'm': case 'M':
+					size_as_double *= pow(10,6);
+					break;
+				case 'k': case 'K':
+					size_as_double *= pow(10,3);
+					break;
+				default:
+					fprintf(stderr,"Unknown suffix %s when parsing %s.\n",size_suffix, optarg);
+				}
+			}
+
+			config->bytes = (size_t)floor(size_as_double);
 			break;
 
 		case 't':
@@ -79,7 +109,7 @@ void parse_args(int argc, char** argv, cnf_t* config)
 			config->output_filename = optarg;
 			break;
 
-		case 'm': // method
+		case 'm':                 // method
 			for(i = 0; i<METHODS_COUNT; i++)
 			{
 				if(strcmp(optarg,METHOD_NAMES[i]) == 0)
@@ -110,24 +140,29 @@ void parse_args(int argc, char** argv, cnf_t* config)
 	 */
 	if(config->bytes > 0)
 	{
+		// number of 64bit blocks
 		config->blocks = config->bytes / 8;
+		// size of one chunk - max size is limited to MAX_CHUNK_SIZE
 		config->chunk_size = config->blocks / config->threads;
-
-		if(config->chunk_size > 0)
-        {
-            if(config->chunk_size > MAX_CHUNK_SIZE)
+		if(config->chunk_size > MAX_CHUNK_SIZE)
 			config->chunk_size = MAX_CHUNK_SIZE;
 
-		config->chunk_count = config->blocks % config->chunk_size;
-		config->ending_bytes = config->bytes % config->chunk_size*config->threads;
-        }
-        else
-        {
-		config->ending_bytes = config->bytes ;
-        }
+		// if there are some chunks (so at least 64 bytes will be generated)
+		if(config->chunk_size > 0)
+		{
+			// get how many iterations in all threads is needed to generate all the data.
+			config->chunk_count = config->blocks / (config->chunk_size*config->threads);
+			// And how many bytes is left, because they could fit into chunks (just few bytes)
+			config->ending_bytes = config->bytes % (config->chunk_size*config->chunk_count*config->threads*8);
+		}
+		else
+		{
+			// there is not enough bytes to generate to fill a single chunk
+			config->ending_bytes = config->bytes;
+		}
 
 
-		printf("Will generate %u of 64bit blocks using %u chunks of size %u blocks, ending: %u bytes.\n", (uint)config->blocks, (uint)config->chunk_count, (uint)config->chunk_size, (uint)config->ending_bytes);
+		//printf("Will generate %u of 64bit blocks using %u chunks of size %u blocks per thread, ending: %u bytes.\n", (uint)config->blocks, (uint)config->chunk_count, (uint)config->chunk_size, (uint)config->ending_bytes);
 	}
 
 
@@ -146,7 +181,6 @@ size_t generate_chunk(cnf_t *config)
 	written_total = 0;
 	for(n = 0; n < config->chunk_count; n++)
 	{
-
 		written = 0;
 		/** At first fill chunks in all parallel threads */
 #pragma omp parallel for reduction(+:written)
@@ -212,21 +246,21 @@ size_t generate_ending(cnf_t *config)
 	size_t written_total;
 	uint8_t buf[config->ending_bytes];
 
-    written_total = rdrand_get_bytes_retry(&buf[0], config->ending_bytes,1);
-    /* test generated amount */
-    if ( written_total != SIZEOF(buf) )
-    {
-        fprintf(stderr, "ERROR: bytes generated %zu, bytes expected %zu\n", written_total, SIZEOF(buf));
-        return written_total;
-    }
-    written_total = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), config->output);
-    if ( written_total !=  SIZEOF(buf) )
-    {
-        perror("fwrite");
-        fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written_total, sizeof(buf));
-        return written_total;
+	written_total = rdrand_get_bytes_retry(&buf[0], config->ending_bytes,1);
+	/* test generated amount */
+	if ( written_total != SIZEOF(buf) )
+	{
+		fprintf(stderr, "ERROR: bytes generated %zu, bytes expected %zu\n", written_total, SIZEOF(buf));
+		return written_total;
+	}
+	written_total = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), config->output);
+	if ( written_total !=  SIZEOF(buf) )
+	{
+		perror("fwrite");
+		fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written_total, sizeof(buf));
+		return written_total;
 
-    }
+	}
 	return written_total;
 }
 
@@ -244,8 +278,8 @@ size_t generate(cnf_t *config)
 	 */
 	written = generate_chunk(config);
 
-    /** Then fill the few ending bytes in one thread. */
-    written += generate_ending(config);
+	/** Then fill the few ending bytes in one thread. */
+	written += generate_ending(config);
 	return written;
 }
 
@@ -284,7 +318,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-    generate(&config);
+	generate(&config);
 
 	fclose(config.output);
 
