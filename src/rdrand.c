@@ -318,7 +318,7 @@ unsigned int rdrand_get_uint16_array_retry(uint16_t *dest,  const unsigned int c
 			++retry_count;
 		}
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
-        PRINT_IF_UNDERFLOW (rc, __LINE__);
+		PRINT_IF_UNDERFLOW (rc, __LINE__);
 
 		if (rc == RDRAND_SUCCESS)
 		{
@@ -373,7 +373,7 @@ unsigned int rdrand_get_uint32_array_retry(uint32_t *dest,  const unsigned int c
 			++retry_count;
 		}
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
-        PRINT_IF_UNDERFLOW (rc, __LINE__);
+		PRINT_IF_UNDERFLOW (rc, __LINE__);
 
 		if (rc == RDRAND_SUCCESS)
 		{
@@ -423,7 +423,7 @@ unsigned int rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int co
 			++retry_count;
 		}
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
-        PRINT_IF_UNDERFLOW (rc, __LINE__);
+		PRINT_IF_UNDERFLOW (rc, __LINE__);
 
 #else
 		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
@@ -484,7 +484,7 @@ unsigned int rdrand_get_uint8_array_retry(uint8_t *dest,  const unsigned int cou
 			++retry_count;
 		}
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
-        PRINT_IF_UNDERFLOW (rc, __LINE__);
+		PRINT_IF_UNDERFLOW (rc, __LINE__);
 #else // little slower, but cleaner code
 		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
 #endif
@@ -538,20 +538,30 @@ size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit)
 	 *   -----|OFFSET|QWORDS (aligned to 64bit blocks)|REST|-----
 	 */
 
-	/* get offset of first 64bit aligned block in the target buffer */
-	offset = 8-(unsigned long int)start % (unsigned long int) 8;
-	if(offset == 0)
-	{
-		alignedStart = (uint64_t *)start;
-		alignedBytes = size;
-		DEBUG_PRINT_9("DEBUG 9: No align needed - start: %p\n", (void *)start);
-	}
-	else
-	{
-		alignedStart = (uint64_t *)(((uint64_t)start & ~(uint64_t)7)+(uint64_t)8);
-		alignedBytes = size - offset;
-		DEBUG_PRINT_9("DEBUG 9:  Aligning needed - start: %p, alignedStart: %p\n", (void *)start, (void *)alignedStart);
-	}
+//	if(size < 8)
+//	{
+//		offset=0;
+//		alignedStart = (uint64_t *)start;
+//		alignedBytes = size;
+//	}
+//	else
+//	{
+//
+//	}
+    /* get offset of first 64bit aligned block in the target buffer */
+		offset = 8-(unsigned long int)start % (unsigned long int) 8;
+		if(offset == 0)
+		{
+			alignedStart = (uint64_t *)start;
+			alignedBytes = size;
+			DEBUG_PRINT_9("DEBUG 9: No align needed - start: %p\n", (void *)start);
+		}
+		else
+		{
+			alignedStart = (uint64_t *)(((uint64_t)start & ~(uint64_t)7)+(uint64_t)8);
+			alignedBytes = size - offset;
+			DEBUG_PRINT_9("DEBUG 9:  Aligning needed - start: %p, alignedStart: %p\n", (void *)start, (void *)alignedStart);
+		}
 
 	/* get count of 64bit blocks */
 	rest = alignedBytes % 8;
