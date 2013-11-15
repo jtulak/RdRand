@@ -21,7 +21,7 @@
 #define RETRY_LIMIT 10
 #define SLOW_RETRY_LIMIT_CYCLES 100
 #define SLOW_RETRY_LIMIT 1000
-#define SLOW_RETRY_DELAY 1000 // in us - 1 ms
+#define SLOW_RETRY_DELAY 100 // 100 us
 
 static const char* HELP_TEXT =
 	"Usage: %s [OPTIONS]\n"
@@ -177,20 +177,20 @@ void parse_args(int argc, char** argv, cnf_t* config)
 
 size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int i, int retry)
 {
-    switch(config->method)
-			{
-			case GET_BYTES:
-				return rdrand_get_bytes_retry((uint8_t*)&buf[i*config->chunk_size], config->chunk_size*8,retry)/8;
-				break;
+	switch(config->method)
+	{
+	case GET_BYTES:
+		return rdrand_get_bytes_retry((uint8_t*)&buf[i*config->chunk_size], config->chunk_size*8,retry)/8;
+		break;
 
-			case GET_RESEED64_DELAY:
-				return rdrand_get_uint64_array_reseed_delay(&buf[i*config->chunk_size], config->chunk_size, retry);
-				break;
-			case GET_RESEED64_SKIP:
-				return rdrand_get_uint64_array_reseed_skip(&buf[i*config->chunk_size], config->chunk_size, retry);
-				break;
-			}
-    return 0;
+	case GET_RESEED64_DELAY:
+		return rdrand_get_uint64_array_reseed_delay(&buf[i*config->chunk_size], config->chunk_size, retry);
+		break;
+	case GET_RESEED64_SKIP:
+		return rdrand_get_uint64_array_reseed_skip(&buf[i*config->chunk_size], config->chunk_size, retry);
+		break;
+	}
+	return 0;
 }
 
 
@@ -215,17 +215,17 @@ size_t generate_chunk(cnf_t *config)
 			generated = generate_with_metod(config,buf, i, RETRY_LIMIT);
 
 			if(generated < config->chunk_size )
-            {
-                fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected, trying to regenerate it\n", generated, SIZEOF(buf));
-                retry = 0;
-                while(generated != SIZEOF(buf) && retry++ < SLOW_RETRY_LIMIT_CYCLES)
-                {
-                    usleep(SLOW_RETRY_DELAY);
-                    generated = generate_with_metod(config,buf, i, SLOW_RETRY_LIMIT);
-                }
-            }
+			{
+				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected, trying to regenerate it\n", generated, SIZEOF(buf));
+				retry = 0;
+				while(generated != SIZEOF(buf) && retry++ < SLOW_RETRY_LIMIT_CYCLES)
+				{
+					usleep(i*SLOW_RETRY_DELAY);
+					generated = generate_with_metod(config,buf, i, SLOW_RETRY_LIMIT);
+				}
+			}
 
-			written += generated ;
+			written += generated;
 		}
 		/* test generated amount */
 		if ( written != SIZEOF(buf) )
