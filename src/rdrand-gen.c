@@ -21,7 +21,7 @@
 #define RETRY_LIMIT 10
 #define SLOW_RETRY_LIMIT_CYCLES 100
 #define SLOW_RETRY_LIMIT 1000
-#define SLOW_RETRY_DELAY 100 // 100 us
+#define SLOW_RETRY_DELAY 1000 // 1 ms
 
 static const char* HELP_TEXT =
 	"Usage: %s [OPTIONS]\n"
