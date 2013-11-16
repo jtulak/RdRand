@@ -236,12 +236,12 @@ size_t generate_chunk(cnf_t *config)
 			if ( config->threads == 1 )
 			{
 				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Trying to get randomness with slower speed.\n", written, buf_size);
-                                retry = 0;
-                                while(written != buf_size && retry++ < SLOW_RETRY_LIMIT_CYCLES)
-                                {
-                                        usleep(SLOW_RETRY_DELAY);
-                                        written = generate_with_metod(config,buf, config->threads*config->chunk_size, SLOW_RETRY_LIMIT);
-                                }
+				retry = 0;
+				while(written != buf_size && retry++ < SLOW_RETRY_LIMIT_CYCLES)
+				{
+					usleep(SLOW_RETRY_DELAY);
+					written = generate_with_metod(config,buf, config->threads*config->chunk_size, SLOW_RETRY_LIMIT);
+				}
 				if( written != buf_size )
 				{
 					fprintf(stderr, "Error:  %zu bytes generated, but %zu bytes expected. Probably there is a hardware problem with your CPU.\n", written, buf_size);
