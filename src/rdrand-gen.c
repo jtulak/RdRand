@@ -175,19 +175,19 @@ void parse_args(int argc, char** argv, cnf_t* config)
 
 }
 
-size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int i, int retry)
+size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int blocks, int retry)
 {
 	switch(config->method)
 	{
 	case GET_BYTES:
-		return rdrand_get_bytes_retry((uint8_t*)&buf[i*config->chunk_size], config->chunk_size*8,retry)/8;
+		return rdrand_get_bytes_retry((uint8_t*)buf, blocks*8,retry)/8;
 		break;
 
 	case GET_RESEED64_DELAY:
-		return rdrand_get_uint64_array_reseed_delay(&buf[i*config->chunk_size], config->chunk_size, retry);
+		return rdrand_get_uint64_array_reseed_delay(buf, blocks, retry);
 		break;
 	case GET_RESEED64_SKIP:
-		return rdrand_get_uint64_array_reseed_skip(&buf[i*config->chunk_size], config->chunk_size, retry);
+		return rdrand_get_uint64_array_reseed_skip(buf, blocks, retry);
 		break;
 	}
 	return 0;
@@ -201,19 +201,20 @@ size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int i, int retr
 size_t generate_chunk(cnf_t *config)
 {
 	unsigned int i, n, retry;
-	size_t generated,written, written_total;
+	size_t generated,written, written_total,buf_size;
 	uint64_t buf[config->chunk_size*config->threads];
 
+	buf_size = SIZEOF(buf);
 	written_total = 0;
 	for(n = 0; n < config->chunk_count; n++)
 	{
 		written = 0;
 		/** At first fill chunks in all parallel threads */
-#pragma omp parallel for  private(generated, retry) reduction(+:written)
+#pragma omp parallel for  private(generated) reduction(+:written)
 		for ( i=0; i<config->threads; ++i)
 		{
-			generated = generate_with_metod(config,buf, i, RETRY_LIMIT);
-
+			generated = generate_with_metod(config,&buf[i*config->chunk_size], config->chunk_size, RETRY_LIMIT);
+#if 0
 			if(generated < config->chunk_size )
 			{
 				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected, trying to regenerate it\n", generated, SIZEOF(buf));
@@ -224,23 +225,49 @@ size_t generate_chunk(cnf_t *config)
 					generated = generate_with_metod(config,buf, i, SLOW_RETRY_LIMIT);
 				}
 			}
-
+#endif
 			written += generated;
-		}
-		/* test generated amount */
-		if ( written != SIZEOF(buf) )
-		{
-			fprintf(stderr, "Error:  %zu bytes generated, but %zu bytes expected. Probably there is a hardware problem with your CPU.\n", written, SIZEOF(buf));
-			break;
+
 		}
 
-		written = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), config->output);
+		if ( written != buf_size )
+		{
+			/* if we can't lower threads count anymore */
+			if ( config->threads == 1 )
+			{
+				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Trying to get randomness with slower speed.\n", written, buf_size);
+                                retry = 0;
+                                while(written != buf_size && retry++ < SLOW_RETRY_LIMIT_CYCLES)
+                                {
+                                        usleep(SLOW_RETRY_DELAY);
+                                        written = generate_with_metod(config,buf, config->threads*config->chunk_size, SLOW_RETRY_LIMIT);
+                                }
+				if( written != buf_size )
+				{
+					fprintf(stderr, "Error:  %zu bytes generated, but %zu bytes expected. Probably there is a hardware problem with your CPU.\n", written, buf_size);
+					break;
+				}
+			}
+			else
+			{
+				/* try to lower threads count to avoid underflow */
+				config->threads--;
+				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Probably slow internal generator - decreaseing threads count by one to %d to avoid problems.\n", written, buf_size, config->threads);
+				buf_size -= config->chunk_size;
+
+				/* run this iteration again */
+				n--;
+				continue;
+			}
+		}
+
+		written = fwrite(buf, sizeof(buf[0]), buf_size, config->output);
 		written_total += written;
 
-		if ( written !=  SIZEOF(buf) )
+		if ( written !=  buf_size)
 		{
 			perror("fwrite");
-			fprintf(stderr, "ERROR: %zu bytes written, but %zu bytes to write\n", sizeof(buf[0]) * written, sizeof(buf));
+			fprintf(stderr, "ERROR: %zu bytes written, but %zu bytes to write\n", sizeof(buf[0]) * written, buf_size);
 			break;
 		}
 	}
