@@ -239,7 +239,7 @@ size_t generate_chunk(cnf_t *config)
 				retry = 0;
 				while(written != buf_size && retry++ < SLOW_RETRY_LIMIT_CYCLES)
 				{
-					usleep(SLOW_RETRY_DELAY);
+					usleep(retry*SLOW_RETRY_DELAY);
 					written = generate_with_metod(config,buf, config->threads*config->chunk_size, SLOW_RETRY_LIMIT);
 				}
 				if( written != buf_size )
