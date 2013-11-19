@@ -214,18 +214,7 @@ size_t generate_chunk(cnf_t *config)
 		for ( i=0; i<config->threads; ++i)
 		{
 			generated = generate_with_metod(config,&buf[i*config->chunk_size], config->chunk_size, RETRY_LIMIT);
-#if 0
-			if(generated < config->chunk_size )
-			{
-				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected, trying to regenerate it\n", generated, SIZEOF(buf));
-				retry = 0;
-				while(generated != SIZEOF(buf) && retry++ < SLOW_RETRY_LIMIT_CYCLES)
-				{
-					usleep(i*SLOW_RETRY_DELAY);
-					generated = generate_with_metod(config,buf, i, SLOW_RETRY_LIMIT);
-				}
-			}
-#endif
+
 			written += generated;
 
 		}
@@ -240,7 +229,8 @@ size_t generate_chunk(cnf_t *config)
 				while(written != buf_size && retry++ < SLOW_RETRY_LIMIT_CYCLES)
 				{
 					usleep(retry*SLOW_RETRY_DELAY);
-					written = generate_with_metod(config,buf, config->threads*config->chunk_size, SLOW_RETRY_LIMIT);
+					// try to generate the rest
+					written += generate_with_metod(config,buf+written, config->threads*config->chunk_size-written, SLOW_RETRY_LIMIT);
 				}
 				if( written != buf_size )
 				{
