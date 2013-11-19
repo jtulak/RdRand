@@ -23,6 +23,7 @@
 #include <termios.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h> // usleep
 #include <inttypes.h>
 //#include <rdrand.h>
 #include "../src/rdrand.h"
@@ -39,6 +40,11 @@
 #define SECONDS     3 // how long should be each method generating before stopped
 #define CHUNK       2*1024 // size of chunk (how many bytes will be generated in each run)
 
+
+#define RETRY_LIMIT 10
+#define SLOW_RETRY_LIMIT_CYCLES 100
+#define SLOW_RETRY_LIMIT 1000
+#define SLOW_RETRY_DELAY 1000 // 1 ms
 
 /**
  * List of methods available for testing.
@@ -281,6 +287,58 @@ int getkey()
 	return character;
 }
 
+
+size_t generate_with_metod( int type, uint64_t *buf, unsigned int blocks, int retry)
+{
+	switch(type)
+			{
+			case GET_BYTES:
+				return rdrand_get_bytes_retry((uint8_t*)buf, blocks*8,retry)/8;
+				break;
+			case GET_UINT8_ARRAY:
+				return rdrand_get_uint8_array_retry((uint8_t*)buf, blocks*8, retry)/8;
+				break;
+			case GET_UINT16_ARRAY:
+				return rdrand_get_uint16_array_retry((uint16_t*)buf, blocks*4, retry)/4;
+				break;
+			case GET_UINT32_ARRAY:
+				return rdrand_get_uint32_array_retry((uint32_t*)buf, blocks*2, retry)/2;
+				break;
+			case GET_UINT64_ARRAY:
+				return rdrand_get_uint64_array_retry(buf, blocks, retry);
+				break;
+
+
+			case GET_RDRAND16_STEP:
+				return fill_uint16_step((uint16_t *)buf, blocks*4, retry)/4;
+				break;
+			case GET_RDRAND32_STEP:
+				return fill_uint32_step((uint32_t *)buf, blocks*2, retry)/2;
+				break;
+			case GET_RDRAND64_STEP:
+				return fill_uint64_step(buf, blocks, retry);
+				break;
+
+			case GET_RDRAND16_RETRY:
+				return fill_uint16_retry((uint16_t *)buf, blocks*4, retry)/4;
+				break;
+			case GET_RDRAND32_RETRY:
+				return fill_uint32_retry((uint32_t *)buf, blocks*2, retry)/2;
+				break;
+			case GET_RDRAND64_RETRY:
+				return fill_uint64_retry(buf, blocks, retry);
+				break;
+
+			case GET_RESEED64_DELAY:
+				return rdrand_get_uint64_array_reseed_delay(buf, blocks, retry);
+				break;
+			case GET_RESEED64_SKIP:
+				return rdrand_get_uint64_array_reseed_skip(buf, blocks, retry);
+				break;
+			}
+	return 0;
+}
+
 /**
  * \param threads - number of threads to run in
  * \param chunk - size of chunk to generate
@@ -290,24 +348,29 @@ int getkey()
  * \param type - which function should be used? GET_UINT8_ARRAY, ...
  * \return throughput in MB/s
  */
-double test_throughput(const int threads, const size_t chunk, int stop_after, FILE *stream, const int type)
+double test_throughput( int threads, const size_t chunk, int stop_after, FILE *stream, const int type)
 {
 
 
-	size_t written, total;
+	size_t written, total,generated,buf_size;
 	uint64_t buf[threads*chunk];
 	omp_set_num_threads(threads);
 	struct timespec t[2];
 	double run_time, throughput;
 	int key,i;
+	unsigned int retry;
 	run_time = 0;
 	total = 0;
 	clock_gettime(CLOCK_REALTIME, &t[0]);
 	if(verbose_flag)
 		fprintf(stderr, "Press [Esc] to stop the loop");
+
+    key = 0;
+	buf_size = SIZEOF(buf);
 	do
 	{
 		written = 0;
+#if 0
 #pragma omp parallel for reduction(+:written)
 		for ( i=0; i<threads; ++i)
 		{
@@ -392,6 +455,75 @@ double test_throughput(const int threads, const size_t chunk, int stop_after, FI
 		{
 			total += written;
 		}
+#else
+		#pragma omp parallel for  private(generated) reduction(+:written)
+		for ( i=0; i<threads; ++i)
+		{
+			generated = generate_with_metod(type,&buf[i*chunk], chunk, RETRY_LIMIT);
+
+			written += generated;
+
+		}
+
+		if ( written != buf_size )
+		{
+			/* if we can't lower threads count anymore */
+			if ( threads == 1 )
+			{
+				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Trying to get randomness with slower speed.\n", written, buf_size);
+				retry = 0;
+				while(written != buf_size && retry++ < SLOW_RETRY_LIMIT_CYCLES)
+				{
+					usleep(retry*SLOW_RETRY_DELAY);
+					// try to generate the rest
+					written +=generate_with_metod(type,buf+written, chunk-written, SLOW_RETRY_LIMIT);
+				}
+				if( written != buf_size )
+				{
+					fprintf(stderr, "Error:  %zu bytes generated, but %zu bytes expected. Probably there is a hardware problem with your CPU.\n", written, buf_size);
+					break;
+				}
+			}
+			else
+			{
+				/* try to lower threads count to avoid underflow */
+				threads--;
+				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Probably slow internal generator - decreaseing threads count by one to %d to avoid problems.\n", written, buf_size, threads);
+				buf_size -= chunk;
+
+				continue;
+			}
+		}
+        if(!no_print_flag)
+		{
+
+			/* Test written amount */
+			if(print_numbers_flag == 1)
+			{
+				written = print_numbers(stream, (char *)buf,sizeof(buf))/8;
+				// written = fwrite(, sizeof(buf[0]), SIZEOF(buf), stream);
+			}
+			else
+			{
+				written = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), stream);
+			}
+			total += written;
+			if ( written !=  SIZEOF(buf) )
+			{
+				perror("fwrite");
+				fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written, sizeof(buf));
+				break;
+			}
+		}
+		else
+		{
+			total += written;
+		}
+
+
+
+
+#endif // 0
 
 		/* Stopping */
 		key = getkey();
