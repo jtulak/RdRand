@@ -210,13 +210,10 @@ size_t generate_chunk(cnf_t *config)
 	{
 		written = 0;
 		/** At first fill chunks in all parallel threads */
-#pragma omp parallel for  private(generated) reduction(+:written)
-		for ( i=0; i<config->threads; ++i)
+#pragma omp parallel for reduction(+:written)
+		for ( i=0; i < config->threads; ++i)
 		{
-			generated = generate_with_metod(config,&buf[i*config->chunk_size], config->chunk_size, RETRY_LIMIT);
-
-			written += generated;
-
+			written += generate_with_metod(config,&buf[i*config->chunk_size], config->chunk_size, RETRY_LIMIT);
 		}
 
 		if ( written != buf_size )
