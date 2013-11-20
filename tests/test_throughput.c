@@ -352,7 +352,7 @@ double test_throughput( int threads, const size_t chunk, int stop_after, FILE *s
 {
 
 
-	size_t written, total,generated,buf_size;
+	size_t written, total,buf_size;
 	uint64_t buf[threads*chunk];
 	omp_set_num_threads(threads);
 	struct timespec t[2];
@@ -456,12 +456,11 @@ double test_throughput( int threads, const size_t chunk, int stop_after, FILE *s
 			total += written;
 		}
 #else
-		#pragma omp parallel for  private(generated) reduction(+:written)
+		#pragma omp parallel for reduction(+:written)
 		for ( i=0; i<threads; ++i)
 		{
-			generated = generate_with_metod(type,&buf[i*chunk], chunk, RETRY_LIMIT);
+			written += generate_with_metod(type,&buf[i*chunk], chunk, RETRY_LIMIT);
 
-			written += generated;
 
 		}
 
