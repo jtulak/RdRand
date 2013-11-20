@@ -201,7 +201,7 @@ size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int blocks, int
 size_t generate_chunk(cnf_t *config)
 {
 	unsigned int i, n, retry;
-	size_t generated,written, written_total,buf_size;
+	size_t written, written_total,buf_size;
 	uint64_t buf[config->chunk_size*config->threads];
 
 	buf_size = SIZEOF(buf);
