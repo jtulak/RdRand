@@ -210,6 +210,7 @@ size_t generate_chunk(cnf_t *config)
 	{
 		written = 0;
 		/** At first fill chunks in all parallel threads */
+		 omp_set_num_threads(config->threads);
 #pragma omp parallel for reduction(+:written)
 		for ( i=0; i < config->threads; ++i)
 		{
