@@ -210,7 +210,7 @@ size_t generate_chunk(cnf_t *config)
 	{
 		written = 0;
 		/** At first fill chunks in all parallel threads */
-		 omp_set_num_threads(config->threads);
+		omp_set_num_threads(config->threads);
 #pragma omp parallel for reduction(+:written)
 		for ( i=0; i < config->threads; ++i)
 		{
@@ -222,7 +222,13 @@ size_t generate_chunk(cnf_t *config)
 			/* if we can't lower threads count anymore */
 			if ( config->threads == 1 )
 			{
-				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Trying to get randomness with slower speed.\n", written, buf_size);
+				if(config->printedWarningFlag == 0)
+				{
+					config->printedWarningFlag++;
+					fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Trying to get randomness with slower speed.\n", written, buf_size);
+				}
+				// reset the retry - LIMIT should work work for each run independently
+				// and also the delay should be as small as possible
 				retry = 0;
 				while(written != buf_size && retry++ < SLOW_RETRY_LIMIT_CYCLES)
 				{
@@ -314,7 +320,7 @@ size_t generate(cnf_t *config)
 int main(int argc, char** argv)
 {
 	int i;
-	cnf_t config = {NULL, stdout, DEFAULT_METHOD, 0, DEFAULT_THREADS, DEFAULT_BYTES,0,0,0,0};
+	cnf_t config = {NULL, stdout, DEFAULT_METHOD, 0, 0, DEFAULT_THREADS, DEFAULT_BYTES,0,0,0,0};
 	parse_args(argc, argv,&config);
 	if(config.help_flag)
 	{

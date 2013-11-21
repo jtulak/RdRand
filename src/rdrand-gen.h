@@ -23,6 +23,7 @@ enum
 	// helper constants
 	METHODS_COUNT
 };
+
 /**
  * List of names of methods for printing.
  * Has to be in the same order as in the enum.
@@ -35,26 +36,29 @@ const char *METHOD_NAMES[] =
 };
 
 typedef struct cnf {
-    /** output file path */
-    char* output_filename;
-    /** output file stream */
-    FILE* output;
-    /** ENUM of the used method */
-    int method;
-    /** Flag of --help/-h */
-    int help_flag;
-    /** number of threads */
-    unsigned int threads;
-    /** number of bytes to generate */
-    size_t bytes;
-    /** amount of 64bit blocks */
-    size_t blocks;
-    /** size of chunks to use */
-    size_t chunk_size;
-    /** count of chunks */
-    size_t chunk_count;
-    /** amount of bytes to be generated at last */
-    size_t ending_bytes;
+	/** output file path */
+	char* output_filename;
+	/** output file stream */
+	FILE* output;
+	/** ENUM of the used method */
+	int method;
+	/** Flag of --help/-h */
+	int help_flag;
+	/** Flag of printed warning about underflow, when only one thread is running */
+	int printedWarningFlag;
+	/** number of threads */
+	unsigned int threads;
+	/** number of bytes to generate */
+	size_t bytes;
+	/** amount of 64bit blocks */
+	size_t blocks;
+	/** size of chunks to use */
+	size_t chunk_size;
+	/** count of chunks */
+	size_t chunk_count;
+	/** amount of bytes to be generated at last */
+	size_t ending_bytes;
+
 } cnf_t;
 
 #endif // RDRAND_GEN_H

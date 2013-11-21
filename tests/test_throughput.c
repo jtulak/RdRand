@@ -291,51 +291,51 @@ int getkey()
 size_t generate_with_metod( int type, uint64_t *buf, unsigned int blocks, int retry)
 {
 	switch(type)
-			{
-			case GET_BYTES:
-				return rdrand_get_bytes_retry((uint8_t*)buf, blocks*8,retry)/8;
-				break;
-			case GET_UINT8_ARRAY:
-				return rdrand_get_uint8_array_retry((uint8_t*)buf, blocks*8, retry)/8;
-				break;
-			case GET_UINT16_ARRAY:
-				return rdrand_get_uint16_array_retry((uint16_t*)buf, blocks*4, retry)/4;
-				break;
-			case GET_UINT32_ARRAY:
-				return rdrand_get_uint32_array_retry((uint32_t*)buf, blocks*2, retry)/2;
-				break;
-			case GET_UINT64_ARRAY:
-				return rdrand_get_uint64_array_retry(buf, blocks, retry);
-				break;
+	{
+	case GET_BYTES:
+		return rdrand_get_bytes_retry((uint8_t*)buf, blocks*8,retry)/8;
+		break;
+	case GET_UINT8_ARRAY:
+		return rdrand_get_uint8_array_retry((uint8_t*)buf, blocks*8, retry)/8;
+		break;
+	case GET_UINT16_ARRAY:
+		return rdrand_get_uint16_array_retry((uint16_t*)buf, blocks*4, retry)/4;
+		break;
+	case GET_UINT32_ARRAY:
+		return rdrand_get_uint32_array_retry((uint32_t*)buf, blocks*2, retry)/2;
+		break;
+	case GET_UINT64_ARRAY:
+		return rdrand_get_uint64_array_retry(buf, blocks, retry);
+		break;
 
 
-			case GET_RDRAND16_STEP:
-				return fill_uint16_step((uint16_t *)buf, blocks*4, retry)/4;
-				break;
-			case GET_RDRAND32_STEP:
-				return fill_uint32_step((uint32_t *)buf, blocks*2, retry)/2;
-				break;
-			case GET_RDRAND64_STEP:
-				return fill_uint64_step(buf, blocks, retry);
-				break;
+	case GET_RDRAND16_STEP:
+		return fill_uint16_step((uint16_t *)buf, blocks*4, retry)/4;
+		break;
+	case GET_RDRAND32_STEP:
+		return fill_uint32_step((uint32_t *)buf, blocks*2, retry)/2;
+		break;
+	case GET_RDRAND64_STEP:
+		return fill_uint64_step(buf, blocks, retry);
+		break;
 
-			case GET_RDRAND16_RETRY:
-				return fill_uint16_retry((uint16_t *)buf, blocks*4, retry)/4;
-				break;
-			case GET_RDRAND32_RETRY:
-				return fill_uint32_retry((uint32_t *)buf, blocks*2, retry)/2;
-				break;
-			case GET_RDRAND64_RETRY:
-				return fill_uint64_retry(buf, blocks, retry);
-				break;
+	case GET_RDRAND16_RETRY:
+		return fill_uint16_retry((uint16_t *)buf, blocks*4, retry)/4;
+		break;
+	case GET_RDRAND32_RETRY:
+		return fill_uint32_retry((uint32_t *)buf, blocks*2, retry)/2;
+		break;
+	case GET_RDRAND64_RETRY:
+		return fill_uint64_retry(buf, blocks, retry);
+		break;
 
-			case GET_RESEED64_DELAY:
-				return rdrand_get_uint64_array_reseed_delay(buf, blocks, retry);
-				break;
-			case GET_RESEED64_SKIP:
-				return rdrand_get_uint64_array_reseed_skip(buf, blocks, retry);
-				break;
-			}
+	case GET_RESEED64_DELAY:
+		return rdrand_get_uint64_array_reseed_delay(buf, blocks, retry);
+		break;
+	case GET_RESEED64_SKIP:
+		return rdrand_get_uint64_array_reseed_skip(buf, blocks, retry);
+		break;
+	}
 	return 0;
 }
 
@@ -350,8 +350,6 @@ size_t generate_with_metod( int type, uint64_t *buf, unsigned int blocks, int re
  */
 double test_throughput( int threads, const size_t chunk, int stop_after, FILE *stream, const int type)
 {
-
-
 	size_t written, total,buf_size;
 	uint64_t buf[threads*chunk];
 	omp_set_num_threads(threads);
@@ -365,7 +363,7 @@ double test_throughput( int threads, const size_t chunk, int stop_after, FILE *s
 	if(verbose_flag)
 		fprintf(stderr, "Press [Esc] to stop the loop");
 
-    key = 0;
+	key = 0;
 	buf_size = SIZEOF(buf);
 	do
 	{
@@ -493,7 +491,7 @@ double test_throughput( int threads, const size_t chunk, int stop_after, FILE *s
 				continue;
 			}
 		}
-        if(!no_print_flag)
+		if(!no_print_flag)
 		{
 
 			/* Test written amount */

@@ -575,11 +575,11 @@ size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit)
 		generatedBytes += rdrand_get_uint8_array_retry((uint8_t *)start,offset,retry_limit);
 	}
 
-    /* fill the main 64bit blocks */
+	/* fill the main 64bit blocks */
 	if(qWords)
-    {
-        generatedBytes += 8*rdrand_get_uint64_array_retry(alignedStart,qWords, retry_limit);
-    }
+	{
+		generatedBytes += 8*rdrand_get_uint64_array_retry(alignedStart,qWords, retry_limit);
+	}
 
 	/* fill the rest */
 	if(rest != 0)
