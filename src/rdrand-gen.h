@@ -2,6 +2,10 @@
 #ifndef RDRAND_GEN_H
 #define RDRAND_GEN_H
 
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+
 #define DEFAULT_THREADS 4
 #define DEFAULT_METHOD GET_BYTES
 #define DEFAULT_BYTES 0

@@ -10,7 +10,6 @@
 #include <omp.h>
 #include <stdio.h>
 #include <unistd.h> // usleep
-#include <crypt.h>
 
 #include <cpuid.h>
 
@@ -22,24 +21,19 @@
  */
 #define RDRAND_MASK     0x40000000
 
-#define PRINT_IF_UNDERFLOW(rc, line) if(rc == RDRAND_FAILURE) fprintf(stderr,"ERROR: UNDERFLOW on line %d!!!\n",line)
-//#define PRINT_IF_UNDERFLOW(rc, line)
+//#define PRINT_IF_UNDERFLOW(rc, line) if(rc == RDRAND_FAILURE) fprintf(stderr,"ERROR: UNDERFLOW on line %d!!!\n",line)
+#define PRINT_IF_UNDERFLOW(rc, line)
 
 /**
  * Debug options
- * If EMULATE_RNG is 1, openssl is used as a RNG.
  *
  * DEBUG_VERBOSE will print informations.
  * 0 - No informations
  * 9 - all informations (multiple messages from one function)
  *
  */
-#define EMULATE_RNG 0
 #define DEBUG_VERBOSE 0
 
-#if EMULATE_RNG == 1
-//#include <openssl/rand.h>
-#endif // EMULATE_RNG
 
 #if DEBUG_VERBOSE > 0
 #define DEBUG_PRINT_1(fmt, args ...)    fprintf(stderr, fmt, ## args)
@@ -80,12 +74,8 @@ inline int rdrand64_step(uint64_t *x)
 int rdrand16_step(uint16_t *x)
 {
 	unsigned char err = 1;
-#if EMULATE_RNG == 0
 	asm volatile ("rdrand %0 ; setc %1"
 		      : "=r" (*x), "=qm" (err));
-#else
-	RAND_pseudo_bytes((unsigned char *)x, 2);
-#endif
 	if(err == 1)
 	{
 		return RDRAND_SUCCESS;
@@ -102,12 +92,8 @@ int rdrand16_step(uint16_t *x)
 int rdrand32_step(uint32_t *x)
 {
 	unsigned char err = 1;
-#if EMULATE_RNG == 0
 	asm volatile ("rdrand %0 ; setc %1"
 		      : "=r" (*x), "=qm" (err));
-#else
-	RAND_pseudo_bytes((unsigned char *)x, 4);
-#endif
 	if(err == 1)
 	{
 		return RDRAND_SUCCESS;
@@ -124,12 +110,8 @@ int rdrand32_step(uint32_t *x)
 int rdrand64_step(uint64_t *x)
 {
 	unsigned char err = 1;
-#if EMULATE_RNG == 0
 	asm volatile ("rdrand %0 ; setc %1"
 		      : "=r" (*x), "=qm" (err));
-#else
-	RAND_pseudo_bytes((unsigned char *)x, 8);
-#endif
 	if(err == 1)
 	{
 		return RDRAND_SUCCESS;

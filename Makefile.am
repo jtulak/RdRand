@@ -10,6 +10,16 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## to provide a way for the user to supply additional arguments.
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 
+################
+bin_PROGRAMS = rdrand-gen
+
+rdrand_gen_SOURCES = src/rdrand-gen.c
+rdrand_gen_LDADD = src/rdrand.c 
+rdrand_gen_LDFLAGS = -fopenmp -mrdrnd  -lrt -lm
+
+##########
+
+
 ## Define a libtool archive target "librdrand-@RDRAND_API_VERSION@.la", with
 ## @RDRAND_API_VERSION@ substituted into the generated Makefile at configure
 ## time.
