@@ -1,0 +1,54 @@
+.\" Manpage for rdrand-gen.
+.\" Contact jan@tulak.me to correct errors or typos.
+.TH man 3 "25 November 2013" "1.0" "rdrand-gen man page"
+.SH NAME
+rdrand-gen \- Generate randomness by using RdRand on Intell's CPUs.
+.SH SYNOPSIS
+rdrand-gen [--amount NUM] [--method NAME] [--output FILE] [--threads NUM]
+.SH DESCRIPTION
+rdrand-gen is a simple application for generating randomness on Intell's CPUs (Ivy Bridge and newers) using the HW RNG on the CPU.
+It can use three methods of generating:
+Default 
+.B get_bytes
+- is fastest (on a laptop with a Core i7 about 200 MiB/s in one thread) and simply pulls out randomness from the HW RNG, and two slow, but more secure methods. These two methods, 
+.B reseed_delay
+and 
+.B reseed_skip
+are trying to enforce full regeneration of the CPU's pool before each single value that is pushed out. But because the HW implementation is closed, it is not possible to trully confirm it.
+
+.B reseed_delay
+is putting small delays, long enough to allow the HW to regenerate the pool according of Intell's developers manual.
+.B reseed_skip
+is taking one of 1025 64bit values (the size of the inner pool) and throwing away the rest.
+The perfomance of these methods is about 1/1000 of the default one. The performance differs on each machine, one one machine the 
+.B reseed_skip
+is faster than 
+.B reseed_delay
+, while on another one it can be different.
+.SH OPTIONS
+  \-\-help       \-h      Print this help.
+  \-\-amount     \-n 
+.I NUM 
+Generate given amount of bytes. Suffixes: K, M, G, T.
+                       Without the option or when 0, generate unlimited amount.
+  \-\-method     \-m 
+.I NAME
+Use method NAME (default is 
+.B get_bytes
+, others are 
+.B reseed_skip
+and
+.B reseed_delay
+).
+  \-\-output     \-o 
+.I FILE
+Save the generated data to the file.
+  \-\-threads    \-t 
+.I NUM
+Run the generator in NUM threads (default 4).
+.SH SEE ALSO
+rdrand-lib(3)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Jan Tulak (jan@tulak.me)
