@@ -170,6 +170,10 @@ void parse_args(int argc, char** argv, cnf_t* config)
 
 		//printf("Will generate %u of 64bit blocks using %u chunks of size %u blocks per thread, ending: %u bytes.\n", (uint)config->blocks, (uint)config->chunk_count, (uint)config->chunk_size, (uint)config->ending_bytes);
 	}
+	else if(config->bytes == 0)
+    {
+        config->chunk_size = MAX_CHUNK_SIZE;
+    }
 
 
 
@@ -206,7 +210,7 @@ size_t generate_chunk(cnf_t *config)
 
 	buf_size = SIZEOF(buf);
 	written_total = 0;
-	for(n = 0; n < config->chunk_count; n++)
+	for(n = 0; n < config->chunk_count || config->bytes == 0; n++)
 	{
 		written = 0;
 		/** At first fill chunks in all parallel threads */
@@ -226,7 +230,7 @@ size_t generate_chunk(cnf_t *config)
 				{
 					config->printedWarningFlag++;
 					//fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Trying to get randomness with slower speed.\n", written, buf_size);
-					fprintf(stderr, "Warning: Less than expected amount of bytes was generated. Trying to get randomness with slower speed.\n", written, buf_size);
+					fprintf(stderr, "Warning: Less than expected amount of bytes was generated. Trying to get randomness with slower speed.\n");
 				}
 				// reset the retry - LIMIT should work work for each run independently
 				// and also the delay should be as small as possible
