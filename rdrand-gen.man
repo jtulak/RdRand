@@ -29,8 +29,7 @@ is faster than
   \-\-help       \-h      Print this help.
   \-\-amount     \-n 
 .I NUM 
-Generate given amount of bytes. Suffixes: K, M, G, T.
-                       Without the option or when 0, generate unlimited amount.
+Generate given amount of bytes. Suffixes: K, M, G, T. Without the option or when 0, generate unlimited amount.
   \-\-method     \-m 
 .I NAME
 Use method NAME (default is 
@@ -45,7 +44,7 @@ and
 Save the generated data to the file.
   \-\-threads    \-t 
 .I NUM
-Run the generator in NUM threads (default 4).
+Run the generator in NUM threads (default 2).
 .SH SEE ALSO
 rdrand-lib(3)
 .SH BUGS
