@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define DEFAULT_THREADS 4
+#define DEFAULT_THREADS 2
 #define DEFAULT_METHOD GET_BYTES
 #define DEFAULT_BYTES 0
 
