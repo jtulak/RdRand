@@ -20,6 +20,11 @@ rdrand_gen_CFLAGS = @OPENMP_CFLAGS@
 
 ##########
 
+man_MANS = rdrand-gen.7
+notrans_man_MANS = rdrand-lib.3
+
+##########
+
 
 ## Define a libtool archive target "librdrand-@RDRAND_API_VERSION@.la", with
 ## @RDRAND_API_VERSION@ substituted into the generated Makefile at configure
