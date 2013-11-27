@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <unistd.h> // usleep
 #include <getopt.h>
-#include <omp.h>
 #include <string.h>
 #include <math.h>       /* floor */
 #include <errno.h>
@@ -14,6 +13,10 @@
 #include "../src/rdrand.h"
 //#include <rdrand-0.1/rdrand.h>
 #include "../src/rdrand-gen.h"
+
+#ifdef _OPENMP
+    #include <omp.h>
+#endif
 
 
 #define SIZEOF(a) ( sizeof (a) / sizeof (a[0]) )
@@ -214,8 +217,11 @@ size_t generate_chunk(cnf_t *config)
 	{
 		written = 0;
 		/** At first fill chunks in all parallel threads */
+
+#ifdef _OPENMP
 		omp_set_num_threads(config->threads);
 #pragma omp parallel for reduction(+:written)
+#endif // _OPENMP
 		for ( i=0; i < config->threads; ++i)
 		{
 			written += generate_with_metod(config,&buf[i*config->chunk_size], config->chunk_size, RETRY_LIMIT);

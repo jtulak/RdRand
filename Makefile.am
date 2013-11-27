@@ -15,8 +15,8 @@ bin_PROGRAMS = rdrand-gen
 
 rdrand_gen_SOURCES = src/rdrand-gen.c
 rdrand_gen_LDADD = src/rdrand.c 
-rdrand_gen_LDFLAGS = -fopenmp -mrdrnd  -lrt -lm
-rdrand_gen_CFLAGS = -fopenmp 
+rdrand_gen_LDFLAGS = @OPENMP_CFLAGS@ -mrdrnd  -lrt -lm
+rdrand_gen_CFLAGS = @OPENMP_CFLAGS@
 
 ##########
 

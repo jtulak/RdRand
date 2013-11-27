@@ -36,8 +36,12 @@ AC_CHECK_HEADERS([math.h])
 AC_CHECK_HEADERS([inttypes.h])
 AC_CHECK_HEADERS([errno.h])
 
-# OpenMP
-AC_OPENMP([C])
+###################
+# Check for OpenMP
+AC_OPENMP
+
+AC_SUBST(OPENMP_CFLAGS) 
+##################
 
 LT_INIT([disable-static])
 
