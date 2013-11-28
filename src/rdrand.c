@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <unistd.h> // usleep
 
-#include <cpuid.h>
+
 
 #define RETRY_LIMIT 10
 
@@ -47,78 +47,78 @@
 #define DEBUG_PRINT_9(fmt, args ...)    /* Don't do anything in release builds */
 #endif
 
-#ifdef HAVE_X86INTRIN_H
-#include <x86intrin.h>
-inline int rdrand16_step(uint16_t *x)
-{
-	return _rdrand16_step ( (unsigned short*) x );
-}
-inline int rdrand32_step(uint32_t *x)
-{
-	return _rdrand32_step ( (unsigned int*) x );
-}
-inline int rdrand64_step(uint64_t *x)
-{
-	return _rdrand64_step ( (unsigned long long*) x );
-}
+#if defined(HAVE_RDRAND_IN_GCC) && defined(HAVE_X86INTRIN_H)
+        #include <x86intrin.h>
+        inline int rdrand16_step(uint16_t *x)
+        {
+            return _rdrand16_step ( (unsigned short*) x );
+        }
+        inline int rdrand32_step(uint32_t *x)
+        {
+            return _rdrand32_step ( (unsigned int*) x );
+        }
+        inline int rdrand64_step(uint64_t *x)
+        {
+            return _rdrand64_step ( (unsigned long long*) x );
+        }
 #else
 
 
 
-/**
- * 16 bits of entropy through RDRAND
- *
- * The 16 bit result is zero extended to 32 bits.
- * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
- */
-int rdrand16_step(uint16_t *x)
-{
-	unsigned char err = 1;
-	asm volatile ("rdrand %0 ; setc %1"
-		      : "=r" (*x), "=qm" (err));
-	if(err == 1)
-	{
-		return RDRAND_SUCCESS;
-	}
-	return RDRAND_FAILURE;
-}
+        /**
+         * 16 bits of entropy through RDRAND
+         *
+         * The 16 bit result is zero extended to 32 bits.
+         * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
+         */
+        int rdrand16_step(uint16_t *x)
+        {
+            unsigned char err = 1;
+            asm volatile (".byte 0x66; .byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
+                      : "=r" (*x), "=qm" (err));
+            if(err == 1)
+            {
+                return RDRAND_SUCCESS;
+            }
+            return RDRAND_FAILURE;
+        }
 
 
-/**
- * 32 bits of entropy through RDRAND
- *
- * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
- */
-int rdrand32_step(uint32_t *x)
-{
-	unsigned char err = 1;
-	asm volatile ("rdrand %0 ; setc %1"
-		      : "=r" (*x), "=qm" (err));
-	if(err == 1)
-	{
-		return RDRAND_SUCCESS;
-	}
-	return RDRAND_FAILURE;
-}
+        /**
+         * 32 bits of entropy through RDRAND
+         *
+         * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
+         */
+        int rdrand32_step(uint32_t *x)
+        {
+            unsigned char err = 1;
+            asm volatile (".byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
+                      : "=r" (*x), "=qm" (err));
+            if(err == 1)
+            {
+                return RDRAND_SUCCESS;
+            }
+            return RDRAND_FAILURE;
+        }
 
 
-/**
- * 64 bits of entropy through RDRAND
- *
- * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
- */
-int rdrand64_step(uint64_t *x)
-{
-	unsigned char err = 1;
-	asm volatile ("rdrand %0 ; setc %1"
-		      : "=r" (*x), "=qm" (err));
-	if(err == 1)
-	{
-		return RDRAND_SUCCESS;
-	}
-	return RDRAND_FAILURE;
-}
-#endif /* HAVE_X86INTRIN_H */
+        /**
+         * 64 bits of entropy through RDRAND
+         *
+         * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
+         */
+        int rdrand64_step(uint64_t *x)
+        {
+            unsigned char err = 1;
+            asm volatile (".byte 0x48; .byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
+                      : "=r" (*x), "=qm" (err));
+            if(err == 1)
+            {
+                return RDRAND_SUCCESS;
+            }
+            return RDRAND_FAILURE;
+        }
+#endif /* HAVE_X86INTRIN_H && HAVE_RDRAND_IN_GCC*/
 
 struct cpuid
 {

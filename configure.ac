@@ -47,6 +47,7 @@ AC_SUBST(OPENMP_CFLAGS)
 # -mrdrnd
 AC_MSG_CHECKING([whether CC supports -mrdrnd])
 my_save_cflags="$CFLAGS"
+CFLAGS="$CFLAGS -mrdrnd"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]],[[]])],
     [AC_MSG_RESULT([yes])]
     [cc_supports_rdrnd=yes],
