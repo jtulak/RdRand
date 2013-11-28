@@ -43,6 +43,34 @@ AC_OPENMP
 AC_SUBST(OPENMP_CFLAGS) 
 ##################
 
+###########
+# -mrdrnd
+AC_MSG_CHECKING([whether CC supports -mrdrnd])
+my_save_cflags="$CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]],[[]])],
+    [AC_MSG_RESULT([yes])]
+    [cc_supports_rdrnd=yes],
+    [AC_MSG_RESULT([no])]
+    [cc_supports_rdrnd=no])
+CFLAGS="$my_save_cflags"
+unset my_save_cflags
+
+if test -z "$RDRND_FLAGS"
+then
+    RDRND_TESTS='rdrnd${EXEEXT}'
+    if test "$cc_supports_rdrnd" = "yes"
+    then
+        RDRND_FLAGS="-mrdrnd"
+    else
+        RDRND_FLAGS=""
+    fi
+else
+    RDRND_TESTS=""
+fi
+AC_SUBST([RDRND_FLAGS])
+
+###########
+
 LT_INIT([disable-static])
 
 # Define these substitions here to keep all version information in one place.

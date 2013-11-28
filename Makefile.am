@@ -15,13 +15,13 @@ bin_PROGRAMS = rdrand-gen
 
 rdrand_gen_SOURCES = src/rdrand-gen.c
 rdrand_gen_LDADD = src/rdrand.c 
-rdrand_gen_LDFLAGS = @OPENMP_CFLAGS@ -mrdrnd  -lrt -lm
-rdrand_gen_CFLAGS = @OPENMP_CFLAGS@
+rdrand_gen_LDFLAGS = @OPENMP_CFLAGS@ @RDRND_FLAGS@  -lrt -lm
+rdrand_gen_CFLAGS = @OPENMP_CFLAGS@ @CFLAGS@
 
 ##########
 
-man_MANS = rdrand-gen.7
-notrans_man_MANS = rdrand-lib.3
+man_MANS = man/rdrand-gen.7
+notrans_man_MANS = man/rdrand-lib.3
 
 ##########
 
