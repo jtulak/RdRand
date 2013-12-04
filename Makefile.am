@@ -21,7 +21,7 @@ rdrand_gen_CFLAGS = @OPENMP_CFLAGS@ @CFLAGS@
 ##########
 
 man_MANS = man/rdrand-gen.7
-notrans_man_MANS = man/rdrand-lib.3
+notrans_man_MANS = man/librdrand.3
 
 ##########
 
