@@ -1,5 +1,5 @@
-ExampleLib
-----------
+LibRdRand
+---------
+Library for generating random values by using RdRand on Intell's CPUs.
 
-This project demonstrates how to use autoconf, automake and libtool to build a
-library.
+
