@@ -5,6 +5,7 @@ Library for RNG with Intel's RdRand usage.
 
 Still in development.
 
+For regenerating autotools, use ./autogen-clean.sh; ./autogen.sh
 
 
 

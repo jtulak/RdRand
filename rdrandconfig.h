@@ -1,0 +1,1 @@
+/* rdrandconfig.h.  Generated from rdrandconfig.h.in by configure.  */
