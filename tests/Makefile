@@ -1,8 +1,8 @@
 CC=gcc
 CFLAGS=-c -Wall  -Wextra -O3 -fopenmp
 LDFLAGS=-fopenmp -mrdrnd -lrt -lm
-SOURCES_COMMON=../src/rdrand.h\
-               ../src/rdrand.c
+SOURCES_COMMON=../src/librdrand.h\
+               ../src/librdrand.c
 OBJECTS_COMMON=$(SOURCES_COMMON:.c=.o)           
                
 SOURCES_TEST=       test_throughput.c

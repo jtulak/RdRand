@@ -4,7 +4,7 @@
    gcc -Wall -Wextra -O2 -fopenmp -mrdrnd [-lrt -lssl -lcrypto (for rng emulation)] -c rdrand.c
  */
 
-#include "rdrand.h"
+#include "./librdrand.h"
 #include <stddef.h>
 #include <string.h>
 #include <omp.h>

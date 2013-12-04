@@ -7,5 +7,5 @@ Name: @PACKAGE_NAME@
 Description: RdRand library.
 Version: @PACKAGE_VERSION@
 URL: @PACKAGE_URL@
-Libs: -L${libdir} -lrdrand-@EXAMPLE_API_VERSION@
-Cflags: -I${includedir}/rdrand-@EXAMPLE_API_VERSION@ -I${libdir}/rdrand-@EXAMPLE_API_VERSION@/include
+Libs: -L${libdir} -lrdrand
+Cflags: -I${includedir}/librdrand -I${libdir}/librdrand/include

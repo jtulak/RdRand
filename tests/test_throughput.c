@@ -26,7 +26,7 @@
 #include <unistd.h> // usleep
 #include <inttypes.h>
 //#include <rdrand.h>
-#include "../src/rdrand.h"
+#include "../src/librdrand.h"
 //#include <rdrand-0.1/rdrand.h>
 
 

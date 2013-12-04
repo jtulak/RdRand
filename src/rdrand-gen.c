@@ -10,9 +10,9 @@
 #include <math.h>       /* floor */
 #include <errno.h>
 #include <inttypes.h>
-#include "../src/rdrand.h"
+#include "./librdrand.h"
 //#include <rdrand-0.1/rdrand.h>
-#include "../src/rdrand-gen.h"
+#include "./rdrand-gen.h"
 
 #ifdef _OPENMP
     #include <omp.h>

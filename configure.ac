@@ -1,8 +1,8 @@
 ## LibRdRand:
 ## an example of using Automake and Libtool to build a shared librar
 
-AC_INIT([LibRdRand], [0.1], [jan@tulak.me], [rdrand],
-        [http://an-url])
+AC_INIT([LibRdRand], [0.1], [jan@tulak.me], [librdrand],
+        [https://github.com/BroukPytlik/RdRand])
 AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([1.10  -Wall -Wextra  no-define])
 
@@ -83,6 +83,7 @@ AC_SUBST([RDRAND_API_VERSION], [0.1])
 
 # Override the template file name of the generated .pc file, so that there
 # is no need to rename the template file when the API version changes.
+#rdrand-${RDRAND_API_VERSION}.pc:rdrand.pc.in])
 AC_CONFIG_FILES([Makefile
-                 rdrand-${RDRAND_API_VERSION}.pc:rdrand.pc.in])
+      librdrand.pc:librdrand.pc.in])
 AC_OUTPUT

@@ -9,7 +9,7 @@
 #include <omp.h>
 #include <string.h>
 
-#include "../src/rdrand.h"
+#include "../src/librdrand.h"
 
 #define RETRY_LIMIT 10
 
