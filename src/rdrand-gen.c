@@ -368,6 +368,7 @@ int main(int argc, char** argv)
     else
     {
         fprintf(stderr,"ERROR: The CPU of this machine do not have RdRand!\n");
+        exit(EXIT_FAILURE);
     }
 
 	fclose(config.output);
