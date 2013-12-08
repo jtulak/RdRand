@@ -75,7 +75,7 @@
         {
             unsigned char err = 1;
             asm volatile (".byte 0x66; .byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
-                      : "=r" (*x), "=qm" (err));
+                      : "=a" (*x), "=qm" (err));
             if(err == 1)
             {
                 return RDRAND_SUCCESS;
@@ -93,7 +93,7 @@
         {
             unsigned char err = 1;
             asm volatile (".byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
-                      : "=r" (*x), "=qm" (err));
+                      : "=a" (*x), "=qm" (err));
             if(err == 1)
             {
                 return RDRAND_SUCCESS;
@@ -111,7 +111,8 @@
         {
             unsigned char err = 1;
             asm volatile (".byte 0x48; .byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
-                      : "=r" (*x), "=qm" (err));
+                      : "=a" (*x), "=qm" (err));
+          //  asm volatile("rdrand %0; setc %1":"=r"(*x), "=qm"(err));
             if(err == 1)
             {
                 return RDRAND_SUCCESS;
