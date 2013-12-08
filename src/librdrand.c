@@ -132,7 +132,7 @@ typedef struct cpuid cpuid_t;
  */
 void cpuid(cpuid_t *result,uint32_t eax)
 {
-	__asm__ __volatile__ ("cpuid"
+	asm volatile ("cpuid"
 			      : "=a" (result->eax),
 			      "=b" (result->ebx),
 			      "=c" (result->ecx),
