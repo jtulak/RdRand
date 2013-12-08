@@ -398,7 +398,6 @@ unsigned int rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int co
 
 	for ( i=0; i<count; ++i)
 	{
-#if 1
 		retry_count = 0;
 		do
 		{
@@ -408,9 +407,6 @@ unsigned int rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int co
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
 		PRINT_IF_UNDERFLOW (rc, __LINE__);
 
-#else
-		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
-#endif
 		if (rc == RDRAND_SUCCESS)
 		{
 			*dest = x_64;
@@ -454,12 +450,6 @@ unsigned int rdrand_get_uint8_array_retry(uint8_t *dest,  const unsigned int cou
 
 	if ( count_8 > 0 )
 	{
-/* TODO: decide what of the two following variant should be used in all functions above.
- * With calling the _retry function, the performance is about 6-7 percent lower than
- * with _step.
- * Possibly solution: use macro for the shared code?
- */
-#if 1 // little faster, but making duplicities in every function
 		retry_count = 0;
 		do
 		{
@@ -468,9 +458,6 @@ unsigned int rdrand_get_uint8_array_retry(uint8_t *dest,  const unsigned int cou
 		}
 		while((rc == RDRAND_FAILURE) && (retry_count < retry_limit));
 		PRINT_IF_UNDERFLOW (rc, __LINE__);
-#else // little slower, but cleaner code
-		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
-#endif
 		if (rc == RDRAND_SUCCESS)
 		{
 			memcpy((void*) dest, (void*) &x_64, count_8);
@@ -613,102 +600,6 @@ size_t rdrand_fwrite(FILE *f, const size_t count, int retry_limit)
 	return generated;
 }
 
-
-#if 0
-/***************************************************************/
-/* Two methods of computing a reseed key                       */
-/*   The first takes multiple random numbers through RdRand    */
-/*   with intervening delays to ensure reseeding and performs  */
-/*   AES-CBC-MAC over the data to compute the seed value.      */
-/*                                                             */
-/*   The second takes multiple random numbers through RdRand   */
-/*   without  intervening delays to ensure reseeding and       */
-/*   performs AES-CBC-MAC over the data to compute the seed    */
-/*   value. More values are gathered than the first method,to  */
-/*   ensure reseeding without needing delays.                  */
-/*                                                             */
-/* Note that these algorithms ensure the output value to be a  */
-/* 'True Random Number' rather than a 'Cryptographically       */
-/* Secure Random Number' which is what RdRand produces         */
-/* natively.                                                   */
-/***************************************************************/
-
-/************************************************************************************/
-/* CBC-MAC together 32 128 bit values, gathered with delays between, to guarantee   */
-/* some interveneing reseeds.                                                       */
-/* Creates a random value that is fully forward and backward prediction resistant,  */
-/* suitable for seeding a NIST SP800-90 Compliant, FIPS 1402-2 certifiable SW DRBG  */
-/************************************************************************************/
-
-int _rdrand_get_seed128_retry(unsigned int retry_limit, void *buffer)
-{
-	unsigned char m[16];
-	unsigned char key[16];
-	unsigned char ffv[16];
-	unsigned char xored[16];
-	unsigned int i;
-
-	/* Chose an arbitary key and zero the feed_forward_value (ffv) */
-	for (i=0; i<16; i++)
-	{
-		key[i]=(unsigned char)i;
-		ffv[i]=0;
-	}
-
-	/* Perform CBC_MAC over 32 * 128 bit values, with 10us gaps between each 128 bit value        */
-	/* The 10us gaps will ensure multiple reseeds within the HW RNG with a large design margin.   */
-
-	for (i=0; i<32; i++)
-	{
-		usleep(10);
-		if(rdrand_get_uint64_array_retry((unsigned long long int*)m, 2,retry_limit) == RDRAND_FAILURE)
-			return 0;
-		xor_128(m,ffv,xored);
-		aes128k128d(key,xored,ffv);
-	}
-
-	for (i=0; i<16; i++)
-		((unsigned char *)buffer)[i] = ffv[i];
-	return 1;
-}
-
-
-/************************************************************************************/
-/* CBC-MAC together 2048 128 bit values, to exceed the reseed limit, to guarantee   */
-/* some interveneing reseeds.                                                       */
-/* Creates a random value that is fully forward and backward prediction resistant,  */
-/* suitable for seeding a NIST SP800-90 Compliant, FIPS 1402-2 certifiable SW DRBG  */
-/************************************************************************************/
-
-int _rdrand_get_seed128_method2_retry(unsigned int retry_limit, void *buffer)
-{
-	unsigned char m[16];
-	unsigned char key[16];
-	unsigned char ffv[16];
-	unsigned char xored[16];
-	unsigned int i;
-
-	for (i=0; i<16; i++)
-	{
-		key[i]=(unsigned char)i;
-		ffv[i]=0;
-	}
-
-	for (i=0; i<2048; i++)
-	{
-		if(rdrand_get_uint64_array_retry((unsigned long long int*)m, 2,retry_limit) == RDRAND_FAILURE)
-			return 0;
-		xor_128(m,ffv,xored);
-		aes128k128d(key,xored,ffv);
-	}
-
-	for (i=0; i<16; i++)
-		((unsigned char *)buffer)[i] = ffv[i];
-	return 1;
-}
-
-
-#endif
 
 
 /**

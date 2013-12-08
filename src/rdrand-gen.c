@@ -361,7 +361,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-    if(rdrand_testSupport() == RDRAND_SUCCESS)
+    if(rdrand_testSupport() == RDRAND_SUPPORTED)
     {
         generate(&config);
     }
