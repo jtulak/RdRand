@@ -361,7 +361,14 @@ int main(int argc, char** argv)
 		}
 	}
 
-	generate(&config);
+    if(rdrand_testSupport() == RDRAND_SUCCESS)
+    {
+        generate(&config);
+    }
+    else
+    {
+        fprintf(stderr,"ERROR: The CPU of this machine do not have RdRand!\n");
+    }
 
 	fclose(config.output);
 
