@@ -18,3 +18,7 @@
 
 # other stuff
 .directory
+
+tests/RdRand
+tests/rdrand-gen
+rdrand-gen
