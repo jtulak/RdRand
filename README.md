@@ -1,12 +1,29 @@
 RdRand
 ======
-
-Library for RNG with Intel's RdRand usage.
+Library for Intel's RdRand instruction.
 
 Still in development.
-
 For regenerating autotools, use ./autogen-clean.sh; ./autogen.sh
 
+Usage of the generator
+----------------------
+rdrand-gen
+    Usage: ./rdrand-gen [OPTIONS]
+    If no output file is specified, the program will print random values to STDOUT.
+
+    OPTIONS
+      --help       -h      Print this help.
+      --amount     -n NUM  Generate given amount of bytes. Suffixes: K, M, G, T.
+                          Without the option or when 0, generate unlimited amount.
+      --method     -m NAME Use method NAME (default is get_bytes).
+      --output     -o FILE Save the generated data to the file.
+      --threads    -t NUM  Run the generator in NUM threads (default 2).
+
+
+    Accessible methods:
+      get_bytes [default]
+      get_uint64_array_reseed_delay
+      get_uint64_array_reseed_skip
 
 
 Usage (of test)
