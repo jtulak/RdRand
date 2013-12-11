@@ -1,9 +1,10 @@
 CC=gcc
-CFLAGS=-c -Wall  -Wextra -O3 -fopenmp
-LDFLAGS=-fopenmp -mrdrnd -lrt -lm
+CFLAGS=-c -Wall  -Wextra -O3 -fopenmp  -fPIC
+LDFLAGS=-fopenmp -lrt -lm -mrdrnd 
+
 SOURCES_COMMON=../src/librdrand.h\
                ../src/librdrand.c
-OBJECTS_COMMON=$(SOURCES_COMMON:.c=.o)           
+OBJECTS_COMMON=$(SOURCES_COMMON:.c=.o) 
                
 SOURCES_TEST=       test_throughput.c
 OBJECTS_TEST=$(SOURCES_TEST:.c=.o)
@@ -16,16 +17,19 @@ EXECUTABLE_GEN=rdrand-gen
 
 .PHONY: all RdRand rdrand-gen
 
-all: rdrand rdrand-gen
+all: librdrand.so rdrand rdrand-gen
 
-rdrand: $(OBJECTS_COMMON) $(OBJECTS_TEST)
-	$(CC) $(LDFLAGS) $(OBJECTS_COMMON) $(OBJECTS_TEST) -o $(EXECUTABLE_TEST)
+rdrand: $(OBJECTS_TEST)
+	$(CC) $(LDFLAGS) -lrdrand  -Wl,-rpath,. -L. $(OBJECTS_TEST) -o $(EXECUTABLE_TEST)
 
-rdrand-gen: $(OBJECTS_COMMON) $(OBJECTS_GEN)
-	$(CC) $(LDFLAGS) $(OBJECTS_COMMON) $(OBJECTS_GEN) -o $(EXECUTABLE_GEN)
+rdrand-gen:  $(OBJECTS_GEN)
+	$(CC) $(LDFLAGS) -lrdrand  -Wl,-rpath,. -L. $(OBJECTS_GEN) -o $(EXECUTABLE_GEN)
 	
 # $(EXECUTABLE): $(OBJECTS) 
 #	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+
+librdrand.so: $(OBJECTS_COMMON)
+	$(CC) $(LDFLAGS) -shared $(OBJECTS_COMMON) -o $@
 
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
@@ -38,4 +42,4 @@ run:
 
 
 clean:
-	rm $(EXECUTABLE_TEST) $(EXECUTABLE_GEN) *.o ../src/*.o
+	-rm $(EXECUTABLE_TEST) $(EXECUTABLE_GEN) *.o ../src/*.o *.so
