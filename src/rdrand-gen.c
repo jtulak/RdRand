@@ -19,6 +19,13 @@
 #endif
 
 
+
+#if defined(__X86_64__) || defined(_WIN64) || defined(_LP64)
+# define _X86_64
+#endif
+
+
+
 #define SIZEOF(a) ( sizeof (a) / sizeof (a[0]) )
 
 #define RETRY_LIMIT 10
@@ -83,7 +90,11 @@ void parse_args(int argc, char** argv, cnf_t* config)
 			size_as_double = strtod(optarg,&size_suffix);
 			if ((optarg == size_suffix) || errno == ERANGE || (size_as_double < 0) || (size_as_double >= UINT64_MAX) )
 			{
-				fprintf(stderr, "Size has to be in range <0, %lu>!\n",UINT64_MAX);
+			    #ifdef _X86_64
+                    fprintf(stderr, "Size has to be in range <0, %lu>!\n",UINT64_MAX);
+			    #else
+                    fprintf(stderr, "Size has to be in range <0, %llu>!\n",UINT64_MAX);
+			    #endif // _X86_64
 			}
 			if(strlen(size_suffix) > 0)
 			{

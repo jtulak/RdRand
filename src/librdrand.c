@@ -15,6 +15,12 @@
 
 #define RETRY_LIMIT 10
 
+
+#if defined(__X86_64__) || defined(_WIN64) || defined(_LP64)
+# define _X86_64
+#endif
+
+
 /**
  * Mask for CPUINFO result. RdRand support on Intel CPUs is
  * declared on 30th bit in ECX register.
@@ -110,9 +116,27 @@
         int rdrand64_step(uint64_t *x)
         {
             unsigned char err = 1;
-            asm volatile (".byte 0x48; .byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
-                      : "=a" (*x), "=qm" (err));
-          //  asm volatile("rdrand %0; setc %1":"=r"(*x), "=qm"(err));
+            /* support for 32bit architecture */
+            #ifdef _X86_64
+                asm volatile (".byte 0x48; .byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
+                          : "=a" (*x), "=qm" (err));
+              //  asm volatile("rdrand %0; setc %1":"=r"(*x), "=qm"(err));
+            #else
+                uint32_t *x32;
+                x32=(uint32_t*)x;
+                asm volatile (".byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
+                          : "=a" (*x32), "=qm" (err));
+                /* test after the first call*/
+                if(err == 1)
+                {
+                    return RDRAND_SUCCESS;
+                }
+
+                asm volatile (".byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
+                          : "=a" (*(x32+1)), "=qm" (err));
+
+            #endif
+
             if(err == 1)
             {
                 return RDRAND_SUCCESS;
