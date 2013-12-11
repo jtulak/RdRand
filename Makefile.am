@@ -14,7 +14,8 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 bin_PROGRAMS = rdrand-gen
 
 rdrand_gen_SOURCES = src/rdrand-gen.c
-rdrand_gen_LDADD = src/librdrand.c 
+rdrand_gen_LDADD = librdrand.la
+# rdrand_gen_LDADD = src/librdrand.c 
 rdrand_gen_LDFLAGS = @OPENMP_CFLAGS@ @RDRND_FLAGS@  -lrt -lm
 rdrand_gen_CFLAGS = @OPENMP_CFLAGS@ @CFLAGS@
 

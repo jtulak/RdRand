@@ -147,7 +147,7 @@ librdrand_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 PROGRAMS = $(bin_PROGRAMS)
 am_rdrand_gen_OBJECTS = src/rdrand_gen-rdrand-gen.$(OBJEXT)
 rdrand_gen_OBJECTS = $(am_rdrand_gen_OBJECTS)
-rdrand_gen_DEPENDENCIES = src/librdrand.c
+rdrand_gen_DEPENDENCIES = librdrand.la
 rdrand_gen_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rdrand_gen_CFLAGS) \
 	$(CFLAGS) $(rdrand_gen_LDFLAGS) $(LDFLAGS) -o $@
@@ -365,7 +365,8 @@ top_srcdir = .
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 rdrand_gen_SOURCES = src/rdrand-gen.c
-rdrand_gen_LDADD = src/librdrand.c 
+rdrand_gen_LDADD = librdrand.la
+# rdrand_gen_LDADD = src/librdrand.c 
 rdrand_gen_LDFLAGS = -fopenmp -mrdrnd  -lrt -lm
 rdrand_gen_CFLAGS = -fopenmp -g -O2
 
