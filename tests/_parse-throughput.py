@@ -17,7 +17,7 @@ for test in root:
     if len(words) == 0:
       continue
     if words[3] == "100.00":
-      print i,"\t",words[1],"\n" # print throughput
+      print i,"\t",words[1] # print throughput
       #sys.stdout.write(words[1]) # print throughput
       #sys.stdout.write("\n") # print throughput
       break

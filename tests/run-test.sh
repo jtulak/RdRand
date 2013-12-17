@@ -7,7 +7,7 @@ FORMAT="png" # png or eps
 if [ $# -gt 0 ]; then
   OUTPUT_FILE=$1
 else
-  OUTPUT_FILE="output_`date +%F_%H-%M-%S`"
+  OUTPUT_FILE=$(hostname |grep -Eo "^[^.]+")"_"$(date +%F_%H-%M-%S)
   ./_test-threads.sh /dev/null $OUTPUT_FILE.xml
 fi
 

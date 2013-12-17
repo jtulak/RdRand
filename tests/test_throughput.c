@@ -32,9 +32,6 @@
 
 #define SIZEOF(a) ( sizeof (a) / sizeof (a[0]) )
 
-// TODO as parameters
-// shell commands numactl, taskset - what is effect on performance?
-// And vnc on server :-)
 #define THREADS     2 // in how many threads to run
 #define CYCLES      2 // how many times all methods should be run
 #define SECONDS     3 // how long should be each method generating before stopped
@@ -352,11 +349,17 @@ double test_throughput( int threads, const size_t chunk, int stop_after, FILE *s
 {
 	size_t written, total,buf_size;
 	uint64_t buf[threads*chunk];
+    //char* buf_ptr;
+    //uint64_t* buf;
+    //size_t size;
 	omp_set_num_threads(threads);
 	struct timespec t[2];
 	double run_time, throughput;
 	int key,i;
 	unsigned int retry;
+
+	//buf_ptr = malloc(threads*chunk*sizeof(uint64_t)+10);
+    //buf = (uint64_t*)&(buf_ptr[3]);
 	run_time = 0;
 	total = 0;
 	clock_gettime(CLOCK_REALTIME, &t[0]);
@@ -364,6 +367,7 @@ double test_throughput( int threads, const size_t chunk, int stop_after, FILE *s
 		fprintf(stderr, "Press [Esc] to stop the loop");
 
 	key = 0;
+	// SIZE threads*chunk;
 	buf_size = SIZEOF(buf);
 	do
 	{

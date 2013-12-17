@@ -24,7 +24,7 @@ REPETITION=2
 # Limit the test to run on only one socket throught numactl -N 0
 # Set to 0 to allow all sockets
 # Set to 1 to force only socket no. 1
-FORCE_SOCKET=1
+FORCE_SOCKET=0
 
 ##################################################################
 # START
