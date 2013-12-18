@@ -1,18 +1,28 @@
 /* vim: set expandtab cindent fdm=marker ts=2 sw=2: */
+/*
+ * Copyright (C) 2013  Jan Tulak <jan@tulak.me>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 /*
-   gcc -DRDRAND_LIBRARY -DHAVE_X86INTRIN_H -Wall -Wextra -std=gnu99 -fopenmp -mrdrnd -I../src -O3 -o jh_with_library jh.c ../src/rdrand.c -lssl -lcrypto -lrt -lcurses
+    Now the legal stuff is done. This file contain a performance test for the library.
 
-   gcc -DHAVE_X86INTRIN_H -Wall -Wextra -fopenmp -mrdrnd -I../src -O3 -o RdRand jh.c ../src/rdrand.c
-
-   ./jh_standalone >(pv >/dev/null )
-   ./jh_with_library >(pv >/dev/null )
-
-   ./jh_standalone /dev/null
-   ./jh_with_library /dev/null
-
-   ./jh /dev/null -
- */
+    Manual compiling:
+    gcc -DHAVE_X86INTRIN_H -Wall -Wextra -fopenmp -mrdrnd -I../src -O3 -o RdRand jh.c ../src/rdrand.c
+*/
 
 #include <stdio.h>
 #include <stdlib.h>

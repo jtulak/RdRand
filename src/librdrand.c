@@ -1,8 +1,26 @@
 /* vim: set expandtab cindent fdm=marker ts=2 sw=2: */
+/*
+ * Copyright (C) 2013  Jan Tulak <jan@tulak.me>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 /*
-   gcc -Wall -Wextra -O2 -fopenmp -mrdrnd [-lrt -lssl -lcrypto (for rng emulation)] -c rdrand.c
- */
+    Now the legal stuff is done. This file contain the library itself.
+*/
+
 
 #include "./librdrand.h"
 #include <stddef.h>
@@ -127,9 +145,9 @@
                 asm volatile (".byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
                           : "=a" (*x32), "=qm" (err));
                 /* test after the first call*/
-                if(err == 1)
+                if(err != 1)
                 {
-                    return RDRAND_SUCCESS;
+                    return RDRAND_FAILURE;
                 }
 
                 asm volatile (".byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
@@ -156,6 +174,7 @@ typedef struct cpuid cpuid_t;
  */
 void cpuid(cpuid_t *result,uint32_t eax)
 {
+#ifdef _X86_64
 	asm volatile ("cpuid"
 			      : "=a" (result->eax),
 			      "=b" (result->ebx),
@@ -163,6 +182,19 @@ void cpuid(cpuid_t *result,uint32_t eax)
 			      "=d" (result->edx)
 			      : "a"  (eax)
 			      : "memory");
+
+#else // 32-bit
+        // http://newbiz.github.io/cpp/2010/12/20/Playing-with-cpuid.html
+        asm volatile (
+          "pushl %%ebx   \n\t" // Backup %ebx
+          "cpuid         \n\t" // Call cpuid
+          "movl %%ebx, %1\n\t" // Copy the %ebx result elsewhere
+          "popl %%ebx    \n\t" // Restore %ebx
+          : "=a"(result->eax), "=r"(result->ebx), "=c"(result->ecx), "=d"(result->edx)
+          : "a"(eax)
+          : "cc"
+        );
+#endif // _X86_64
 }
 
 /**
