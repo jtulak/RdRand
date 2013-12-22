@@ -37,6 +37,10 @@ librdrand.so: $(OBJECTS_COMMON)
 run:
 	./run-test.sh
 
+testu01:
+	$(CC) -Wall -Wextra -O2 -o TestU01_raw_stdin_input_with_log TestU01_raw_stdin_input_with_log.c -ltestu01
+
+
 #test-gen:
 #test-throughput:
 
