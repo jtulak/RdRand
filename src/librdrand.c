@@ -30,6 +30,10 @@
 #include <unistd.h> // usleep
 
 
+// Delay for enforcing reseed in the rdrand_get_uint64_array_reseed_delay
+// method.
+// Value is in usec.
+#define RESEED_DELAY 20
 
 #define RETRY_LIMIT 10
 
@@ -678,7 +682,7 @@ unsigned int rdrand_get_uint64_array_reseed_delay(uint64_t *dest, const unsigned
 
 	for ( i=0; i<count; ++i)
 	{
-		usleep(10);
+		usleep(RESEED_DELAY);
 		rc = rdrand_get_uint64_retry(&x_64, retry_limit);
 
 		if (rc == RDRAND_SUCCESS)
