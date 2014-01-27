@@ -117,7 +117,35 @@ file descriptor.
 
 .SH EXAMPLE
 
-TODO
+/*
+.br
+gcc -Wall -Wextra -mrdrnd -O2 -std=gnu99 -o simple_example simple_example.c -lrdrand
+.br
+*/
+
+#include <stdlib.h>
+.br
+#include <librdrand.h>
+
+int main (void) {
+   // count of random numbers
+   const size_t N = 10;
+   unsigned int buf;
+   // test for support
+   if (!rdrand_testSupport()) {
+     fprintf(stderr,"RdRand is not supported on this CPU!\n");
+     return 1;
+   }
+   // generate and print the numbers
+   for(size_t i=0; i<N; i++){
+      // generate the number and save it to the buffer
+      rdrand32_step ( &buf );
+      // print it in hexadecimal form
+      printf("%08X\n",buf);
+   }
+   return 0;
+.br
+}
 
 .SH SEE ALSO
 rdrand-gen(7)
