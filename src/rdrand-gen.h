@@ -64,8 +64,8 @@ enum
 const char *METHOD_NAMES[] =
 {
 	"get_bytes",
-	"get_uint64_array_reseed_delay",
-	"get_uint64_array_reseed_skip",
+	"reseed_delay",
+	"reseed_skip",
 };
 
 typedef struct cnf {

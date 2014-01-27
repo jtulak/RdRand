@@ -73,6 +73,22 @@ static const char* HELP_TEXT =
 	"  --threads    -t NUM  Run the generator in NUM threads (default %u).\n"
 	"\n";
 
+void print_available_methods(FILE* stream){
+    int i=0;
+    fprintf(stream,"\nAvailable methods:\n");
+    for(i = 0; i<METHODS_COUNT; i++)
+    {
+        if(i == DEFAULT_METHOD)
+        {
+            fprintf(stream,"  %s [default]\n",METHOD_NAMES[i]);
+        }
+        else
+        {
+            fprintf(stream,"  %s\n",METHOD_NAMES[i]);
+        }
+    }
+}
+
 /**
  * Parse arguments and save flags/values to cnf_t* config.
  */
@@ -129,16 +145,16 @@ void parse_args(int argc, char** argv, cnf_t* config)
 				switch(*size_suffix)
 				{
 				case 't': case 'T':
-					size_as_double *= pow(10,12);
+					size_as_double *= pow(2,40);
 					break;
 				case 'g': case 'G':
-					size_as_double *= pow(10,9);
+					size_as_double *= pow(2,30);
 					break;
 				case 'm': case 'M':
-					size_as_double *= pow(10,6);
+					size_as_double *= pow(2,20);
 					break;
 				case 'k': case 'K':
-					size_as_double *= pow(10,3);
+					size_as_double *= pow(2,10);
 					break;
 				default:
 					fprintf(stderr,"Unknown suffix %s when parsing %s.\n",size_suffix, optarg);
@@ -158,6 +174,7 @@ void parse_args(int argc, char** argv, cnf_t* config)
 			break;
 
 		case 'm':                 // method
+		    config->method = METHODS_COUNT;
 			for(i = 0; i<METHODS_COUNT; i++)
 			{
 				if(strcmp(optarg,METHOD_NAMES[i]) == 0)
@@ -166,9 +183,11 @@ void parse_args(int argc, char** argv, cnf_t* config)
 					break;
 				}
 			}
-			if(i == METHODS_COUNT)
+			// test default value
+			if(config->method == METHODS_COUNT)
 			{
 				fprintf (stderr,"Error: Unknown method to use!\n");
+				print_available_methods(stderr);
 				exit(EXIT_FAILURE);
 			}
 			break;
@@ -375,18 +394,7 @@ int main(int argc, char** argv)
 	if(config.help_flag)
 	{
 		printf(HELP_TEXT,argv[0],METHOD_NAMES[DEFAULT_METHOD],DEFAULT_THREADS);
-		fprintf(stdout,"\nAccessible methods:\n");
-		for(i = 0; i<METHODS_COUNT; i++)
-		{
-			if(i == DEFAULT_METHOD)
-			{
-				fprintf(stdout,"  %s [default]\n",METHOD_NAMES[i]);
-			}
-			else
-			{
-				fprintf(stdout,"  %s\n",METHOD_NAMES[i]);
-			}
-		}
+		print_available_methods(stdout);
 		exit(EXIT_SUCCESS);
 	}
 
