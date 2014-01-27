@@ -1,6 +1,6 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        1.0.0
+Version:        1.0.1
 Release:        1%{?dist}
 License:        LGPLv2+
 Group:          Applications/System
