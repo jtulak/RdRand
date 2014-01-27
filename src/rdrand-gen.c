@@ -139,6 +139,7 @@ void parse_args(int argc, char** argv, cnf_t* config)
 			    #else
                     fprintf(stderr, "Size has to be in range <0, %llu>!\n",UINT64_MAX);
 			    #endif // _X86_64
+                exit(EXIT_FAILURE);
 			}
 			if(strlen(size_suffix) > 0)
 			{
@@ -158,6 +159,7 @@ void parse_args(int argc, char** argv, cnf_t* config)
 					break;
 				default:
 					fprintf(stderr,"Unknown suffix %s when parsing %s.\n",size_suffix, optarg);
+					exit(EXIT_FAILURE);
 				}
 			}
 
@@ -166,6 +168,11 @@ void parse_args(int argc, char** argv, cnf_t* config)
 
 		case 't':
 			config->threads = strtoumax(optarg, NULL, 10);
+			if(config->threads)
+            {
+                fprintf(stderr,"Invalid threads parameter!\n");
+                exit(EXIT_FAILURE);
+			}
 
 			break;
 
@@ -192,12 +199,11 @@ void parse_args(int argc, char** argv, cnf_t* config)
 			}
 			break;
 
-		case '?':
-			/* getopt_long already printed an error message. */
-			break;
 
 		default:
-			abort ();
+		    fprintf(stderr,"An unknown parameter.\n");
+			exit(EXIT_FAILURE);
+			//abort ();
 		}
 	}
 
