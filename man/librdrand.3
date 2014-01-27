@@ -2,7 +2,7 @@
 .\" Contact jan@tulak.me to correct errors or typos.
 .TH man 3 "25 November 2013" "1.0" "rdrand-gen man page"
 .SH NAME
-librdrand \- Library for generating random values by using RdRand on Intell's CPUs.
+librdrand \- Library for generating random values by using RdRand on Intel's CPUs.
 .SH SYNOPSIS
 .B #include <librdrand.h>
 
@@ -40,8 +40,8 @@ librdrand \- Library for generating random values by using RdRand on Intell's CP
 
 
 .SH DESCRIPTION
-The rdrand-lib is a library for generating random values on Intell CPUs (Ivy Bridge and newers) using the HW RNG on the CPU.
-As the HW RNG is only on newer Intell CPUs, the library contain
+The rdrand-lib is a library for generating random values on Intel CPUs (Ivy Bridge and newers) using the HW RNG on the CPU.
+As the HW RNG is only on newer Intel CPUs, the library contain
 .BR rdrand_testSupport ()
 function for testing the availability. Return values are 
 .I RDRAND_SUPPORTED
@@ -100,11 +100,11 @@ The two reseed functions (
 .BR rdrand_get_uint64_array_reseed_delay ()
 and
 .BR rdrand_get_uint64_array_reseed_skip ())
-are trying to force reseed of the internal HW RNG pool, so each single generated value is from completely different pool. The difference between these two functions is in approach: 
+are forcing the reseed of the internal HW RNG so each single generated 64-bit value is guaranteed to be generated with differend seed of Intel RdRand's internal PRNG. The difference between these two functions is in approach: 
 .BR rdrand_get_uint64_array_reseed_skip ()
 is returning just one from each 1025 64-bits values (size of the inner pool is 1024 of such).
 .BR rdrand_get_uint64_array_reseed_delay ()
-is inserting small delays between each call, long enought so according of Intell, the inner pool should fully regenerate.
+is inserting small delays (20 microseconds) between each call, long enough so according of Intel, the inner pool should fully regenerate.
 Unfortunately, because the HW implementation is closed, it is not possible to verify, if these two functions trully works like intended.
 
 The last 
@@ -115,9 +115,14 @@ bytes of randomness to the
 .I *f
 file descriptor.
 
+.SH EXAMPLE
+
+TODO
+
 .SH SEE ALSO
 rdrand-gen(7)
 .SH BUGS
 No known bugs.
 .SH AUTHOR
 Jan Tulak (jan@tulak.me)
+Jiri Hladky (hladky.jiri@gmail.com)
