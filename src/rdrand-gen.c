@@ -79,7 +79,7 @@ static const char* HELP_TEXT =
 	"\n";
 
 static const char* VERSION_TEXT =
-	"rdrand-gen %s\n"
+	"rdrand-gen, librdrand %s\n"
 	"Copyright (C) 2014 Jan Tulak <jan@tulak.me>\n"
 	"License LGPLv2.1+: Lesser GNU GPL version 2.1 or newer <http://www.gnu.org/licenses/lgpl-2.1.html>\n"
 	"This is free software: you are free to change and redistribute it.\n"
@@ -119,12 +119,12 @@ void parse_args(int argc, char** argv, cnf_t* config)
 	static struct option long_options[] =
 	{
 		{"help", no_argument,       0, 'h'},
+		{"verbose",  no_argument, 0, 'v'},
+		{"version",  no_argument, 0, 'V'},
 		{"amount",    required_argument, 0, 'n'},
 		{"method",  required_argument, 0, 'm'},
 		{"output",  required_argument, 0, 'o'},
 		{"threads",  required_argument, 0, 't'},
-		{"verbose",  no_argument, 0, 'v'},
-		{"version",  no_argument, 0, 'V'},
 		{0, 0, 0, 0}
 	};
 
@@ -135,7 +135,7 @@ void parse_args(int argc, char** argv, cnf_t* config)
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		optC = getopt_long (argc, argv, "hn:m:o:t:",
+		optC = getopt_long (argc, argv, "hvVn:m:o:t:",
 				    long_options, &option_index);
 
 		/* Detect the end of the options. */
@@ -224,8 +224,11 @@ void parse_args(int argc, char** argv, cnf_t* config)
 			break;
 
 
-		default:
+		case '?':
 		    fprintf(stderr,"An unknown parameter.\n");
+			exit(EXIT_FAILURE);
+		default:
+		    fprintf(stderr,"An unknown parameter %c.\n",optC);
 			exit(EXIT_FAILURE);
 			//abort ();
 		}
