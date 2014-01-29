@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <unistd.h> // usleep
 #include <getopt.h>
 #include <string.h>
@@ -61,6 +62,8 @@
 #define SLOW_RETRY_LIMIT 1000
 #define SLOW_RETRY_DELAY 1000 // 1 ms
 
+#define VERSION "1.0.2"
+
 static const char* HELP_TEXT =
 	"Usage: %s [OPTIONS]\n"
 	"If no output file is specified, the program will print random values to STDOUT.\n\n"
@@ -71,7 +74,21 @@ static const char* HELP_TEXT =
 	"  --method     -m NAME Use method NAME (default is %s).\n"
 	"  --output     -o FILE Save the generated data to the file.\n"
 	"  --threads    -t NUM  Run the generator in NUM threads (default %u).\n"
+	"  --verbose    -v      Be verbose (will print on stderr).\n"
+	"  --version    -V      Print version.\n"
 	"\n";
+
+static const char* VERSION_TEXT =
+	"rdrand-gen %s\n"
+	"Copyright (C) 2014 Jan Tulak <jan@tulak.me>\n"
+	"License LGPLv2.1+: Lesser GNU GPL version 2.1 or newer <http://www.gnu.org/licenses/lgpl-2.1.html>\n"
+	"This is free software: you are free to change and redistribute it.\n"
+	"There is NO WARRANTY, to the extent permitted by law.\n";
+
+void print_version(FILE* stream){
+    fprintf(stream, VERSION_TEXT, VERSION);
+}
+
 
 void print_available_methods(FILE* stream){
     int i=0;
@@ -106,6 +123,8 @@ void parse_args(int argc, char** argv, cnf_t* config)
 		{"method",  required_argument, 0, 'm'},
 		{"output",  required_argument, 0, 'o'},
 		{"threads",  required_argument, 0, 't'},
+		{"verbose",  no_argument, 0, 'v'},
+		{"version",  no_argument, 0, 'V'},
 		{0, 0, 0, 0}
 	};
 
@@ -125,7 +144,12 @@ void parse_args(int argc, char** argv, cnf_t* config)
 
 		switch (optC)
 		{
-
+        case 'V':
+            config->version_flag = 1;
+            break;
+        case 'v':
+            config->verbose_flag = 1;
+            break;
 		case 'h':
 			config->help_flag = 1;
 			break;
@@ -277,6 +301,7 @@ size_t generate_chunk(cnf_t *config)
 
 	buf_size = SIZEOF(buf);
 	written_total = 0;
+	// for all chunks (or indefinitely if bytes are set to 0)
 	for(n = 0; n < config->chunk_count || config->bytes == 0; n++)
 	{
 		written = 0;
@@ -394,14 +419,19 @@ size_t generate(cnf_t *config)
 
 int main(int argc, char** argv)
 {
-	int i;
-	cnf_t config = {NULL, stdout, DEFAULT_METHOD, 0, 0, DEFAULT_THREADS, DEFAULT_BYTES,0,0,0,0};
+	size_t generated;
+	cnf_t config = {NULL, stdout, DEFAULT_METHOD, 0, 0, 0, 0, DEFAULT_THREADS, DEFAULT_BYTES,0,0,0,0};
 	parse_args(argc, argv,&config);
 	if(config.help_flag)
 	{
 		printf(HELP_TEXT,argv[0],METHOD_NAMES[DEFAULT_METHOD],DEFAULT_THREADS);
 		print_available_methods(stdout);
 		exit(EXIT_SUCCESS);
+	}
+	if(config.version_flag)
+    {
+        print_version(stdout);
+        exit (EXIT_SUCCESS);
 	}
 
 	if(config.output_filename != NULL)
@@ -416,7 +446,31 @@ int main(int argc, char** argv)
 
     if(rdrand_testSupport() == RDRAND_SUPPORTED)
     {
-        generate(&config);
+
+        if(config.verbose_flag)
+        {
+            if(config.bytes)
+            {
+                fprintf(stderr, "Generating %zu bytes using %s method and %u working threads.\n",
+                      config.bytes,
+                      METHOD_NAMES[config.method],
+                      config.threads);
+            }
+            else
+            {
+                fprintf(stderr, "Generating infinite bytes using %s method and %u working threads.\n",
+                      METHOD_NAMES[config.method],
+                      config.threads);
+            }
+
+        }
+        generated=generate(&config);
+        if(config.verbose_flag)
+        {
+            // TODO print it also on ^C
+            fprintf(stderr, "Generated %zu bytes.\n", generated);
+        }
+
     }
     else
     {

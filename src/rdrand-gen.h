@@ -77,6 +77,10 @@ typedef struct cnf {
 	int method;
 	/** Flag of --help/-h */
 	int help_flag;
+	/** Flag of --version */
+	int version_flag;
+	/** Flag of --verbose/-v */
+	int verbose_flag;
 	/** Flag of printed warning about underflow, when only one thread is running */
 	int printedWarningFlag;
 	/** number of threads */

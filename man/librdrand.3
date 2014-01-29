@@ -133,7 +133,7 @@ int main (void) {
    unsigned int buf;
    // test for support
    if (!rdrand_testSupport()) {
-     fprintf(stderr,"RdRand is not supported on this CPU!\n");
+     fprintf(stderr,"RdRand is not supported on this CPU!\\n");
      return 1;
    }
    // generate and print the numbers
@@ -141,7 +141,7 @@ int main (void) {
       // generate the number and save it to the buffer
       rdrand32_step ( &buf );
       // print it in hexadecimal form
-      printf("%08X\n",buf);
+      printf("%08X\\n",buf);
    }
    return 0;
 .br
