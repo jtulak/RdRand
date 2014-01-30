@@ -4,9 +4,9 @@
 AC_INIT([LibRdRand], [0.1], [jan@tulak.me], [librdrand],
         [https://github.com/BroukPytlik/RdRand])
 AC_PREREQ([2.59])
-AM_INIT_AUTOMAKE([1.10  -Wall -Wextra  no-define])
+AM_INIT_AUTOMAKE([1.10  -Wall  no-define])
 
-
+AC_CONFIG_MACRO_DIR([m4])
 
 
 

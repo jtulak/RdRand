@@ -438,7 +438,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/home/jtulak/Documents/VUT/Thesis - rdrand/project/library'
+ac_pwd='/home/RdRand/RdRand-master'
 srcdir='.'
 INSTALL='/usr/bin/install -c'
 MKDIR_P='/usr/bin/mkdir -p'
@@ -675,8 +675,8 @@ postuninstall_cmds=''
 finish_cmds='PATH="\$PATH:/sbin" ldconfig -n $libdir'
 finish_eval=''
 hardcode_into_libs='yes'
-sys_lib_search_path_spec='/usr/lib/gcc/x86_64-redhat-linux/4.8.2 /usr/lib64 /lib64 '
-sys_lib_dlsearch_path_spec='/lib64 /usr/lib64 /lib /usr/lib /usr/lib64/atlas /usr/lib64/dyninst /usr/lib/llvm /usr/lib64/llvm /usr/local/lib /usr/lib64/mysql /usr/lib64/qt-3.3/lib /usr/lib64/xulrunner '
+sys_lib_search_path_spec='/usr/lib/gcc/x86_64-redhat-linux/4.7.2 /usr/lib64 /lib64 '
+sys_lib_dlsearch_path_spec='/lib64 /usr/lib64 /lib /usr/lib /usr/local/lib '
 hardcode_action='immediate'
 enable_dlopen='unknown'
 enable_dlopen_self='unknown'
@@ -731,12 +731,12 @@ prelink_cmds_CXX=''
 postlink_cmds_CXX=''
 file_list_spec_CXX=''
 hardcode_action_CXX='immediate'
-compiler_lib_search_dirs_CXX='/usr/lib/gcc/x86_64-redhat-linux/4.8.2 /usr/lib/gcc/x86_64-redhat-linux/4.8.2/../../../../lib64 /lib/../lib64 /usr/lib/../lib64 /usr/lib/gcc/x86_64-redhat-linux/4.8.2/../../..'
-predep_objects_CXX='/usr/lib/gcc/x86_64-redhat-linux/4.8.2/../../../../lib64/crti.o /usr/lib/gcc/x86_64-redhat-linux/4.8.2/crtbeginS.o'
-postdep_objects_CXX='/usr/lib/gcc/x86_64-redhat-linux/4.8.2/crtendS.o /usr/lib/gcc/x86_64-redhat-linux/4.8.2/../../../../lib64/crtn.o'
+compiler_lib_search_dirs_CXX='/usr/lib/gcc/x86_64-redhat-linux/4.7.2 /usr/lib/gcc/x86_64-redhat-linux/4.7.2/../../../../lib64 /lib/../lib64 /usr/lib/../lib64 /usr/lib/gcc/x86_64-redhat-linux/4.7.2/../../..'
+predep_objects_CXX='/usr/lib/gcc/x86_64-redhat-linux/4.7.2/../../../../lib64/crti.o /usr/lib/gcc/x86_64-redhat-linux/4.7.2/crtbeginS.o'
+postdep_objects_CXX='/usr/lib/gcc/x86_64-redhat-linux/4.7.2/crtendS.o /usr/lib/gcc/x86_64-redhat-linux/4.7.2/../../../../lib64/crtn.o'
 predeps_CXX=''
 postdeps_CXX='-lstdc++ -lm -lgcc_s -lc -lgcc_s'
-compiler_lib_search_path_CXX='-L/usr/lib/gcc/x86_64-redhat-linux/4.8.2 -L/usr/lib/gcc/x86_64-redhat-linux/4.8.2/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/4.8.2/../../..'
+compiler_lib_search_path_CXX='-L/usr/lib/gcc/x86_64-redhat-linux/4.7.2 -L/usr/lib/gcc/x86_64-redhat-linux/4.7.2/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/4.7.2/../../..'
 
 LTCC='gcc'
 LTCFLAGS='-g -O2'
@@ -934,10 +934,6 @@ S["CPPFLAGS"]=""
 S["LDFLAGS"]=""
 S["CXXFLAGS"]="-g -O2"
 S["CXX"]="g++"
-S["AM_BACKSLASH"]="\\"
-S["AM_DEFAULT_VERBOSITY"]="1"
-S["AM_DEFAULT_V"]="$(AM_DEFAULT_VERBOSITY)"
-S["AM_V"]="$(V)"
 S["am__untar"]="$${TAR-tar} xf -"
 S["am__tar"]="$${TAR-tar} chof - \"$$tardir\""
 S["AMTAR"]="$${TAR-tar}"
@@ -948,12 +944,12 @@ S["mkdir_p"]="$(MKDIR_P)"
 S["MKDIR_P"]="/usr/bin/mkdir -p"
 S["INSTALL_STRIP_PROGRAM"]="$(install_sh) -c -s"
 S["STRIP"]="strip"
-S["install_sh"]="${SHELL} '/home/jtulak/Documents/VUT/Thesis - rdrand/project/library/install-sh'"
-S["MAKEINFO"]="${SHELL} \"/home/jtulak/Documents/VUT/Thesis - rdrand/project/library/missing\" makeinfo"
-S["AUTOHEADER"]="${SHELL} \"/home/jtulak/Documents/VUT/Thesis - rdrand/project/library/missing\" autoheader"
-S["AUTOMAKE"]="${SHELL} \"/home/jtulak/Documents/VUT/Thesis - rdrand/project/library/missing\" automake-1.13"
-S["AUTOCONF"]="${SHELL} \"/home/jtulak/Documents/VUT/Thesis - rdrand/project/library/missing\" autoconf"
-S["ACLOCAL"]="${SHELL} \"/home/jtulak/Documents/VUT/Thesis - rdrand/project/library/missing\" aclocal-1.13"
+S["install_sh"]="${SHELL} /home/RdRand/RdRand-master/install-sh"
+S["MAKEINFO"]="${SHELL} /home/RdRand/RdRand-master/missing --run makeinfo"
+S["AUTOHEADER"]="${SHELL} /home/RdRand/RdRand-master/missing --run autoheader"
+S["AUTOMAKE"]="${SHELL} /home/RdRand/RdRand-master/missing --run automake-1.12"
+S["AUTOCONF"]="${SHELL} /home/RdRand/RdRand-master/missing --run autoconf"
+S["ACLOCAL"]="${SHELL} /home/RdRand/RdRand-master/missing --run aclocal-1.12"
 S["VERSION"]="0.1"
 S["PACKAGE"]="librdrand"
 S["CYGPATH_W"]="echo"
@@ -1397,7 +1393,7 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
 
   case $ac_file$ac_mode in
     "depfiles":C) test x"$AMDEP_TRUE" != x"" || {
-  # Older Autoconf quotes --file arguments for eval, but not when files
+  # Autoconf 2.62 quotes --file arguments for eval, but not when files
   # are listed without --file.  Let's play safe and only enable the eval
   # if we detect the quoting.
   case $CONFIG_FILES in
@@ -1448,7 +1444,7 @@ $as_echo X"$mf" |
     DEPDIR=`sed -n 's/^DEPDIR = //p' < "$mf"`
     test -z "$DEPDIR" && continue
     am__include=`sed -n 's/^am__include = //p' < "$mf"`
-    test -z "$am__include" && continue
+    test -z "am__include" && continue
     am__quote=`sed -n 's/^am__quote = //p' < "$mf"`
     # Find all dependency output files, they are included files with
     # $(DEPDIR) in their names.  We invoke sed twice because it is the
