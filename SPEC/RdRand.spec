@@ -1,13 +1,13 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        1.0.2
-Release:        1%{?dist}
+Version:        1.0.3
+Release:        2%{?dist}
 License:        LGPLv2+
 Group:          Applications/System
 URL:            http://github.com/BroukPytlik/%{name}
 Source0:        https://github.com/BroukPytlik/%{name}/archive/%{version}.tar.gz
 BuildRequires: autoconf libtool
-ExcludeArch: armv7hl
+ExcludeArch: %{arm} s390 s390x ppc ppc64
 
 %description
 RdRand is an instruction for returning random numbers from an Intel on-chip 
@@ -28,7 +28,7 @@ reseed, in practice it reseeds much more frequently.
 %package devel
 Summary:        Development files for the RdRand
 Group:          Development/Libraries
-Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description devel
 Headers and shared object symbolic links for the RdRand.
@@ -73,6 +73,8 @@ rm -rf $RPM_BUILD_ROOT
 #% {_datadir}/aclocal.m4
 
 %changelog
+* Fri Jan 31 2014 Jirka Hladky <jhladky@redhat.com> - 1.0.2-2
+- Fixed License, ExcludeArch and Requires for the devel package
 * Wed Jan 29 2014 Jan Tulak <jan@tulak.me> - 1.0.2-1
 - Added --verbose and --version flags and few minor changes in manual pages 
 - and in spec file.
