@@ -1,7 +1,7 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
 Version:        1.0.4
-Release:        2%{?dist}
+Release:        1%{?dist}
 License:        LGPLv2+
 Group:          Applications/System
 URL:            http://github.com/BroukPytlik/%{name}
@@ -68,6 +68,10 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 #% {_datadir}/aclocal.m4
 
 %changelog
+* Wed Feb 5 2014 Jan Tulak <jan@tulak.me> - 1.0.4-1
+- ExclusiveArch, removed %clean, %defattr, added blank lines between changelogs.
+- Removed temp files from package.
+
 * Fri Jan 31 2014 Jirka Hladky <jhladky@redhat.com> - 1.0.2-2
 - Fixed License, ExcludeArch and Requires for the devel package
 
