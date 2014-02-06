@@ -44,7 +44,6 @@ make %{?_smp_mflags}
 make install DESTDIR=$RPM_BUILD_ROOT INSTALL="%{__install} -p"
 rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdrandconfig.h}
 
-
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
