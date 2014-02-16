@@ -71,8 +71,12 @@ const char *METHOD_NAMES[] =
 typedef struct cnf {
 	/** output file path */
 	char* output_filename;
+	/** filename for --aes-keys/-k*/
+	char* aeskeys_filename;
 	/** output file stream */
 	FILE* output;
+	/** file for --aes-keys/-k*/
+	FILE* aeskeys_file;
 	/** ENUM of the used method */
 	int method;
 	/** Flag of --help/-h */
@@ -81,6 +85,8 @@ typedef struct cnf {
 	int version_flag;
 	/** Flag of --verbose/-v */
 	int verbose_flag;
+	/** flag of --aes-ctr/-a*/
+	int aesctr_flag;
 	/** Flag of printed warning about underflow, when only one thread is running */
 	int printedWarningFlag;
 	/** number of threads */
