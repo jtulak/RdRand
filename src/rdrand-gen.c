@@ -75,6 +75,8 @@ static const char* HELP_TEXT =
 	"  --method     -m NAME Use method NAME (default is %s).\n"
 	"  --output     -o FILE Save the generated data to the file.\n"
 	"  --threads    -t NUM  Run the generator in NUM threads (default %u).\n"
+	"  --aes-ctr    -a      Encrypt the RdRand output with AES in counter mode.\n"
+	"  --aes-keys   -k FILE Use given key file for the AES-CTR instead of /dev/random.\n"
 	"  --verbose    -v      Be verbose (will print on stderr).\n"
 	"  --version    -V      Print version.\n"
 	"\n";
@@ -126,6 +128,8 @@ void parse_args(int argc, char** argv, cnf_t* config)
 		{"method",  required_argument, 0, 'm'},
 		{"output",  required_argument, 0, 'o'},
 		{"threads",  required_argument, 0, 't'},
+		{"aes-ctr",  no_argument, 0, 'a'},
+		{"aes-keys",  required_argument, 0, 'k'},
 		{0, 0, 0, 0}
 	};
 
@@ -153,6 +157,16 @@ void parse_args(int argc, char** argv, cnf_t* config)
             break;
 		case 'h':
 			config->help_flag = 1;
+			break;
+
+
+		case 'a':
+			config->aesctr_flag = 1;
+			break;
+
+
+		case 'k':
+			config->aeskeys_filename = optarg;
 			break;
 
 		case 'n':
@@ -433,7 +447,7 @@ size_t generate(cnf_t *config)
 int main(int argc, char** argv)
 {
 	size_t generated;
-	cnf_t config = {NULL, stdout, DEFAULT_METHOD, 0, 0, 0, 0, DEFAULT_THREADS, DEFAULT_BYTES,0,0,0,0};
+	cnf_t config = {NULL, NULL, stdout, NULL, DEFAULT_METHOD, 0, 0, 0, 0, 0, DEFAULT_THREADS, DEFAULT_BYTES,0,0,0,0};
 	parse_args(argc, argv,&config);
 	if(config.help_flag)
 	{
@@ -457,6 +471,16 @@ int main(int argc, char** argv)
 		}
 	}
 
+	if(config.aeskeys_filename != NULL)
+	{
+		config.aeskeys_file = fopen(config.output_filename, "r");
+		if( config.aeskeys_file == NULL )
+		{
+			fprintf(stderr,"ERROR: Can't open file %s!\n", config.aeskeys_filename);
+			exit(EXIT_FAILURE);
+		}
+		// TODO: test if it contain keys
+	}
     if(rdrand_testSupport() == RDRAND_SUPPORTED)
     {
 
