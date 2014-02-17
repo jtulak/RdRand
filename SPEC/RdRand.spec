@@ -1,7 +1,7 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        1.0.4
-Release:        2%{?dist}
+Version:        1.0.5
+Release:        1%{?dist}
 License:        LGPLv2+
 Group:          Applications/System
 URL:            http://github.com/BroukPytlik/%{name}
@@ -60,6 +60,9 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/pkgconfig/*
 
 %changelog
+* Mon Feb 17 2014 Jan Tulak <jan@tulak.me> - 1.0.5-1
+- Fixed bug with parsing -t argument in rdrand-gen.
+
 * Thu Feb 6 2014 Jan Tulak <jan@tulak.me> - 1.0.4-2
 - Removed %defattr from devel subpackage, removed commented out lines,
 - man page suffix changed from .gz to .*
