@@ -39,6 +39,7 @@
 #include <math.h>       /* floor */
 #include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 #include "./librdrand.h"
 //#include <rdrand-0.1/rdrand.h>
 #include "./rdrand-gen.h"
@@ -191,12 +192,21 @@ void parse_args(int argc, char** argv, cnf_t* config)
 			break;
 
 		case 't':
-			config->threads = strtoumax(optarg, NULL, 10);
-			if(config->threads)
-            {
-                fprintf(stderr,"Invalid threads parameter!\n");
-                exit(EXIT_FAILURE);
-			}
+		    {
+                char*p;
+                config->threads=strtoul(optarg,&p,10);
+                if((p ==optarg)||(*p !=0)
+                   ||errno ==ERANGE
+                   ||(config->threads <1)
+                   ||(config->threads >=INT_MAX)
+                   ||(config->threads>16384))
+                {
+                    fprintf(stderr,"Invalid threads parameter!\n");
+                    exit(EXIT_FAILURE);
+                }
+		    }
+			//config->threads = strtoumax(optarg, NULL, 10);
+
 
 			break;
 
