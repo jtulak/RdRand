@@ -50,11 +50,11 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %files
 %doc README COPYING ChangeLog NEWS
 %{_bindir}/rdrand-gen
-%{_mandir}/man7/rdrand-gen.7.*
+%{_mandir}/man7/rdrand-gen.7*
 %{_libdir}/librdrand.so.*
 
 %files devel
-%{_mandir}/man3/librdrand.3.*
+%{_mandir}/man3/librdrand.3*
 %{_includedir}/librdrand.h
 %{_libdir}/librdrand.so
 %{_libdir}/pkgconfig/*
