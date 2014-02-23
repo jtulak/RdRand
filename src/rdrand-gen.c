@@ -139,7 +139,7 @@ void parse_args(int argc, char** argv, cnf_t* config)
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		optC = getopt_long (argc, argv, "hvVn:m:o:t:",
+		optC = getopt_long (argc, argv, "hakvVn:m:o:t:",
 				    long_options, &option_index);
 
 		/* Detect the end of the options. */
