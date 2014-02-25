@@ -20,7 +20,45 @@
 /*
     Now the legal stuff is done. This file contain the library itself.
 */
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include "librdrand.h"
 #include "librdrand-aes.h"
+
+#define DEFAULT_KEY_LEN 128
+
+enum {
+	KEYS_GENERATED,
+	KEYS_GIVEN
+};
+
+enum {
+	SUCCESS,
+	ERROR
+};
+
+/*
+typedef struct s_buffer {
+	void* pool;
+	size_t allocated;
+	size_t filled;
+} t_buffer;
+*/
+
+typedef struct s_keys {
+	size_t amount;
+	unsigned int index;
+	unsigned char **nonces;
+	size_t nonce_length;
+	unsigned char **keys;
+	size_t key_length;
+} t_keys;
+
+typedef struct s_aes_cfg {
+	t_keys keys;
+	int keys_type;
+} t_aes_cfg;
 
 /**
  * Set key for AES to a next in the list.
@@ -46,5 +84,69 @@ int keys_generate();
  * Called on every key change.
  */
 unsigned keys_new_timeout();
+
+/**
+ * Create buffer for AES encrypted values
+ */
+//int buffer_init(size_t size);
+
+/**
+ * Get N bytes of data from the buffer.
+ */
+//int buffer_get_bytes(void *dest, size_t amount);
+
+/**
+ * Add new data to the buffer.
+ */
+//int buffer_fill(unsigned char *data, size_t length);
+
+/**
+ * Cleaning.
+ */
+//int buffer_destroy();
+
+/*****************************************************************************/
+//t_buffer* BUFFER;
+t_aes_cfg AES_CFG;
+
+int keys_allocate(size_t amount, size_t key_length){
+	
+	AES_CFG.keys.key_length=key_length;
+	AES_CFG.keys.nonce_length=key_length/2;
+	
+	AES_CFG.keys.keys = calloc(AES_CFG.keys.key_length, amount);
+	AES_CFG.keys.nonces = calloc(AES_CFG.keys.nonce_length, amount);
+	
+	if( AES_CFG.keys.keys == NULL || AES_CFG.keys.nonces == NULL) 
+		return ERROR;
+		
+	return SUCCESS;
+}
+
+/**
+ * Set manually keys for AES.
+ * These keys will be rotated randomly.
+ */
+/*
+TODO: rotate just in random times, or also random order?
+Maybe a shuffle at the end of the list?
+*/
+int rdrand_set_aes_keys(size_t amount, size_t key_length, unsigned char **nonce, unsigned char **keys){
+	AES_CFG.keys_type = KEYS_GIVEN;
+	keys_allocate(amount, key_length);
+	
+	memcpy(AES_CFG.keys.keys, keys, amount*key_length);
+	
+}
+
+/**
+ * Set automatic key generation.
+ * /dev/random will be used as a key generator.
+ */
+int rdrand_set_aes_random_key(){
+	AES_CFG.keys_type = KEYS_GIVEN;
+	keys_allocate(1, DEFAULT_KEY_LEN);
+}
+
 
 

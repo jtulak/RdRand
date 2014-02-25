@@ -20,8 +20,8 @@
 /*
     Now the legal stuff is done. This file contain the library itself.
 */
-#ifndef LIBRDRAND-AES_H_INCLUDED
-#define LIBRDRAND-AES_H_INCLUDED
+#ifndef LIBRDRAND_AES_H_INCLUDED
+#define LIBRDRAND_AES_H_INCLUDED
 
 
 /**
@@ -35,7 +35,7 @@
  * Either rdrand_set_aes_keys or rdrand_set_aes_random_key
  * has to be set in advance.
  */
-unsigned int rdrand_get_uint64_array_aes_ctr(uint64_t *dest, const unsigned int count, int retry_limit);
+unsigned int rdrand_get_bytes_aes_ctr(void *dest, const unsigned int count, int retry_limit);
 
 
 /**
@@ -46,7 +46,7 @@ unsigned int rdrand_get_uint64_array_aes_ctr(uint64_t *dest, const unsigned int 
 TODO: rotate just in random times, or also random order?
 Maybe a shuffle at the end of the list?
 */
-int rdrand_set_aes_keys(unsigned int amount, unsigned char **keys);
+int rdrand_set_aes_keys(size_t amount, size_t key_length, unsigned char **nonce, unsigned char **keys);
 
 /**
  * Set automatic key generation.
@@ -54,10 +54,11 @@ int rdrand_set_aes_keys(unsigned int amount, unsigned char **keys);
  */
 int rdrand_set_aes_random_key();
 
+
 /**
  * Perform cleaning of all AES related settings:
  * Discard keys, ...
  */
 int rdrand_clean_aes();
 
-#endif // LIBRDRAND-AES_H_INCLUDED
+#endif // LIBRDRAND_AES_H_INCLUDED
