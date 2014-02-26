@@ -45,11 +45,15 @@
 int TEST_BYTES_PRINT=1;
 
 // Test if given bytes in array are set to 0
-int test_zeros(unsigned char *arr, unsigned int from, unsigned int to)
+int test_zeros(unsigned char *arr, unsigned int arr_size, unsigned int from, unsigned int to)
 {
 	unsigned int i;
 	unsigned int errs=0;
-	if( from > to || to > DEST_SIZE) return FALSE;
+	if( from > to || to > arr_size) 
+	{
+		fprintf(stderr,"Error test_zeros: invalid range! From: %u, To: %u, array size: %u.\n",from, to,DEST_SIZE);
+		return FALSE;
+	}
 	for (i=from; i<to; i++)
 	{
 		if (arr[i] != 0x00 ) 
@@ -70,11 +74,15 @@ int test_zeros(unsigned char *arr, unsigned int from, unsigned int to)
 // Test if given bytes in array have all bits set to 1
 // If changing unsigned char *arr to another type, change also 0xFF
 // constant!
-int test_ones(unsigned char *arr, unsigned int from, unsigned int to)
+int test_ones(unsigned char *arr, unsigned int arr_size, unsigned int from, unsigned int to)
 {
 	unsigned int i;
 	unsigned int errs=0;
-	if( from > to || to > DEST_SIZE) return FALSE;
+	if( from > to || to > arr_size) 
+	{
+		fprintf(stderr,"Error test_ones: invalid range! From: %u, To: %u, array size: %u.\n",from, to,DEST_SIZE);
+		return FALSE;
+	}
 	for (i=from; i<to; i++)
 	{
 		if (arr[i] != 0xFF) 
@@ -98,9 +106,9 @@ START_TEST (rdrand_step_16_stub)
   unsigned char dst[DEST_SIZE]={0};
   ck_assert_int_eq (rdrand16_step((uint16_t *)&dst),RDRAND_SUCCESS);
   // test if it wrote just into the place it should
-  ck_assert(test_zeros(dst, 2, DEST_SIZE));
+  ck_assert(test_zeros(dst, DEST_SIZE, 2, DEST_SIZE));
   // test if it set all to 1
-  ck_assert(test_ones(dst, 0, 2));
+  ck_assert(test_ones(dst,DEST_SIZE, 0, 2));
 }
 END_TEST
 
@@ -110,10 +118,10 @@ START_TEST (rdrand_step_32_stub)
   ck_assert_int_eq (rdrand32_step((uint32_t *)&dst),RDRAND_SUCCESS);
   
   // test if it wrote just into the place it should
-  ck_assert(test_zeros(dst, 4, DEST_SIZE));
+  ck_assert(test_zeros(dst, DEST_SIZE, 4, DEST_SIZE));
   
   // test if it set all to 1
-  ck_assert(test_ones(dst, 0, 4));
+  ck_assert(test_ones(dst, DEST_SIZE, 0, 4));
 }
 END_TEST
 
@@ -124,10 +132,10 @@ START_TEST (rdrand_step_64_stub)
   ck_assert_int_eq (rdrand64_step((uint64_t *)&dst),RDRAND_SUCCESS);
   
   // test if it wrote just into the place it should
-  ck_assert(test_zeros(dst, 8, DEST_SIZE));
+  ck_assert(test_zeros(dst, DEST_SIZE, 8, DEST_SIZE));
   
   // test if it set all to 1
-  ck_assert(test_ones(dst, 0, 8));
+  ck_assert(test_ones(dst, DEST_SIZE, 0, 8));
 }
 END_TEST
 
@@ -153,10 +161,10 @@ START_TEST (rdrand_step_16_native)
   unsigned char dst[DEST_SIZE]={0};
   ck_assert_int_eq (rdrand16_step_native((uint16_t *)&dst),RDRAND_SUCCESS);
   // test if it wrote just into the place it should
-  ck_assert(test_zeros(dst, 2, DEST_SIZE));
+  ck_assert(test_zeros(dst, DEST_SIZE, 2, DEST_SIZE));
   // test if it wrote something (rarely can fail)
   TEST_BYTES_PRINT=0;
-  ck_assert_msg(test_zeros(dst, 0, 2)==FALSE, 
+  ck_assert_msg(test_zeros(dst, DEST_SIZE, 0, 2)==FALSE, 
 		"This test can rarely fail if rdrand generates just all zeros. \
 		Try it once more to be sure.\n");
   TEST_BYTES_PRINT=1;
@@ -169,11 +177,11 @@ START_TEST (rdrand_step_32_native)
   ck_assert_int_eq (rdrand32_step_native((uint32_t *)&dst),RDRAND_SUCCESS);
   
   // test if it wrote just into the place it should
-  ck_assert(test_zeros(dst, 4, DEST_SIZE));
+  ck_assert(test_zeros(dst, DEST_SIZE, 4, DEST_SIZE));
   
   // test if it wrote something (rarely can fail)
   TEST_BYTES_PRINT=0;
-  ck_assert_msg(test_zeros(dst, 0, 4)==FALSE, 
+  ck_assert_msg(test_zeros(dst, DEST_SIZE, 0, 4)==FALSE, 
 		"This test can rarely fail if rdrand generates just all zeros. \
 		Try it once more to be sure.\n");
   TEST_BYTES_PRINT=1;
@@ -187,11 +195,11 @@ START_TEST (rdrand_step_64_native)
   ck_assert_int_eq (rdrand64_step_native((uint64_t *)&dst),RDRAND_SUCCESS);
   
   // test if it wrote just into the place it should
-  ck_assert(test_zeros(dst, 8, DEST_SIZE));
+  ck_assert(test_zeros(dst, DEST_SIZE, 8, DEST_SIZE));
   
   // test if it wrote something (rarely can fail)
   TEST_BYTES_PRINT=0;
-  ck_assert_msg(test_zeros(dst, 0, 8)==FALSE, 
+  ck_assert_msg(test_zeros(dst, DEST_SIZE, 0, 8)==FALSE, 
 		"This test can rarely fail if rdrand generates a byte all zeros. \
 		Try it once more to be sure.\n");
   TEST_BYTES_PRINT=1;
@@ -222,10 +230,10 @@ void rdrand_retry_16_test(int retry)
   ck_assert_int_eq (rdrand_get_uint16_retry((uint16_t *)&dst,retry),RDRAND_SUCCESS);
   
   // test if it wrote just into the place it should
-  ck_assert(test_zeros(dst, 2, DEST_SIZE));
+  ck_assert(test_zeros(dst, DEST_SIZE, 2, DEST_SIZE));
   
   // test if it wrote something (rarely can fail)
-  ck_assert(test_ones(dst, 0, 2));
+  ck_assert(test_ones(dst, DEST_SIZE, 0, 2));
 }
 
 START_TEST (rdrand_retry_16)
@@ -244,10 +252,10 @@ void rdrand_retry_32_test(int retry)
   ck_assert_int_eq (rdrand_get_uint32_retry((uint32_t *)&dst,retry),RDRAND_SUCCESS);
   
   // test if it wrote just into the place it should
-  ck_assert(test_zeros(dst, 4, DEST_SIZE));
+  ck_assert(test_zeros(dst, DEST_SIZE, 4, DEST_SIZE));
   
   // test if it wrote something (rarely can fail)
-  ck_assert(test_ones(dst, 0, 4));
+  ck_assert(test_ones(dst, DEST_SIZE, 0, 4));
 }
 START_TEST (rdrand_retry_32)
 {
@@ -263,10 +271,10 @@ void rdrand_retry_64_test(int retry)
   ck_assert_int_eq (rdrand_get_uint64_retry((uint64_t *)&dst,retry),RDRAND_SUCCESS);
   
   // test if it wrote just into the place it should
-  ck_assert(test_zeros(dst, 8, DEST_SIZE));
+  ck_assert(test_zeros(dst, DEST_SIZE, 8, DEST_SIZE));
   
   // test if it wrote something (rarely can fail)
-  ck_assert(test_ones(dst, 0, 8));
+  ck_assert(test_ones(dst, DEST_SIZE, 0, 8));
 }
 START_TEST (rdrand_retry_64)
 {
@@ -303,9 +311,9 @@ START_TEST (array_8)
 	  unsigned char dst[ARRAY_SIZE] = {0};
 	  ck_assert_int_eq (rdrand_get_uint8_array_retry((uint8_t *)&dst, size, RETRY_LIMIT), size);
 	  // test if it wrote just into the place it should
-	  ck_assert(test_zeros(dst, size, ARRAY_SIZE));
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size, ARRAY_SIZE));
 	  // test if it wrote something (rarely can fail)
-	  ck_assert(test_ones(dst, 0, size));
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size));
   }}}	
   
   /* Generate half size */
@@ -313,9 +321,9 @@ START_TEST (array_8)
 	  unsigned char dst[ARRAY_SIZE] = {0};
 	  ck_assert_int_eq (rdrand_get_uint8_array_retry((uint8_t *)&dst, size/2, RETRY_LIMIT), size/2);
 	  // test if it wrote just into the place it should
-	  ck_assert(test_zeros(dst, size/2, ARRAY_SIZE));
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2, ARRAY_SIZE));
 	  // test if it wrote something (rarely can fail)
-	  ck_assert(test_ones(dst, 0, size/2));
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size/2));
   }}}	
   
   /* Generate half size with offset */
@@ -323,11 +331,11 @@ START_TEST (array_8)
 	  unsigned char dst[ARRAY_SIZE] = {0};
 	  ck_assert_int_eq (rdrand_get_uint8_array_retry((uint8_t *)&dst+10, size/2, RETRY_LIMIT), size/2);
 	  // test if it wrote just into the place it should
-	  ck_assert(test_zeros(dst, size/2+10, ARRAY_SIZE));
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2+10, ARRAY_SIZE));
 	  // test if it wrote just into the place it should
-	  ck_assert(test_zeros(dst, 0, 10));
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, 0, 10));
 	  // test if it wrote something (rarely can fail)
-	  ck_assert(test_ones(dst, 10, size/2));
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 10, size/2));
   }}}
 }
 END_TEST
