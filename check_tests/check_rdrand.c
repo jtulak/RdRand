@@ -302,14 +302,18 @@ rdrand_retry_methods_suite (void)
 /**                       Arrays                                      */
 /** *******************************************************************/
 
-START_TEST (array_8)
+
+START_TEST (array_bytes)
 {
   unsigned int size=ARRAY_SIZE-1;
+  unsigned int offset=16;
+  
+  unsigned int multiplier=1; // 1 - 8bit, 2 - 8bit, 4 - 32bit, ...
   
   /* Generate one size */
   {{{
 	  unsigned char dst[ARRAY_SIZE] = {0};
-	  ck_assert_int_eq (rdrand_get_uint8_array_retry((uint8_t *)&dst, size, RETRY_LIMIT), size);
+	  ck_assert_int_eq (rdrand_get_bytes_retry((uint8_t *)&dst, size/multiplier, RETRY_LIMIT), size/multiplier);
 	  // test if it wrote just into the place it should
 	  ck_assert(test_zeros(dst, ARRAY_SIZE, size, ARRAY_SIZE));
 	  // test if it wrote something (rarely can fail)
@@ -319,7 +323,7 @@ START_TEST (array_8)
   /* Generate half size */
   {{{
 	  unsigned char dst[ARRAY_SIZE] = {0};
-	  ck_assert_int_eq (rdrand_get_uint8_array_retry((uint8_t *)&dst, size/2, RETRY_LIMIT), size/2);
+	  ck_assert_int_eq (rdrand_get_bytes_retry((uint8_t *)&dst, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
 	  // test if it wrote just into the place it should
 	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2, ARRAY_SIZE));
 	  // test if it wrote something (rarely can fail)
@@ -329,16 +333,270 @@ START_TEST (array_8)
   /* Generate half size with offset */
   {{{
 	  unsigned char dst[ARRAY_SIZE] = {0};
-	  ck_assert_int_eq (rdrand_get_uint8_array_retry((uint8_t *)&dst+10, size/2, RETRY_LIMIT), size/2);
+	  ck_assert_int_eq (rdrand_get_bytes_retry((uint8_t *)&dst+offset/multiplier, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
 	  // test if it wrote just into the place it should
-	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2+10, ARRAY_SIZE));
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2+offset, ARRAY_SIZE));
 	  // test if it wrote just into the place it should
-	  ck_assert(test_zeros(dst, ARRAY_SIZE, 0, 10));
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, 0, offset));
 	  // test if it wrote something (rarely can fail)
-	  ck_assert(test_ones(dst, ARRAY_SIZE, 10, size/2));
+	  ck_assert(test_ones(dst, ARRAY_SIZE, offset, size/2));
   }}}
 }
 END_TEST
+
+
+START_TEST (array_8)
+{
+  unsigned int size=ARRAY_SIZE-1;
+  unsigned int offset=16;
+  
+  unsigned int multiplier=1; // 1 - 8bit, 2 - 8bit, 4 - 32bit, ...
+  
+  /* Generate one size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint8_array_retry((uint8_t *)&dst, size/multiplier, RETRY_LIMIT), size/multiplier);
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size));
+  }}}	
+  
+  /* Generate half size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint8_array_retry((uint8_t *)&dst, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size/2));
+  }}}	
+  
+  /* Generate half size with offset */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint8_array_retry((uint8_t *)&dst+offset/multiplier, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2+offset, ARRAY_SIZE));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, 0, offset));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, offset, size/2));
+  }}}
+}
+END_TEST
+
+
+START_TEST (array_16)
+{
+  unsigned int size=ARRAY_SIZE-1;
+  unsigned int offset=16;
+  
+  unsigned int multiplier=2; // 1 - 8bit, 2 - 16bit, 4 - 32bit, ...
+  
+  /* Generate one size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint16_array_retry((uint16_t *)&dst, size/multiplier, RETRY_LIMIT), size/multiplier);
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size));
+  }}}	
+  
+  /* Generate half size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint16_array_retry((uint16_t *)&dst, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size/2));
+  }}}	
+  
+  /* Generate half size with offset */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint16_array_retry((uint16_t *)&dst+offset/multiplier, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2+offset, ARRAY_SIZE));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, 0, offset));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, offset, size/2));
+  }}}
+}
+END_TEST
+
+
+START_TEST (array_32)
+{
+  unsigned int size=ARRAY_SIZE-1;
+  unsigned int offset=16;
+  
+  unsigned int multiplier=4; // 1 - 8bit, 2 - 32bit, 4 - 32bit, ...
+  
+  /* Generate one size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint32_array_retry((uint32_t *)&dst, size/multiplier, RETRY_LIMIT), size/multiplier);
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size));
+  }}}	
+  
+  /* Generate half size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint32_array_retry((uint32_t *)&dst, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size/2));
+  }}}	
+  
+  /* Generate half size with offset */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint32_array_retry((uint32_t *)&dst+offset/multiplier, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2+offset, ARRAY_SIZE));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, 0, offset));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, offset, size/2));
+  }}}
+}
+END_TEST
+
+
+START_TEST (array_64)
+{
+  unsigned int size=ARRAY_SIZE-1;
+  unsigned int offset=16;
+  
+  unsigned int multiplier=8; // 1 - 8bit, 2 - 64bit, 4 - 32bit, ...
+  
+  /* Generate one size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint64_array_retry((uint64_t *)&dst, size/multiplier, RETRY_LIMIT), size/multiplier);
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size));
+  }}}	
+  
+  /* Generate half size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint64_array_retry((uint64_t *)&dst, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size/2));
+  }}}	
+  
+  /* Generate half size with offset */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint64_array_retry((uint64_t *)&dst+offset/multiplier, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2+offset, ARRAY_SIZE));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, 0, offset));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, offset, size/2));
+  }}}
+}
+END_TEST
+
+
+START_TEST (array_reseed_delay_64)
+{
+  unsigned int size=ARRAY_SIZE-1;
+  unsigned int offset=16;
+  
+  unsigned int multiplier=8; // 1 - 8bit, 2 - 64bit, 4 - 32bit, ...
+  
+  /* Generate one size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint64_array_reseed_delay((uint64_t *)&dst, size/multiplier, RETRY_LIMIT), size/multiplier);
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size));
+  }}}	
+  
+  /* Generate half size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint64_array_reseed_delay((uint64_t *)&dst, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size/2));
+  }}}	
+  
+  /* Generate half size with offset */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint64_array_reseed_delay((uint64_t *)&dst+offset/multiplier, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2+offset, ARRAY_SIZE));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, 0, offset));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, offset, size/2));
+  }}}
+}
+END_TEST
+
+
+
+START_TEST (array_reseed_skip_64)
+{
+  unsigned int size=ARRAY_SIZE-1;
+  unsigned int offset=16;
+  
+  unsigned int multiplier=8; // 1 - 8bit, 2 - 64bit, 4 - 32bit, ...
+  
+  /* Generate one size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint64_array_reseed_skip((uint64_t *)&dst, size/multiplier, RETRY_LIMIT), size/multiplier);
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size));
+  }}}	
+  
+  /* Generate half size */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint64_array_reseed_skip((uint64_t *)&dst, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2, ARRAY_SIZE));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, 0, size/2));
+  }}}	
+  
+  /* Generate half size with offset */
+  {{{
+	  unsigned char dst[ARRAY_SIZE] = {0};
+	  ck_assert_int_eq (rdrand_get_uint64_array_reseed_skip((uint64_t *)&dst+offset/multiplier, size/(2*multiplier), RETRY_LIMIT), size/(2*multiplier));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, size/2+offset, ARRAY_SIZE));
+	  // test if it wrote just into the place it should
+	  ck_assert(test_zeros(dst, ARRAY_SIZE, 0, offset));
+	  // test if it wrote something (rarely can fail)
+	  ck_assert(test_ones(dst, ARRAY_SIZE, offset, size/2));
+  }}}
+}
+END_TEST
+
 
 Suite *
 arrays_suite (void)
@@ -347,6 +605,12 @@ arrays_suite (void)
 
   TCase *tc_steps = tcase_create ("arrays");
   tcase_add_test (tc_steps, array_8);
+  tcase_add_test (tc_steps, array_16);
+  tcase_add_test (tc_steps, array_32);
+  tcase_add_test (tc_steps, array_64);
+  tcase_add_test (tc_steps, array_bytes);
+  tcase_add_test (tc_steps, array_reseed_delay_64);
+  tcase_add_test (tc_steps, array_reseed_skip_64);
   suite_add_tcase (s, tc_steps);
 
   return s;
