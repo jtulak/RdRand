@@ -27,6 +27,20 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/** ********************************************************************
+ *                         TESTING NAMES
+ * For testing purposes, real generating functions can be renamed
+ * and all library will use stub functions with predetermined behaviour.
+ * 
+ * When STUB_RDRAND is defined, any rdrand calls will set all bits 
+ * to 1. For access to the real rdrand, use rdrandXX_step_native()
+ */
+#ifdef STUB_RDRAND
+	int rdrand16_step_native(uint16_t *x);
+	int rdrand32_step_native(uint32_t *x);
+	int rdrand64_step_native(uint64_t *x);
+#endif //STUB_RDRAND
+
 
 /**
  * Returned by function if a random number(s) was generated correctly.

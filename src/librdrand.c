@@ -75,17 +75,53 @@
 #define DEBUG_PRINT_9(fmt, args ...)    /* Don't do anything in release builds */
 #endif
 
+/** ********************************************************************
+ *                         TESTING NAMES
+ * For testing purposes, real generating functions can be renamed
+ * and all library will use stub functions with predetermined behaviour.
+ * 
+ * When STUB_RDRAND is defined, any rdrand calls will set all bits 
+ * to 1. For access to the real rdrand, use rdrandXX_step_native()
+ */
+ 
+#ifdef STUB_RDRAND
+	#define RDRAND16_STEP rdrand16_step_native
+	#define RDRAND32_STEP rdrand32_step_native
+	#define RDRAND64_STEP rdrand64_step_native
+
+	inline int rdrand16_step(uint16_t *x)
+	{
+		*x=~(*x & 0);
+		return  RDRAND_SUCCESS;
+	}
+	inline int rdrand32_step(uint32_t *x)
+	{
+		*x=~(*x & 0);
+		return  RDRAND_SUCCESS;
+	}
+	inline int rdrand64_step(uint64_t *x)
+	{
+		*x=~(*x & 0);
+		return  RDRAND_SUCCESS;
+	}
+#else
+	#define RDRAND16_STEP rdrand16_step
+	#define RDRAND32_STEP rdrand32_step
+	#define RDRAND64_STEP rdrand64_step
+#endif // STUB_RDRAND
+
+
 #if defined(HAVE_RDRAND_IN_GCC) && defined(HAVE_X86INTRIN_H)
         #include <x86intrin.h>
-        inline int rdrand16_step(uint16_t *x)
+        inline int RDRAND16_STEP(uint16_t *x)
         {
             return _rdrand16_step ( (unsigned short*) x );
         }
-        inline int rdrand32_step(uint32_t *x)
+        inline int RDRAND32_STEP(uint32_t *x)
         {
             return _rdrand32_step ( (unsigned int*) x );
         }
-        inline int rdrand64_step(uint64_t *x)
+        inline int RDRAND64_STEP(uint64_t *x)
         {
             return _rdrand64_step ( (unsigned long long*) x );
         }
@@ -99,7 +135,7 @@
          * The 16 bit result is zero extended to 32 bits.
          * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
          */
-        int rdrand16_step(uint16_t *x)
+        int RDRAND16_STEP(uint16_t *x)
         {
             unsigned char err = 1;
             asm volatile (".byte 0x66; .byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
@@ -117,7 +153,7 @@
          *
          * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
          */
-        int rdrand32_step(uint32_t *x)
+        int RDRAND32_STEP(uint32_t *x)
         {
             unsigned char err = 1;
             asm volatile (".byte 0x0f; .byte 0xc7; .byte 0xf0; setc %1"
@@ -135,7 +171,7 @@
          *
          * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
          */
-        int rdrand64_step(uint64_t *x)
+        int RDRAND64_STEP(uint64_t *x)
         {
             unsigned char err = 1;
             /* support for 32bit architecture */

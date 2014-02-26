@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall -Wextra -O3 -fopenmp  -fPIC
+CFLAGS=-DSTUB_RDRAND -c -Wall -Wextra -O3 -fopenmp  -fPIC
 LDFLAGS=-fopenmp -lrt -lm -mrdrnd -lcheck
 
 SRCS=../src/librdrand.c\
@@ -29,4 +29,6 @@ check_rdrand: $(OSRCS) check_rdrand.o
 .c.o: $(OSRCS)
 	$(CC) $(CFLAGS) $< -o $@
 
+clean:
+	-rm check_rdrand check_aes *.o ../src/*.o
 
