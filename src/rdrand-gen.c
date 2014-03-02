@@ -125,7 +125,7 @@ void print_available_methods(FILE* stream){
 /**
  * Parse arguments and save flags/values to cnf_t* config.
  */
-void parse_args(int argc, char** argv, cnf_t* config)
+int parse_args(int argc, char** argv, cnf_t* config)
 {
 	int i;
 	char optC;
@@ -184,14 +184,17 @@ void parse_args(int argc, char** argv, cnf_t* config)
 
 		case 'n':
 			size_as_double = strtod(optarg,&size_suffix);
-			if ((optarg == size_suffix) || errno == ERANGE || (size_as_double < 0) || (size_as_double >= UINT64_MAX) )
-			{
+			if ((optarg == size_suffix) ||
+             errno == ERANGE ||
+             (size_as_double < 0) || 
+             (size_as_double >= UINT64_MAX) ){
 			    #ifdef _X86_64
                     fprintf(stderr, "Size has to be in range <0, %lu>!\n",UINT64_MAX);
 			    #else
                     fprintf(stderr, "Size has to be in range <0, %llu>!\n",UINT64_MAX);
 			    #endif // _X86_64
-                exit(EXIT_FAILURE);
+                //exit(EXIT_FAILURE);
+                return EXIT_FAILURE;
 			}
 			if(strlen(size_suffix) > 0)
 			{
@@ -210,8 +213,11 @@ void parse_args(int argc, char** argv, cnf_t* config)
 					size_as_double *= pow(2,10);
 					break;
 				default:
-					fprintf(stderr,"Unknown suffix %s when parsing %s.\n",size_suffix, optarg);
-					exit(EXIT_FAILURE);
+					fprintf(stderr,
+                        "Unknown suffix %s when parsing %s.\n",
+                        size_suffix, 
+                        optarg);
+                    return EXIT_FAILURE;
 				}
 			}
 
@@ -256,17 +262,20 @@ void parse_args(int argc, char** argv, cnf_t* config)
 			{
 				fprintf (stderr,"Error: Unknown method to use!\n");
 				print_available_methods(stderr);
-				exit(EXIT_FAILURE);
+				//exit(EXIT_FAILURE);
+                return EXIT_FAILURE;
 			}
 			break;
 
 
 		case '?':
 		    fprintf(stderr,"An unknown parameter.\n");
-			exit(EXIT_FAILURE);
+			//exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
 		default:
 		    fprintf(stderr,"An unknown parameter %c.\n",optC);
-			exit(EXIT_FAILURE);
+			//exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
 			//abort ();
 		}
 	}
@@ -307,7 +316,7 @@ void parse_args(int argc, char** argv, cnf_t* config)
     }
 
 
-
+    return EXIT_SUCCESS;
 }
 
 size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int blocks, int retry)
@@ -460,8 +469,12 @@ size_t generate(cnf_t *config)
 int main(int argc, char** argv)
 {
 	size_t generated;
-	cnf_t config = {NULL, NULL, stdout, NULL, DEFAULT_METHOD, 0, 0, 0, 0, 0, DEFAULT_THREADS, DEFAULT_BYTES,0,0,0,0};
-	parse_args(argc, argv,&config);
+	cnf_t config = DEFAULT_CONFIG_SETTING;
+    // {NULL, NULL, stdout, NULL, DEFAULT_METHOD, 0, 0, 0, 0, 0, DEFAULT_THREADS, DEFAULT_BYTES,0,0,0,0};
+	if( parse_args(argc, argv,&config) == EXIT_FAILURE) {
+        exit(EXIT_FAILURE);
+    }
+
 	if(config.help_flag)
 	{
 		printf(HELP_TEXT,argv[0],METHOD_NAMES[DEFAULT_METHOD],DEFAULT_THREADS);

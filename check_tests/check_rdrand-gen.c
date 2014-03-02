@@ -14,7 +14,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
  */
 
 /*
@@ -28,49 +29,266 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include <check.h>
-//#include "../src/librdrand.h"
+#include "../src/librdrand.h"
 #include "../src/rdrand-gen.h"
 
 
 #define TRUE 1
 #define FALSE 0
 
-
-#if 0
-/** ******************************************************************/
-/**                      aes setup                                   */
-/** ******************************************************************/
-
-START_TEST (aes_setup_manual_keys)
+int str_compare(char * a, char * b)
 {
-	//ck_assert(rdrand_set_aes_keys(size_t amount, size_t key_length, unsigned char **nonce, unsigned char **keys));
-  //ck_assert_int_eq (rdrand16_step((uint16_t *)&dst),RDRAND_SUCCESS);
-  // test if it set all to 1
-  //ck_assert(test_ones(dst,DEST_SIZE, 0, 2));
+    if (a == NULL){
+        if( a == b) {
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+
+    if(strcmp(a,b) != 0)
+        return FALSE;
+    return TRUE;
+
+}
+
+int compareConfigs(cnf_t a, cnf_t b) {
+    if(!str_compare(a.output_filename, b.output_filename)){
+        fprintf(stderr, "ERROR: Different output_filename! \n");
+        return FALSE;
+    }
+    if(!str_compare(a.aeskeys_filename, b.aeskeys_filename)){
+        fprintf(stderr, "ERROR: Different aeskeys_filename!\n");
+        return FALSE;
+    }
+    if (a.output != b.output) {
+        fprintf(stderr, "ERROR: Different output!\n");
+        return FALSE;
+    }
+    if (a.aeskeys_file != b.aeskeys_file) {
+        fprintf(stderr, "ERROR: Different aeskeys_file!\n");
+        return FALSE;
+    }
+    if (a.method != b.method) {
+        fprintf(stderr, "ERROR: Different method!\n");
+        return FALSE;
+    }
+    if (a.help_flag != b.help_flag) {
+        fprintf(stderr, "ERROR: Different help_flag!\n");
+        return FALSE;
+    }
+    if (a.version_flag != b.version_flag) {
+        fprintf(stderr, "ERROR: Different version_flag!\n");
+        return FALSE;
+    }
+    if (a.verbose_flag != b.verbose_flag) {
+        fprintf(stderr, "ERROR: Different verbose_flag!\n");
+        return FALSE;
+    }
+    if (a.aesctr_flag != b.aesctr_flag) {
+        fprintf(stderr, "ERROR: Different aesctr_flag!\n");
+        return FALSE;
+    }
+    if (a.printedWarningFlag != b.printedWarningFlag) {
+        fprintf(stderr, "ERROR: Different printedWarningFlag!\n");
+        return FALSE;
+    }
+    if (a.threads != b.threads) {
+        fprintf(stderr, "ERROR: Different threads!\n");
+        return FALSE;
+    }
+    if (a.bytes != b.bytes) {
+        fprintf(stderr, "ERROR: Different bytes! %d/%d\n",a.bytes,b.bytes);
+        return FALSE;
+    }
+    if (a.blocks != b.blocks) {
+        fprintf(stderr, "ERROR: Different blocks! %d/%d\n",a.blocks,b.blocks);
+        return FALSE;
+    }
+    if (a.chunk_size != b.chunk_size) {
+        fprintf(stderr, "ERROR: Different chunk_size! %d/%d\n",
+            a.chunk_size, b.chunk_size);
+        return FALSE;
+    }
+    if (a.chunk_count != b.chunk_count) {
+        fprintf(stderr, "ERROR: Different chunk_count! %d/%d\n",
+            a.chunk_count, b.chunk_count);
+        return FALSE;
+    }
+    if (a.ending_bytes != b.ending_bytes) {
+        fprintf(stderr, "ERROR: Different ending_bytes! %d/%d\n",
+            a.ending_bytes,b.ending_bytes);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+/** ******************************************************************/
+/**                      arguments parsing                           */
+/** ******************************************************************/
+
+START_TEST (parseArgs_no_args)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    cc.chunk_size=MAX_CHUNK_SIZE;
+    // arguments
+    int argc = 1;
+    char *argv[] = {"rdrand-gen"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_help)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    cc.chunk_size=MAX_CHUNK_SIZE;
+    cc.help_flag=1;
+    // arguments
+    int argc = 2;
+    char *argv[] = {"rdrand-gen","-h"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_amount_missingNumber)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    // arguments
+    int argc = 2;
+    char *argv[] = {"rdrand-gen","--amount"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_FAILURE);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_amount_decimalNumber)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    cc.bytes=3;
+    cc.ending_bytes=3; // difference in bytes between bytes and blocks
+    // arguments
+    int argc = 3;
+    char *argv[] = {"rdrand-gen","--amount", "3.14"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_amount_simpleNumber)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    cc.bytes=214;
+    cc.blocks=26; // 214/8 
+    cc.chunk_size=13;
+    cc.chunk_count=1;
+    cc.ending_bytes=6; // 214 - 26*8 (blocks)
+    // arguments
+    int argc = 3;
+    char *argv[] = {"rdrand-gen","--amount","214"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_amount_suffixK)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    cc.bytes=1024;
+    cc.blocks=128; // bytes/8
+    cc.chunk_size=64; // blocks/2
+    cc.chunk_count=1;
+    cc.ending_bytes=0; // difference in bytes between bytes and blocks
+    // arguments
+    int argc = 3;
+    char *argv[] = {"rdrand-gen","--amount","1k"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_amount_suffix_bad)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    // arguments
+    int argc = 3;
+    char *argv[] = {"rdrand-gen","--amount","1D"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_FAILURE);
+    ck_assert(compareConfigs(config, cc));
 }
 END_TEST
 
 
+START_TEST (parseArgs_amount_negative)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    // arguments
+    int argc = 3;
+    char *argv[] = {"rdrand-gen","--amount","-1024"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_FAILURE);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
 Suite *
-rdrand_stub_methods_suite (void)
+parseArgs_suite (void)
 {
   Suite *s = suite_create ("Stub methods suite");
 
   TCase *tc_steps = tcase_create ("Stub methods");
-  //tcase_add_test (tc_steps, rdrand_step_16_stub);
+  tcase_add_test (tc_steps, parseArgs_no_args);
+  tcase_add_test (tc_steps, parseArgs_help);
+  tcase_add_test (tc_steps, parseArgs_amount_missingNumber);
+  tcase_add_test (tc_steps, parseArgs_amount_decimalNumber);
+  tcase_add_test (tc_steps, parseArgs_amount_simpleNumber);
+  tcase_add_test (tc_steps, parseArgs_amount_suffixK);
+  tcase_add_test (tc_steps, parseArgs_amount_suffix_bad);
+  tcase_add_test (tc_steps, parseArgs_amount_negative);
   suite_add_tcase (s, tc_steps);
 
   return s;
 }
-#endif
 
 /** *******************************************************************/
 /**             MAIN                                                  */
 /** *******************************************************************/
 
 int main (void){
-	#if 0
 	Suite *s;
   	SRunner *sr;
 	if(rdrand_testSupport() == RDRAND_UNSUPPORTED){
@@ -80,12 +298,11 @@ int main (void){
 	}
 
 	int number_failed =0;
-	#if 0
 	/* Standard suites */
-	s = rdrand_stub_methods_suite ();
+	s = parseArgs_suite ();
 	sr = srunner_create (s);
 
-
+    //s = some_suite ();
 	//srunner_add_suite(sr, s);
 
 
@@ -93,7 +310,6 @@ int main (void){
 	number_failed = srunner_ntests_failed (sr);
 	srunner_free (sr);
 
-	#endif
 
 	if(number_failed == 0)
 	{
@@ -105,8 +321,6 @@ int main (void){
 
 	return EXIT_FAILURE;
 
-	#endif
-	return EXIT_SUCCESS;
 }
 
 
