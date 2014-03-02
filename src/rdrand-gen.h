@@ -61,12 +61,8 @@ enum
  * List of names of methods for printing.
  * Has to be in the same order as in the enum.
  */
-const char *METHOD_NAMES[] =
-{
-	"get_bytes",
-	"reseed_delay",
-	"reseed_skip",
-};
+
+extern const char *METHOD_NAMES[];
 
 typedef struct cnf {
 	/** output file path */

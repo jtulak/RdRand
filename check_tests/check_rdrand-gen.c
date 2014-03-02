@@ -21,11 +21,93 @@
     Now the legal stuff is done. This file contain the tests for Check 
     unit testing.
 */
+#ifndef CHECK_RDRAND_GEN_INCLUDE
+#define CHECK_RDRAND_GEN_INCLUDE
+
 #include <stdlib.h>
-#include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 #include <check.h>
+//#include "../src/librdrand.h"
+#include "../src/rdrand-gen.h"
+
+
+#define TRUE 1
+#define FALSE 0
+
+
+#if 0
+/** ******************************************************************/
+/**                      aes setup                                   */
+/** ******************************************************************/
+
+START_TEST (aes_setup_manual_keys)
+{
+	//ck_assert(rdrand_set_aes_keys(size_t amount, size_t key_length, unsigned char **nonce, unsigned char **keys));
+  //ck_assert_int_eq (rdrand16_step((uint16_t *)&dst),RDRAND_SUCCESS);
+  // test if it set all to 1
+  //ck_assert(test_ones(dst,DEST_SIZE, 0, 2));
+}
+END_TEST
+
+
+Suite *
+rdrand_stub_methods_suite (void)
+{
+  Suite *s = suite_create ("Stub methods suite");
+
+  TCase *tc_steps = tcase_create ("Stub methods");
+  //tcase_add_test (tc_steps, rdrand_step_16_stub);
+  suite_add_tcase (s, tc_steps);
+
+  return s;
+}
+#endif
+
+/** *******************************************************************/
+/**             MAIN                                                  */
+/** *******************************************************************/
 
 int main (void){
-	
+	#if 0
+	Suite *s;
+  	SRunner *sr;
+	if(rdrand_testSupport() == RDRAND_UNSUPPORTED){
+	  fprintf(stderr, 
+		"RdRand is not supported on this CPU! Can't run.\n");
+	  exit(EXIT_FAILURE);
+	}
+
+	int number_failed =0;
+	#if 0
+	/* Standard suites */
+	s = rdrand_stub_methods_suite ();
+	sr = srunner_create (s);
+
+
+	//srunner_add_suite(sr, s);
+
+
+	srunner_run_all (sr, CK_NORMAL);
+	number_failed = srunner_ntests_failed (sr);
+	srunner_free (sr);
+
+	#endif
+
+	if(number_failed == 0)
+	{
+	  fprintf(stderr,"\n100%%: Everything OK.\n-----------------\n");
+	  return EXIT_SUCCESS;
+	}
+
+	fprintf(stderr,"\nERROR: %d test(s) failed!\n-----------------\n",number_failed);
+
+	return EXIT_FAILURE;
+
+	#endif
 	return EXIT_SUCCESS;
 }
+
+
+#endif // CHECK_RDRAND_GEN_INCLUDE

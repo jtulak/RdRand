@@ -38,13 +38,6 @@ enum {
 	ERROR
 };
 
-/*
-typedef struct s_buffer {
-	void* pool;
-	size_t allocated;
-	size_t filled;
-} t_buffer;
-*/
 
 typedef struct s_keys {
 	size_t amount;
@@ -85,25 +78,6 @@ int keys_generate();
  */
 unsigned keys_new_timeout();
 
-/**
- * Create buffer for AES encrypted values
- */
-//int buffer_init(size_t size);
-
-/**
- * Get N bytes of data from the buffer.
- */
-//int buffer_get_bytes(void *dest, size_t amount);
-
-/**
- * Add new data to the buffer.
- */
-//int buffer_fill(unsigned char *data, size_t length);
-
-/**
- * Cleaning.
- */
-//int buffer_destroy();
 
 /*****************************************************************************/
 //t_buffer* BUFFER;
@@ -137,6 +111,8 @@ int rdrand_set_aes_keys(size_t amount, size_t key_length, unsigned char **nonce,
 	
 	memcpy(AES_CFG.keys.keys, keys, amount*key_length);
 	
+	// TODO some better return
+	return 0;
 }
 
 /**
@@ -146,6 +122,9 @@ int rdrand_set_aes_keys(size_t amount, size_t key_length, unsigned char **nonce,
 int rdrand_set_aes_random_key(){
 	AES_CFG.keys_type = KEYS_GIVEN;
 	keys_allocate(1, DEFAULT_KEY_LEN);
+	
+	// TODO some better return
+	return 0;
 }
 
 

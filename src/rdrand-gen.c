@@ -63,7 +63,20 @@
 #define SLOW_RETRY_LIMIT 1000
 #define SLOW_RETRY_DELAY 1000 // 1 ms
 
-#define VERSION "1.0.2"
+#define VERSION "1.1.0"
+
+
+/**
+ * List of names of methods for printing.
+ * Has to be in the same order as in the enum.
+ */
+
+const char *METHOD_NAMES[] =
+{
+	"get_bytes",
+	"reseed_delay",
+	"reseed_skip",
+};
 
 static const char* HELP_TEXT =
 	"Usage: %s [OPTIONS]\n"
@@ -443,7 +456,7 @@ size_t generate(cnf_t *config)
 }
 
 /*****************************************************************************/
-
+#ifndef NO_MAIN // for testing
 int main(int argc, char** argv)
 {
 	size_t generated;
@@ -519,3 +532,4 @@ int main(int argc, char** argv)
 
 	exit(EXIT_SUCCESS);
 }
+#endif // NO_MAIN
