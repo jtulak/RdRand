@@ -48,10 +48,15 @@
     #include <omp.h>
 #endif
 
+#ifndef NO_ERROR_PRINTS
+    #define EPRINT(...) fprintf(stderr,__VA_ARGS__)
+#else
+    #define EPRINT(...) fprintf(stderr,"")
+#endif
 
 
 #if defined(__X86_64__) || defined(_WIN64) || defined(_LP64)
-# define _X86_64
+#define _X86_64
 #endif
 
 
@@ -122,6 +127,43 @@ void print_available_methods(FILE* stream){
     }
 }
 
+/** Compute the size of a chunk:
+ *  Total bytes / 8 = number of 64bit blocks.
+ *  No. 64bit blocks / threads = size of chunk
+ */
+void compute_chunk_size(cnf_t * config){
+    if(config->bytes > 0)
+    {
+        // number of 64bit blocks
+        config->blocks = config->bytes / 8;
+        // size of one chunk - max size is limited to MAX_CHUNK_SIZE
+        config->chunk_size = config->blocks / config->threads;
+        if(config->chunk_size > MAX_CHUNK_SIZE)
+            config->chunk_size = MAX_CHUNK_SIZE;
+
+        // if there are some chunks (so at least 64 bytes will be generated)
+        if(config->chunk_size > 0)
+        {
+            // get how many iterations in all threads is needed to generate all the data.
+            config->chunk_count = config->blocks / (config->chunk_size*config->threads);
+            // And how many bytes is left, because they could fit into chunks (just few bytes)
+            config->ending_bytes = config->bytes % (config->chunk_size*config->chunk_count*config->threads*8);
+        }
+        else
+        {
+            // there is not enough bytes to generate to fill a single chunk
+            config->ending_bytes = config->bytes;
+        }
+
+
+        //printf("Will generate %u of 64bit blocks using %u chunks of size %u blocks per thread, ending: %u bytes.\n", (uint)config->blocks, (uint)config->chunk_count, (uint)config->chunk_size, (uint)config->ending_bytes);
+    }
+    else if(config->bytes == 0)
+    {
+        config->chunk_size = MAX_CHUNK_SIZE;
+    }
+}
+
 /**
  * Parse arguments and save flags/values to cnf_t* config.
  */
@@ -189,9 +231,9 @@ int parse_args(int argc, char** argv, cnf_t* config)
              (size_as_double < 0) || 
              (size_as_double >= UINT64_MAX) ){
 			    #ifdef _X86_64
-                    fprintf(stderr, "Size has to be in range <0, %lu>!\n",UINT64_MAX);
+                    EPRINT("Size has to be in range <0, %lu>!\n",UINT64_MAX);
 			    #else
-                    fprintf(stderr, "Size has to be in range <0, %llu>!\n",UINT64_MAX);
+                    EPRINT("Size has to be in range <0, %llu>!\n",UINT64_MAX);
 			    #endif // _X86_64
                 //exit(EXIT_FAILURE);
                 return EXIT_FAILURE;
@@ -213,8 +255,7 @@ int parse_args(int argc, char** argv, cnf_t* config)
 					size_as_double *= pow(2,10);
 					break;
 				default:
-					fprintf(stderr,
-                        "Unknown suffix %s when parsing %s.\n",
+					EPRINT("Unknown suffix %s when parsing %s.\n",
                         size_suffix, 
                         optarg);
                     return EXIT_FAILURE;
@@ -234,8 +275,8 @@ int parse_args(int argc, char** argv, cnf_t* config)
                    ||(config->threads >=INT_MAX)
                    ||(config->threads>16384))
                 {
-                    fprintf(stderr,"Invalid threads parameter!\n");
-                    exit(EXIT_FAILURE);
+                    EPRINT("Invalid threads parameter!\n");
+                    return EXIT_FAILURE;
                 }
 		    }
 			//config->threads = strtoumax(optarg, NULL, 10);
@@ -260,7 +301,7 @@ int parse_args(int argc, char** argv, cnf_t* config)
 			// test default value
 			if(config->method == METHODS_COUNT)
 			{
-				fprintf (stderr,"Error: Unknown method to use!\n");
+				EPRINT("Error: Unknown method to use!\n");
 				print_available_methods(stderr);
 				//exit(EXIT_FAILURE);
                 return EXIT_FAILURE;
@@ -269,55 +310,23 @@ int parse_args(int argc, char** argv, cnf_t* config)
 
 
 		case '?':
-		    fprintf(stderr,"An unknown parameter.\n");
+		    EPRINT("An unknown parameter.\n");
 			//exit(EXIT_FAILURE);
             return EXIT_FAILURE;
 		default:
-		    fprintf(stderr,"An unknown parameter %c.\n",optC);
+		    EPRINT("An unknown parameter %c.\n",optC);
 			//exit(EXIT_FAILURE);
             return EXIT_FAILURE;
 			//abort ();
 		}
 	}
 
-	/** Compute the size of a chunk:
-	 *  Total bytes / 8 = number of 64bit blocks.
-	 *  No. 64bit blocks / threads = size of chunk
-	 */
-	if(config->bytes > 0)
-	{
-		// number of 64bit blocks
-		config->blocks = config->bytes / 8;
-		// size of one chunk - max size is limited to MAX_CHUNK_SIZE
-		config->chunk_size = config->blocks / config->threads;
-		if(config->chunk_size > MAX_CHUNK_SIZE)
-			config->chunk_size = MAX_CHUNK_SIZE;
-
-		// if there are some chunks (so at least 64 bytes will be generated)
-		if(config->chunk_size > 0)
-		{
-			// get how many iterations in all threads is needed to generate all the data.
-			config->chunk_count = config->blocks / (config->chunk_size*config->threads);
-			// And how many bytes is left, because they could fit into chunks (just few bytes)
-			config->ending_bytes = config->bytes % (config->chunk_size*config->chunk_count*config->threads*8);
-		}
-		else
-		{
-			// there is not enough bytes to generate to fill a single chunk
-			config->ending_bytes = config->bytes;
-		}
-
-
-		//printf("Will generate %u of 64bit blocks using %u chunks of size %u blocks per thread, ending: %u bytes.\n", (uint)config->blocks, (uint)config->chunk_count, (uint)config->chunk_size, (uint)config->ending_bytes);
-	}
-	else if(config->bytes == 0)
-    {
-        config->chunk_size = MAX_CHUNK_SIZE;
-    }
+	compute_chunk_size(config);
 
 
     return EXIT_SUCCESS;
 }
+
 
 size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int blocks, int retry)
 {
@@ -373,8 +382,8 @@ size_t generate_chunk(cnf_t *config)
 				if(config->printedWarningFlag == 0)
 				{
 					config->printedWarningFlag++;
-					//fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Trying to get randomness with slower speed.\n", written, buf_size);
-					fprintf(stderr, "Warning: Less than expected amount of bytes was generated. Trying to get randomness with slower speed.\n");
+					//EPRINT( "Warning: %zu bytes generated, but %zu bytes expected. Trying to get randomness with slower speed.\n", written, buf_size);
+					EPRINT( "Warning: Less than expected amount of bytes was generated. Trying to get randomness with slower speed.\n");
 				}
 				// reset the retry - LIMIT should work work for each run independently
 				// and also the delay should be as small as possible
@@ -387,7 +396,7 @@ size_t generate_chunk(cnf_t *config)
 				}
 				if( written != buf_size )
 				{
-					fprintf(stderr, "Error:  %zu bytes generated, but %zu bytes expected. Probably there is a hardware problem with your CPU.\n", written, buf_size);
+					EPRINT( "Error:  %zu bytes generated, but %zu bytes expected. Probably there is a hardware problem with your CPU.\n", written, buf_size);
 					break;
 				}
 			}
@@ -395,7 +404,7 @@ size_t generate_chunk(cnf_t *config)
 			{
 				/* try to lower threads count to avoid underflow */
 				config->threads--;
-				fprintf(stderr, "Warning: %zu bytes generated, but %zu bytes expected. Probably slow internal generator - decreaseing threads count by one to %d to avoid problems.\n", written, buf_size, config->threads);
+				EPRINT( "Warning: %zu bytes generated, but %zu bytes expected. Probably slow internal generator - decreaseing threads count by one to %d to avoid problems.\n", written, buf_size, config->threads);
 				buf_size -= config->chunk_size;
 
 				/* run this iteration again */
@@ -410,7 +419,7 @@ size_t generate_chunk(cnf_t *config)
 		if ( written !=  buf_size)
 		{
 			perror("fwrite");
-			fprintf(stderr, "ERROR: %zu bytes written, but %zu bytes to write\n", sizeof(buf[0]) * written, buf_size);
+			EPRINT( "ERROR: %zu bytes written, but %zu bytes to write\n", sizeof(buf[0]) * written, buf_size);
 			break;
 		}
 	}
@@ -431,14 +440,14 @@ size_t generate_ending(cnf_t *config)
 	/* test generated amount */
 	if ( written_total != SIZEOF(buf) )
 	{
-		fprintf(stderr, "ERROR: bytes generated %zu, bytes expected %zu\n", written_total, SIZEOF(buf));
+		EPRINT( "ERROR: bytes generated %zu, bytes expected %zu\n", written_total, SIZEOF(buf));
 		return written_total;
 	}
 	written_total = fwrite(buf, sizeof(buf[0]), SIZEOF(buf), config->output);
 	if ( written_total !=  SIZEOF(buf) )
 	{
 		perror("fwrite");
-		fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written_total, sizeof(buf));
+		EPRINT( "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", sizeof(buf[0]) * written_total, sizeof(buf));
 		return written_total;
 
 	}
@@ -492,7 +501,7 @@ int main(int argc, char** argv)
 		config.output = fopen(config.output_filename, "wb");
 		if( config.output == NULL )
 		{
-			fprintf(stderr,"ERROR: Can't open file %s!\n", config.output_filename);
+			EPRINT("ERROR: Can't open file %s!\n", config.output_filename);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -502,7 +511,7 @@ int main(int argc, char** argv)
 		config.aeskeys_file = fopen(config.output_filename, "r");
 		if( config.aeskeys_file == NULL )
 		{
-			fprintf(stderr,"ERROR: Can't open file %s!\n", config.aeskeys_filename);
+			EPRINT("ERROR: Can't open file %s!\n", config.aeskeys_filename);
 			exit(EXIT_FAILURE);
 		}
 		// TODO: test if it contain keys
@@ -514,14 +523,14 @@ int main(int argc, char** argv)
         {
             if(config.bytes)
             {
-                fprintf(stderr, "Generating %zu bytes using %s method and %u working threads.\n",
+                EPRINT( "Generating %zu bytes using %s method and %u working threads.\n",
                       config.bytes,
                       METHOD_NAMES[config.method],
                       config.threads);
             }
             else
             {
-                fprintf(stderr, "Generating infinite bytes using %s method and %u working threads.\n",
+                EPRINT( "Generating infinite bytes using %s method and %u working threads.\n",
                       METHOD_NAMES[config.method],
                       config.threads);
             }
@@ -531,13 +540,13 @@ int main(int argc, char** argv)
         if(config.verbose_flag)
         {
             // TODO print it also on ^C
-            fprintf(stderr, "Generated %zu bytes.\n", generated);
+            EPRINT( "Generated %zu bytes.\n", generated);
         }
 
     }
     else
     {
-        fprintf(stderr,"ERROR: The CPU of this machine do not have RdRand!\n");
+        EPRINT("ERROR: The CPU of this machine do not have RdRand!\n");
         exit(EXIT_FAILURE);
     }
 

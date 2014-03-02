@@ -96,29 +96,29 @@ int compareConfigs(cnf_t a, cnf_t b) {
         return FALSE;
     }
     if (a.threads != b.threads) {
-        fprintf(stderr, "ERROR: Different threads!\n");
+        fprintf(stderr, "ERROR: Different threads! %u/%u\n",a.threads,b.threads);
         return FALSE;
     }
     if (a.bytes != b.bytes) {
-        fprintf(stderr, "ERROR: Different bytes! %d/%d\n",a.bytes,b.bytes);
+        fprintf(stderr, "ERROR: Different bytes! %zd/%zd\n",a.bytes,b.bytes);
         return FALSE;
     }
     if (a.blocks != b.blocks) {
-        fprintf(stderr, "ERROR: Different blocks! %d/%d\n",a.blocks,b.blocks);
+        fprintf(stderr, "ERROR: Different blocks! %zd/%zd\n",a.blocks,b.blocks);
         return FALSE;
     }
     if (a.chunk_size != b.chunk_size) {
-        fprintf(stderr, "ERROR: Different chunk_size! %d/%d\n",
+        fprintf(stderr, "ERROR: Different chunk_size! %zd/%zd\n",
             a.chunk_size, b.chunk_size);
         return FALSE;
     }
     if (a.chunk_count != b.chunk_count) {
-        fprintf(stderr, "ERROR: Different chunk_count! %d/%d\n",
+        fprintf(stderr, "ERROR: Different chunk_count! %zd/%zd\n",
             a.chunk_count, b.chunk_count);
         return FALSE;
     }
     if (a.ending_bytes != b.ending_bytes) {
-        fprintf(stderr, "ERROR: Different ending_bytes! %d/%d\n",
+        fprintf(stderr, "ERROR: Different ending_bytes! %zd/%zd\n",
             a.ending_bytes,b.ending_bytes);
         return FALSE;
     }
@@ -128,7 +128,7 @@ int compareConfigs(cnf_t a, cnf_t b) {
 /** ******************************************************************/
 /**                      arguments parsing                           */
 /** ******************************************************************/
-
+// {{{
 START_TEST (parseArgs_no_args)
 {
     // default config
@@ -167,13 +167,13 @@ START_TEST (parseArgs_amount_missingNumber)
     // default config
     cnf_t config = DEFAULT_CONFIG_SETTING;
     // correct result
-    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    //cnf_t cc = DEFAULT_CONFIG_SETTING;
     // arguments
     int argc = 2;
     char *argv[] = {"rdrand-gen","--amount"};
     // call
     ck_assert(parse_args(argc, argv,&config) == EXIT_FAILURE);
-    ck_assert(compareConfigs(config, cc));
+    //ck_assert(compareConfigs(config, cc));
 }
 END_TEST
 
@@ -239,13 +239,13 @@ START_TEST (parseArgs_amount_suffix_bad)
     // default config
     cnf_t config = DEFAULT_CONFIG_SETTING;
     // correct result
-    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    //cnf_t cc = DEFAULT_CONFIG_SETTING;
     // arguments
     int argc = 3;
     char *argv[] = {"rdrand-gen","--amount","1D"};
     // call
     ck_assert(parse_args(argc, argv,&config) == EXIT_FAILURE);
-    ck_assert(compareConfigs(config, cc));
+    //ck_assert(compareConfigs(config, cc));
 }
 END_TEST
 
@@ -255,31 +255,91 @@ START_TEST (parseArgs_amount_negative)
     // default config
     cnf_t config = DEFAULT_CONFIG_SETTING;
     // correct result
-    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    //cnf_t cc = DEFAULT_CONFIG_SETTING;
     // arguments
     int argc = 3;
     char *argv[] = {"rdrand-gen","--amount","-1024"};
     // call
     ck_assert(parse_args(argc, argv,&config) == EXIT_FAILURE);
+    //ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_threads_negative)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    //cnf_t cc = DEFAULT_CONFIG_SETTING;
+    // arguments
+    int argc = 3;
+    char *argv[] = {"rdrand-gen","--threads","-1"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_FAILURE);
+   // ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_threads_withoutNumber)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    //cnf_t cc = DEFAULT_CONFIG_SETTING;
+    // arguments
+    int argc = 2;
+    char *argv[] = {"rdrand-gen","--threads"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_FAILURE);
+   // ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_threads_positive)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    cc.chunk_size=MAX_CHUNK_SIZE;
+    cc.threads=2;
+    // arguments
+    int argc = 3;
+    char *argv[] = {"rdrand-gen","--threads","2"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
     ck_assert(compareConfigs(config, cc));
 }
 END_TEST
 
+
+
 Suite *
 parseArgs_suite (void)
 {
-  Suite *s = suite_create ("Stub methods suite");
+  Suite *s = suite_create ("Parse arguments suite");
+  TCase *tc;
 
-  TCase *tc_steps = tcase_create ("Stub methods");
-  tcase_add_test (tc_steps, parseArgs_no_args);
-  tcase_add_test (tc_steps, parseArgs_help);
-  tcase_add_test (tc_steps, parseArgs_amount_missingNumber);
-  tcase_add_test (tc_steps, parseArgs_amount_decimalNumber);
-  tcase_add_test (tc_steps, parseArgs_amount_simpleNumber);
-  tcase_add_test (tc_steps, parseArgs_amount_suffixK);
-  tcase_add_test (tc_steps, parseArgs_amount_suffix_bad);
-  tcase_add_test (tc_steps, parseArgs_amount_negative);
-  suite_add_tcase (s, tc_steps);
+  tc = tcase_create ("Basic arguments");
+  tcase_add_test (tc, parseArgs_no_args);
+  tcase_add_test (tc, parseArgs_help);
+  suite_add_tcase (s, tc);
+
+  tc = tcase_create ("Amount");
+  tcase_add_test (tc, parseArgs_amount_missingNumber);
+  tcase_add_test (tc, parseArgs_amount_decimalNumber);
+  tcase_add_test (tc, parseArgs_amount_simpleNumber);
+  tcase_add_test (tc, parseArgs_amount_suffixK);
+  tcase_add_test (tc, parseArgs_amount_suffix_bad);
+  tcase_add_test (tc, parseArgs_amount_negative);
+  suite_add_tcase (s, tc);
+
+
+  tc = tcase_create ("Threads");
+  tcase_add_test (tc, parseArgs_threads_negative);
+  tcase_add_test (tc, parseArgs_threads_withoutNumber);
+  tcase_add_test (tc, parseArgs_threads_positive);
+  suite_add_tcase (s, tc);
 
   return s;
 }
@@ -313,12 +373,11 @@ int main (void){
 
 	if(number_failed == 0)
 	{
-	  fprintf(stderr,"\n100%%: Everything OK.\n-----------------\n");
+	  fprintf(stderr,"\n-----------------\n");
 	  return EXIT_SUCCESS;
 	}
 
-	fprintf(stderr,"\nERROR: %d test(s) failed!\n-----------------\n",number_failed);
-
+	fprintf(stderr,"\n-----------------\n");
 	return EXIT_FAILURE;
 
 }
