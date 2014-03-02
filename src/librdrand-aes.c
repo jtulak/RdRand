@@ -14,7 +14,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
  */
 
 /*
@@ -23,34 +24,34 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "librdrand.h"
-#include "librdrand-aes.h"
+#include "./librdrand.h"
+#include "./librdrand-aes.h"
 
 #define DEFAULT_KEY_LEN 128
 
 enum {
-	KEYS_GENERATED,
-	KEYS_GIVEN
+    KEYS_GENERATED,
+    KEYS_GIVEN
 };
 
 enum {
-	SUCCESS,
-	ERROR
+    SUCCESS,
+    ERROR
 };
 
 
 typedef struct s_keys {
-	size_t amount;
-	unsigned int index;
-	unsigned char **nonces;
-	size_t nonce_length;
-	unsigned char **keys;
-	size_t key_length;
+    size_t amount;
+    unsigned int index;
+    unsigned char **nonces;
+    size_t nonce_length;
+    unsigned char **keys;
+    size_t key_length;
 } t_keys;
 
 typedef struct s_aes_cfg {
-	t_keys keys;
-	int keys_type;
+    t_keys keys;
+    int keys_type;
 } t_aes_cfg;
 
 /**
@@ -80,21 +81,20 @@ unsigned keys_new_timeout();
 
 
 /*****************************************************************************/
-//t_buffer* BUFFER;
+// t_buffer* BUFFER;
 t_aes_cfg AES_CFG;
 
-int keys_allocate(size_t amount, size_t key_length){
-	
-	AES_CFG.keys.key_length=key_length;
-	AES_CFG.keys.nonce_length=key_length/2;
-	
-	AES_CFG.keys.keys = calloc(AES_CFG.keys.key_length, amount);
-	AES_CFG.keys.nonces = calloc(AES_CFG.keys.nonce_length, amount);
-	
-	if( AES_CFG.keys.keys == NULL || AES_CFG.keys.nonces == NULL) 
-		return ERROR;
-		
-	return SUCCESS;
+int keys_allocate(size_t amount, size_t key_length) {
+    AES_CFG.keys.key_length = key_length;
+    AES_CFG.keys.nonce_length = key_length/2;
+
+    AES_CFG.keys.keys = calloc(AES_CFG.keys.key_length, amount);
+    AES_CFG.keys.nonces = calloc(AES_CFG.keys.nonce_length, amount);
+
+    if (AES_CFG.keys.keys == NULL || AES_CFG.keys.nonces == NULL)
+        return ERROR;
+
+    return SUCCESS;
 }
 
 /**
@@ -105,26 +105,29 @@ int keys_allocate(size_t amount, size_t key_length){
 TODO: rotate just in random times, or also random order?
 Maybe a shuffle at the end of the list?
 */
-int rdrand_set_aes_keys(size_t amount, size_t key_length, unsigned char **nonce, unsigned char **keys){
-	AES_CFG.keys_type = KEYS_GIVEN;
-	keys_allocate(amount, key_length);
-	
-	memcpy(AES_CFG.keys.keys, keys, amount*key_length);
-	
-	// TODO some better return
-	return 0;
+int rdrand_set_aes_keys(size_t amount,
+                        size_t key_length,
+                        unsigned char **nonce,
+                        unsigned char **keys) {
+    AES_CFG.keys_type = KEYS_GIVEN;
+    keys_allocate(amount, key_length);
+
+    memcpy(AES_CFG.keys.keys, keys, amount*key_length);
+
+    // TODO some better return
+    return 0;
 }
 
 /**
  * Set automatic key generation.
  * /dev/random will be used as a key generator.
  */
-int rdrand_set_aes_random_key(){
-	AES_CFG.keys_type = KEYS_GIVEN;
-	keys_allocate(1, DEFAULT_KEY_LEN);
-	
-	// TODO some better return
-	return 0;
+int rdrand_set_aes_random_key() {
+    AES_CFG.keys_type = KEYS_GIVEN;
+    keys_allocate(1, DEFAULT_KEY_LEN);
+
+    // TODO some better return
+    return 0;
 }
 
 
