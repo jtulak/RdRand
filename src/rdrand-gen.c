@@ -51,7 +51,7 @@
 #ifndef NO_ERROR_PRINTS
     #define EPRINT(...) fprintf(stderr,__VA_ARGS__)
 #else
-    #define EPRINT(...) fprintf(stderr,"")
+    #define EPRINT(...) ((void)0)
 #endif
 
 
