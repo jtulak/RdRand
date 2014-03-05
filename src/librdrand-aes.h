@@ -20,8 +20,26 @@
 /*
     Now the legal stuff is done. This file contain the library itself.
 */
+
+/*
+ * Usage:
+ * 1) Initialize it by one of the two functions
+ *     - rdrand_set_aes_keys
+ *     - rdrand_set_aes_random_key
+ * 2) Generate
+ *     - rdrand_get_bytes_aes_ctr
+ * 3) Clean
+ *     - rdrand_clean_aes
+ */
 #ifndef LIBRDRAND_AES_H_INCLUDED
 #define LIBRDRAND_AES_H_INCLUDED
+
+/**
+ * Default length of a key in bits.
+ * Used when key is generated.
+ */
+#define DEFAULT_KEY_LEN 128
+#define BYTES(bits) (bits>>3)/*(bits>>3)*/
 
 
 /**
@@ -34,23 +52,42 @@
  *
  * Either rdrand_set_aes_keys or rdrand_set_aes_random_key
  * has to be set in advance.
+ * 
+ * @param  dest        [description]
+ * @param  count       [description]
+ * @param  retry_limit [description]
+ * @return             [description]
  */
-unsigned int rdrand_get_bytes_aes_ctr(void *dest, const unsigned int count, int retry_limit);
+unsigned int rdrand_get_bytes_aes_ctr(void *dest,
+    const unsigned int count,
+    int retry_limit);
 
 
 /**
  * Set manually keys for AES.
  * These keys will be rotated randomly.
+ * 
+ *   TODO: rotate just in random times, or also random order?
+ *   Maybe a shuffle at the end of the list?
+ *
+ * @param  amount     Count of keys
+ * @param  key_length Length of all keys in bits 
+ *                    (must be pow(2))
+ * @param  nonces     Array of nonces. Nonces have to be half of 
+ *                    length of keys.
+ * @param  keys       Array of keys. All have to be the same length.
+ * @return            True if the keys were successfuly set
  */
-/*
-TODO: rotate just in random times, or also random order?
-Maybe a shuffle at the end of the list?
-*/
-int rdrand_set_aes_keys(size_t amount, size_t key_length, unsigned char **nonce, unsigned char **keys);
+int rdrand_set_aes_keys(size_t amount,
+    size_t key_length,
+    char **nonces,
+    char **keys);
 
 /**
  * Set automatic key generation.
  * /dev/random will be used as a key generator.
+ * 
+ * @return True if the key was successfuly set
  */
 int rdrand_set_aes_random_key();
 
@@ -59,6 +96,6 @@ int rdrand_set_aes_random_key();
  * Perform cleaning of all AES related settings:
  * Discard keys, ...
  */
-int rdrand_clean_aes();
+void rdrand_clean_aes();
 
 #endif // LIBRDRAND_AES_H_INCLUDED

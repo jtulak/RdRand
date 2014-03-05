@@ -25,4 +25,4 @@ rdrand-gen
 config.log
 src/.deps/
 src/.dirstamp
-
+*.swp

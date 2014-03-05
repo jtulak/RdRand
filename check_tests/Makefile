@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-DSTUB_RDRAND -DNO_MAIN -DNO_ERROR_PRINTS -c -Wall -Wextra -O3 -fopenmp  -fPIC
+CFLAGS=-DSTUB_RDRAND -DNO_MAIN -DNO_ERROR_PRINTS -c -Wall -Wextra -g -O0 -fopenmp  -fPIC
 LDFLAGS=-fopenmp -lrt -lm -mrdrnd -lcheck
 
 SRCS=../src/librdrand.c\

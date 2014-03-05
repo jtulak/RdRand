@@ -27,81 +27,140 @@
 #include <string.h>
 #include <check.h>
 #include "../src/librdrand.h"
+#include "../src/librdrand-aes.private.h"
 #include "../src/librdrand-aes.h"
 
-
-#define TRUE 1
-#define FALSE 0
-
-
-#if 0
+extern aes_cfg_t AES_CFG;
 /** ******************************************************************/
 /**                      aes setup                                   */
 /** ******************************************************************/
-
-START_TEST (aes_setup_manual_keys)
-{
-	//ck_assert(rdrand_set_aes_keys(size_t amount, size_t key_length, unsigned char **nonce, unsigned char **keys));
-  //ck_assert_int_eq (rdrand16_step((uint16_t *)&dst),RDRAND_SUCCESS);
-  // test if it set all to 1
-  //ck_assert(test_ones(dst,DEST_SIZE, 0, 2));
+// {{{ AES setup
+// {{{ allocation tests
+START_TEST(aes_malloc_bad) {
+  ck_assert(keys_allocate(0, 128) == FALSE);
+  ck_assert(keys_allocate(3, 127) == FALSE);
 }
 END_TEST
 
+START_TEST(aes_malloc_correct) {
+  ck_assert(keys_allocate(3, 128) == TRUE);
+  keys_free();
+}
+END_TEST
+// }}} allocation tests
+
+// {{{ keys manual setting 
+START_TEST(aes_set_keys_start) {
+  unsigned char ** guu;
+
+  size_t amount = 3;
+  size_t key_length = 32;
+  size_t nonce_length = 16;
+  char *nonces[] = {
+    "aa",
+    "bb",
+    "cc"
+  };
+  char *keys[] = {
+    "aaaa",
+    "bbbb",
+    "cccc"
+  };
+
+
+  ck_assert(rdrand_set_aes_keys(amount, key_length, nonces, keys) == TRUE);
+  
+  ck_assert(AES_CFG.keys_type == KEYS_GIVEN);
+  ck_assert(AES_CFG.keys.amount == amount);
+  ck_assert(AES_CFG.keys.key_length == key_length);
+  ck_assert(AES_CFG.keys.nonce_length == nonce_length);
+  ck_assert(AES_CFG.keys.index == 0);
+
+// FIXME Throw away the ** and make it a void*ptr;
+// For strings make a convert function
+  guu = AES_CFG.keys.keys;
+  printf("size: %zu\n",sizeof(guu));
+  printf("size: %zu\n",sizeof(keys));
+  printf("%c # %c\n",guu[2][3],keys[2][3]);
+  ck_assert(memcmp(AES_CFG.keys.keys[0], keys[0],amount) == 0);
+  ck_assert(memcmp(AES_CFG.keys.keys[1], keys[1],amount) == 0);
+  ck_assert(memcmp(AES_CFG.keys.keys[2], keys[2],amount) == 0);
+
+  ck_assert(memcmp(AES_CFG.keys.nonces[0], nonces[0],amount) == 0);
+  ck_assert(memcmp(AES_CFG.keys.nonces[1], nonces[1],amount) == 0);
+  ck_assert(memcmp(AES_CFG.keys.nonces[2], nonces[2],amount) == 0);
+}
+END_TEST
+
+START_TEST(aes_set_keys_end) {
+  rdrand_clean_aes();
+  ck_assert(AES_CFG.keys_type == 0);
+  ck_assert(AES_CFG.keys.amount == 0);
+  ck_assert(AES_CFG.keys.key_length == 0);
+  ck_assert(AES_CFG.keys.nonce_length == 0);
+  ck_assert(AES_CFG.keys.index == 0);
+  ck_assert(AES_CFG.keys.keys == NULL);
+  ck_assert(AES_CFG.keys.nonces == NULL);
+}
+END_TEST
+// }}} keys manual setting
+
+
 
 Suite *
-rdrand_stub_methods_suite (void)
-{
-  Suite *s = suite_create ("Stub methods suite");
+aes_creation_suite(void) {
+  Suite *s = suite_create("AES creation suite");
+  TCase *tc;
 
-  TCase *tc_steps = tcase_create ("Stub methods");
-  //tcase_add_test (tc_steps, rdrand_step_16_stub);
-  suite_add_tcase (s, tc_steps);
+  tc = tcase_create("Mallocs");
+  tcase_add_test(tc, aes_malloc_bad);
+  tcase_add_test(tc, aes_malloc_correct);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("Settings");
+  tcase_add_test(tc, aes_set_keys_start);
+
+  tcase_add_test(tc, aes_set_keys_end);
+  suite_add_tcase(s, tc);
 
   return s;
 }
-#endif
-
+// }}} AES setup
 /** *******************************************************************/
 /**             MAIN                                                  */
 /** *******************************************************************/
 
-int main (void){
-	#if 0
-	Suite *s;
+int main(void) {
+  Suite *s;
   SRunner *sr;
-  
-  if(rdrand_testSupport() == RDRAND_UNSUPPORTED){
-	  fprintf(stderr, 
-		"RdRand is not supported on this CPU! Can't run.\n");
-	  exit(EXIT_FAILURE);
+/*
+  if (rdrand_testSupport() == RDRAND_UNSUPPORTED) {
+    fprintf(stderr,
+    "RdRand is not supported on this CPU! Can't run.\n");
+    exit(EXIT_FAILURE);
   }
-	
+*/
   int number_failed;
-  
-  /* Standard suites */
-  s = rdrand_stub_methods_suite ();
-  sr = srunner_create (s);
-  
-  
-  //srunner_add_suite(sr, s);
-  
-  
-  srunner_run_all (sr, CK_NORMAL);
-  number_failed = srunner_ntests_failed (sr);
-  srunner_free (sr);
-  
-  
-  
-  if(number_failed == 0)
-  {
-	  fprintf(stderr,"\n100%%: Everything OK.\n-----------------\n");
-	  return EXIT_SUCCESS;
-  }
-  
-  fprintf(stderr,"\nERROR: %d test(s) failed!\n-----------------\n",number_failed);
-  return EXIT_FAILURE;
 
-  #endif
-  return EXIT_SUCCESS;
+  /* Standard suites */
+  s = aes_creation_suite();
+  sr = srunner_create(s);
+
+
+  // s = aes_creation_suite ();
+  // srunner_add_suite(sr, s);
+
+
+  srunner_run_all(sr, CK_NORMAL);
+  number_failed = srunner_ntests_failed(sr);
+  srunner_free(sr);
+
+
+  if (number_failed == 0) {
+    fprintf(stderr, "\n-----------------\n");
+    return EXIT_SUCCESS;
+  }
+
+  fprintf(stderr, "\n-----------------\n");
+  return EXIT_FAILURE;
 }
