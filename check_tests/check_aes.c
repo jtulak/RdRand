@@ -183,6 +183,8 @@ START_TEST(aes_random_key_startup) {
     ck_assert(AES_CFG.keys.amount == 1);
     ck_assert(AES_CFG.keys.nonce_length == AES_CFG.keys.key_length/2);
     ck_assert(AES_CFG.keys.index == 0);
+    ck_assert(AES_CFG.keys.keys != NULL);
+    ck_assert(AES_CFG.keys.nonces != NULL);
 }
 END_TEST
 // }}} aes_random_key_startup

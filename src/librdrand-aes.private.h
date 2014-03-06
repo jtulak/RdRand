@@ -92,11 +92,11 @@ void keys_free();
  * Lock memory to prevent saving it on swap
  * @return TRUE if it was successful
  */
-int keys_mem_lock();
+int keys_mem_lock(void * ptr, size_t len);
 /**
  * Unock memory from preventing saving it on swap
  * @return TRUE if it was successful
  */
-int keys_mem_unlock();
+int keys_mem_unlock(void * ptr, size_t len);
 
 #endif  // LIBRDRAND_AES_PRIVATE_H_INCLUDED

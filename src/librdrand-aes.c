@@ -34,7 +34,10 @@
 
 /*****************************************************************************/
 // {{{ misc
+
+
 // t_buffer* BUFFER;
+
 aes_cfg_t AES_CFG = {.keys={.amount=0}};
 
 /**
@@ -59,13 +62,27 @@ int keys_allocate(unsigned int amount, size_t key_length) {
 
 
 //    printf("allocating: %zu B x %zu\n",AES_CFG.keys.key_length,amount);
-    AES_CFG.keys.keys = malloc(AES_CFG.keys.key_length * amount);
-    AES_CFG.keys.nonces = malloc(AES_CFG.keys.nonce_length * amount);
-
+//    AES_CFG.keys.keys = calloc(AES_CFG.keys.key_length , amount);
+//    AES_CFG.keys.nonces = calloc(AES_CFG.keys.nonce_length , amount);
+    AES_CFG.keys.keys = malloc(sizeof(char*) *  amount);
+    AES_CFG.keys.nonces = malloc(sizeof(char*) * amount);
     if (AES_CFG.keys.keys == NULL || AES_CFG.keys.nonces == NULL)
         return 0;
 
-    keys_mem_lock();
+    keys_mem_lock(AES_CFG.keys.keys, amount*sizeof(char*));
+    keys_mem_lock(AES_CFG.keys.nonces, amount*sizeof(char*));
+    // block
+    {
+        unsigned int i;
+        for (i=0; i < amount; i++){
+            AES_CFG.keys.keys[i]=malloc(key_length * sizeof(char));
+            keys_mem_lock (AES_CFG.keys.keys[i], AES_CFG.keys.key_length);
+            AES_CFG.keys.nonces[i]=malloc(key_length/2 * sizeof(char));
+            keys_mem_lock (AES_CFG.keys.nonces[i], key_length/2);
+        }
+    }
+
+
     return 1;
 }
 
@@ -78,33 +95,52 @@ void keys_free() {
         return;
     }
 
-    // destroy keays in memory
-    memset(AES_CFG.keys.keys,
-        0,
-        AES_CFG.keys.amount * AES_CFG.keys.key_length);
-    memset(AES_CFG.keys.nonces,
-        0,
-        AES_CFG.keys.amount * AES_CFG.keys.nonce_length);
+    // Destroy keays in memory.
+    // Overwrite all keys and nonces, then free them.
+    // At the end, do the same for the arrays.
+    {
+        unsigned int i;
+        for (i=0; i < AES_CFG.keys.amount; i++) {
+            memset(AES_CFG.keys.keys[i],
+                0,
+                AES_CFG.keys.key_length);
+            keys_mem_unlock (AES_CFG.keys.keys[i], AES_CFG.keys.key_length);
+            free(AES_CFG.keys.keys[i]);
+            memset(AES_CFG.keys.nonces[i],
+                0,
+                AES_CFG.keys.nonce_length);
+            keys_mem_unlock(AES_CFG.keys.nonces[i], AES_CFG.keys.nonce_length);
+            free(AES_CFG.keys.nonces[i]);
+        }
+    }
 
-    keys_mem_unlock();
-    // free the memory
+    memset(AES_CFG.keys.keys, 0, AES_CFG.keys.amount*sizeof(char*));
+    memset(AES_CFG.keys.nonces, 0, AES_CFG.keys.amount*sizeof(char*));
+
+    keys_mem_unlock(AES_CFG.keys.keys, AES_CFG.keys.amount*sizeof(char*));
+    keys_mem_unlock(AES_CFG.keys.nonces, AES_CFG.keys.amount*sizeof(char*));
+    
     free(AES_CFG.keys.keys);
-    AES_CFG.keys.keys = NULL;
-
     free(AES_CFG.keys.nonces);
+
+    AES_CFG.keys.keys = NULL;
     AES_CFG.keys.nonces = NULL;
 
 }
 // }}} keys_allocate/free
 
 // {{{ keys_mem_lock/unlock
-int keys_mem_lock() {
+int keys_mem_lock(void * ptr, size_t len) {
     // TODO
+    (void) ptr;
+    (void) len;
     return TRUE;
 }
 
-int keys_mem_unlock() {
+int keys_mem_unlock(void * ptr, size_t len) {
     // TODO
+    (void) ptr;
+    (void) len;
     return TRUE;
 }
 // }}} keys_mem_lock/unlock
@@ -133,9 +169,16 @@ int rdrand_set_aes_keys(unsigned int amount,
     if (keys_allocate(amount, key_length) == 0) {
         return 0;
     }
-    memcpy(AES_CFG.keys.keys, keys, amount*key_length);
-    memcpy(AES_CFG.keys.nonces, nonces, amount*(key_length/2));
-
+    
+    { // subblock for var. i
+        unsigned int i;
+        for (i=0; i<amount; i++) {
+            memcpy(AES_CFG.keys.keys[i], keys[i], key_length);
+        }
+        for (i=0; i<amount; i++) {
+            memcpy(AES_CFG.keys.nonces[i], nonces[i], (key_length/2));
+        }
+    }
     return TRUE;
 }
 // }}} rdrand_set_aes_keys
@@ -194,6 +237,10 @@ unsigned int rdrand_get_bytes_aes_ctr(
     void *dest,
     const unsigned int count,
     int retry_limit) {
+
+    (void) dest;
+    (void) count;
+    (void) retry_limit;
 
     if (--AES_CFG.keys.next_counter <= 0) {
         if (AES_CFG.keys_type == KEYS_GIVEN) { 
