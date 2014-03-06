@@ -76,8 +76,11 @@ int keys_allocate(unsigned int amount, size_t key_length) {
         unsigned int i;
         for (i=0; i < amount; i++){
             AES_CFG.keys.keys[i]=malloc(key_length * sizeof(char));
+            memset(AES_CFG.keys.keys[i], 0, AES_CFG.keys.key_length);
             keys_mem_lock (AES_CFG.keys.keys[i], AES_CFG.keys.key_length);
+
             AES_CFG.keys.nonces[i]=malloc(key_length/2 * sizeof(char));
+            memset(AES_CFG.keys.nonces[i], 0, AES_CFG.keys.nonce_length);
             keys_mem_lock (AES_CFG.keys.nonces[i], key_length/2);
         }
     }
@@ -101,14 +104,11 @@ void keys_free() {
     {
         unsigned int i;
         for (i=0; i < AES_CFG.keys.amount; i++) {
-            memset(AES_CFG.keys.keys[i],
-                0,
-                AES_CFG.keys.key_length);
+            memset(AES_CFG.keys.keys[i], 0, AES_CFG.keys.key_length);
             keys_mem_unlock (AES_CFG.keys.keys[i], AES_CFG.keys.key_length);
             free(AES_CFG.keys.keys[i]);
-            memset(AES_CFG.keys.nonces[i],
-                0,
-                AES_CFG.keys.nonce_length);
+
+            memset(AES_CFG.keys.nonces[i], 0, AES_CFG.keys.nonce_length);
             keys_mem_unlock(AES_CFG.keys.nonces[i], AES_CFG.keys.nonce_length);
             free(AES_CFG.keys.nonces[i]);
         }
@@ -174,8 +174,6 @@ int rdrand_set_aes_keys(unsigned int amount,
         unsigned int i;
         for (i=0; i<amount; i++) {
             memcpy(AES_CFG.keys.keys[i], keys[i], key_length);
-        }
-        for (i=0; i<amount; i++) {
             memcpy(AES_CFG.keys.nonces[i], nonces[i], (key_length/2));
         }
     }
@@ -247,9 +245,12 @@ unsigned int rdrand_get_bytes_aes_ctr(
             keys_change(); // set a new random index 
             keys_randomize(); // set a new random timer
         } else { // KEYS_GENERATED
-            //key_generate();
+            key_generate(); // generate a new key and nonce
+            keys_randomize(); // set a new random timer
         }
     }
+
+    
     // TODO
 
     return 0;
@@ -267,7 +268,6 @@ unsigned int rdrand_get_bytes_aes_ctr(
 int keys_change() {
     unsigned int buf;
     if (RAND_bytes((unsigned char*)&buf, sizeof(unsigned int)) != 1) {
-        // TODO report error
         fprintf(stderr, "ERROR: can't change keys index, not enough entropy!\n");
         return 0;
     }
@@ -282,7 +282,6 @@ int keys_change() {
 int keys_randomize() {
     unsigned int buf;
     if (RAND_bytes((unsigned char*)&buf, sizeof(unsigned int)) != 1) { 
-        // TODO report error
         fprintf(stderr, "ERROR: can't change keys index, not enough entropy!\n");
         return 0;
     } 
@@ -293,17 +292,20 @@ int keys_randomize() {
 /**
  * Generate a random key.
  * Used when rdrand_set_aes_random_key() was set.
- * TODO
  */
 int key_generate() {
     unsigned char buf[MAX_KEY_LENGTH] = {};
     if (RAND_bytes(buf, AES_CFG.keys.key_length) != 1) { 
-        // TODO report error
         fprintf(stderr, "ERROR: can't generate key, not enough entropy!\n");
         return 0;
     }
-    //printf("%.*s\n",AES_CFG.keys.key_length,buf);
     memcpy(AES_CFG.keys.keys[0],buf, AES_CFG.keys.key_length);
+
+    if (RAND_bytes(buf, AES_CFG.keys.nonce_length) != 1) { 
+        fprintf(stderr, "ERROR: can't generate nonce, not enough entropy!\n");
+        return 0;
+    }
+    memcpy(AES_CFG.keys.nonces[0],buf, AES_CFG.keys.nonce_length);
     return 1;
 }
 // }}} keys and randomizing

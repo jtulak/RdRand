@@ -50,7 +50,13 @@ START_TEST(aes_malloc_bad) {
 END_TEST
 
 START_TEST(aes_malloc_correct) {
-  ck_assert(keys_allocate(3, 128) == TRUE);
+    unsigned char zero[DEFAULT_KEY_LEN]={};
+  ck_assert(keys_allocate(3, DEFAULT_KEY_LEN) == TRUE);
+  ck_assert_msg(memcmp(AES_CFG.keys.keys[0], zero, DEFAULT_KEY_LEN) == 0,
+          "Allocated memory for keys wasn't deleted.\n");
+  ck_assert_msg(memcmp(AES_CFG.keys.nonces[0], zero, DEFAULT_KEY_LEN/2) == 0,
+          "Allocated memory for nonces wasn't deleted.\n");
+
   keys_free();
 }
 END_TEST
@@ -75,6 +81,7 @@ END_TEST
   };\
   ck_assert(rdrand_set_aes_keys(amount, key_length, nonces, keys) == TRUE);
 // }}}
+
 
 // {{{ aes_set_keys_start
 START_TEST(aes_set_keys_start) {
@@ -215,9 +222,14 @@ START_TEST(aes_random_key_gen) {
     ck_assert(rdrand_set_aes_random_key());
     //mem_dump(old_key, DEFAULT_KEY_LEN);
     //mem_dump(AES_CFG.keys.keys[0], AES_CFG.keys.key_length);
+    //mem_dump(AES_CFG.keys.nonces[0], AES_CFG.keys.nonce_length);
+    
     // test if the key was generated at the beginning 
     ck_assert_msg(memcmp(AES_CFG.keys.keys[0], old_key, AES_CFG.keys.key_length) !=  0,
             "Key wasn't generated at initialization, but is still all zero.\n");
+    
+    // nonce is too all zero by default, so it can be checked this way
+    ck_assert(memcmp(AES_CFG.keys.nonces[0], old_key, AES_CFG.keys.nonce_length) !=  0);
 
     // save the generated key
     memcpy(old_key, AES_CFG.keys.keys[0], AES_CFG.keys.key_length);
