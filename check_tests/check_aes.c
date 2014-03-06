@@ -1,4 +1,4 @@
-/* vim: set expandtab cindent fdm=marker ts=2 sw=2: */
+/* vim: set expandtab cindent fdm=marker ts=4 sw=4: */
 /*
  * Copyright (C) 2013  Jan Tulak <jan@tulak.me>
  *
@@ -31,6 +31,13 @@
 #include "../src/librdrand-aes.h"
 
 extern aes_cfg_t AES_CFG;
+void mem_dump(unsigned char *mem, unsigned int length) {
+    unsigned i;
+    for (i=0; length > i; i++){
+        printf("%x",mem[i]);
+    }
+    printf("\n");
+}   
 /** ******************************************************************/
 /**                      aes setup                                   */
 /** ******************************************************************/
@@ -50,63 +57,171 @@ END_TEST
 // }}} allocation tests
 
 // {{{ keys manual setting 
-START_TEST(aes_set_keys_start) {
-  unsigned char ** guu;
-
-  size_t amount = 3;
-  size_t key_length = 32;
-  size_t nonce_length = 16;
-  char *nonces[] = {
-    "aa",
-    "bb",
-    "cc"
-  };
-  char *keys[] = {
-    "aaaa",
-    "bbbb",
-    "cccc"
-  };
-
-
+// {{{ SETUP MACRO
+// return amount of keys
+#define SETUP_KEYS() \
+  unsigned int amount = 3;\
+  size_t key_length = 32;\
+  /*size_t nonce_length = 16;*/\
+  char *nonces[] = {\
+    "aa",\
+    "bb",\
+    "cc"\
+  };\
+  char *keys[] = {\
+    "aaaa",\
+    "bbbb",\
+    "cccc"\
+  };\
   ck_assert(rdrand_set_aes_keys(amount, key_length, nonces, keys) == TRUE);
-  
-  ck_assert(AES_CFG.keys_type == KEYS_GIVEN);
-  ck_assert(AES_CFG.keys.amount == amount);
-  ck_assert(AES_CFG.keys.key_length == key_length);
-  ck_assert(AES_CFG.keys.nonce_length == nonce_length);
-  ck_assert(AES_CFG.keys.index == 0);
+// }}}
 
-// FIXME Throw away the ** and make it a void*ptr;
-// For strings make a convert function
-  guu = AES_CFG.keys.keys;
-  printf("size: %zu\n",sizeof(guu));
-  printf("size: %zu\n",sizeof(keys));
-  printf("%c # %c\n",guu[2][3],keys[2][3]);
-  ck_assert(memcmp(AES_CFG.keys.keys[0], keys[0],amount) == 0);
-  ck_assert(memcmp(AES_CFG.keys.keys[1], keys[1],amount) == 0);
-  ck_assert(memcmp(AES_CFG.keys.keys[2], keys[2],amount) == 0);
+// {{{ aes_set_keys_start
+START_TEST(aes_set_keys_start) {
 
-  ck_assert(memcmp(AES_CFG.keys.nonces[0], nonces[0],amount) == 0);
-  ck_assert(memcmp(AES_CFG.keys.nonces[1], nonces[1],amount) == 0);
-  ck_assert(memcmp(AES_CFG.keys.nonces[2], nonces[2],amount) == 0);
+    SETUP_KEYS();
+    ck_assert(AES_CFG.keys_type == KEYS_GIVEN);
+    ck_assert(AES_CFG.keys.amount == amount);
+    ck_assert(AES_CFG.keys.key_length == key_length);
+    ck_assert(AES_CFG.keys.nonce_length == key_length/2);
+    ck_assert(AES_CFG.keys.index == 0);
+
+    ck_assert(memcmp(AES_CFG.keys.keys[0], keys[0],amount) == 0);
+    ck_assert(memcmp(AES_CFG.keys.keys[1], keys[1],amount) == 0);
+    ck_assert(memcmp(AES_CFG.keys.keys[2], keys[2],amount) == 0);
+
+    ck_assert(memcmp(AES_CFG.keys.nonces[0], nonces[0],amount) == 0);
+    ck_assert(memcmp(AES_CFG.keys.nonces[1], nonces[1],amount) == 0);
+    ck_assert(memcmp(AES_CFG.keys.nonces[2], nonces[2],amount) == 0);
+
+
 }
 END_TEST
+// }}} aes_set_keys_start
 
+// {{{ aes_set_keys_changing
+START_TEST(aes_set_keys_changing) {
+    unsigned int i, old_index, index, changes;
+    SETUP_KEYS();
+
+    old_index = AES_CFG.keys.index;
+    for (i=0; i < 5; i++) {
+        keys_change();
+        index = AES_CFG.keys.index;
+        // test boundaries
+        ck_assert_msg( index < AES_CFG.keys.amount, 
+                "Generated index is out of <0,%u) boundaries. Value: %u.\n",
+                AES_CFG.keys.amount, index);
+        if (index != old_index) {
+            old_index = AES_CFG.keys.index;
+            changes++;
+        }
+    }
+    ck_assert_msg(changes > 0, "No changes in index happened during multiple runs!\n");
+}
+END_TEST
+// }}} aes_set_keys_changing
+
+// {{{ aes_set_counter_changing
+START_TEST(aes_set_counter_changing) {
+    unsigned int i, old_next_counter, next_counter, changes=0;
+    SETUP_KEYS();
+
+    old_next_counter = AES_CFG.keys.next_counter;
+    
+    for (i=0; i < 5; i++) {
+        keys_randomize();
+        next_counter = AES_CFG.keys.next_counter;
+        // test boundaries
+        ck_assert_msg( next_counter <=MAX_COUNTER, 
+                "Generated next_counter is out of <0,%u> boundaries. Value: %u.\n",
+                MAX_COUNTER, next_counter);
+        // test change
+        if (next_counter != old_next_counter) {
+            changes++;
+            old_next_counter = AES_CFG.keys.next_counter;
+        }
+    }
+    ck_assert_msg(changes > 0, "No changes in next_counter happened during multiple runs!\n");
+}
+END_TEST
+// }}} aes_set_counter_changing
+
+// {{{ aes_set_keys_end
 START_TEST(aes_set_keys_end) {
-  rdrand_clean_aes();
-  ck_assert(AES_CFG.keys_type == 0);
-  ck_assert(AES_CFG.keys.amount == 0);
-  ck_assert(AES_CFG.keys.key_length == 0);
-  ck_assert(AES_CFG.keys.nonce_length == 0);
-  ck_assert(AES_CFG.keys.index == 0);
-  ck_assert(AES_CFG.keys.keys == NULL);
-  ck_assert(AES_CFG.keys.nonces == NULL);
+
+    SETUP_KEYS();
+
+    rdrand_clean_aes();
+    ck_assert(AES_CFG.keys_type == 0);
+    ck_assert(AES_CFG.keys.amount == 0);
+    ck_assert(AES_CFG.keys.key_length == 0);
+    ck_assert(AES_CFG.keys.nonce_length == 0);
+    ck_assert(AES_CFG.keys.index == 0);
+    ck_assert(AES_CFG.keys.keys == NULL);
+    ck_assert(AES_CFG.keys.nonces == NULL);
 }
 END_TEST
+// }}} aes_set_keys_end
 // }}} keys manual setting
 
 
+// {{{ keys generated
+// {{{ aes_random_key_startup
+START_TEST(aes_random_key_startup) {
+    rdrand_set_aes_random_key();
+    ck_assert(AES_CFG.keys.key_length == DEFAULT_KEY_LEN);
+    ck_assert(AES_CFG.keys_type == KEYS_GENERATED);
+    ck_assert(AES_CFG.keys.amount == 1);
+    ck_assert(AES_CFG.keys.nonce_length == AES_CFG.keys.key_length/2);
+    ck_assert(AES_CFG.keys.index == 0);
+}
+END_TEST
+// }}} aes_random_key_startup
 
+// {{{ aes_random_key_end
+START_TEST(aes_random_key_end) {
+
+    rdrand_set_aes_random_key();
+
+    rdrand_clean_aes();
+    ck_assert(AES_CFG.keys_type == 0);
+    ck_assert(AES_CFG.keys.amount == 0);
+    ck_assert(AES_CFG.keys.key_length == 0);
+    ck_assert(AES_CFG.keys.nonce_length == 0);
+    ck_assert(AES_CFG.keys.index == 0);
+    ck_assert(AES_CFG.keys.keys == NULL);
+    ck_assert(AES_CFG.keys.nonces == NULL);
+}
+END_TEST
+// }}} aes_random_key_end
+
+// {{{ aes_random_key_gen
+START_TEST(aes_random_key_gen) {
+    unsigned char old_key[DEFAULT_KEY_LEN] = {};
+    unsigned int changes=0, i;
+
+    rdrand_set_aes_random_key();
+    ck_assert(AES_CFG.keys.key_length == DEFAULT_KEY_LEN);
+
+    memcpy(old_key, AES_CFG.keys.keys[0], AES_CFG.keys.key_length);
+    for (i=0; i<5; i++) {
+        ck_assert(key_generate() == 1);
+        // if there is a difference
+        if(memcmp(AES_CFG.keys.keys[0], old_key, AES_CFG.keys.key_length) != 0) {
+            changes++;
+            memcpy(old_key, AES_CFG.keys.keys[0], AES_CFG.keys.key_length);
+        }
+        // print the keys
+        //mem_dump(AES_CFG.keys.keys[0],AES_CFG.keys.key_length);
+    }
+    ck_assert_msg(changes > 0, "No changes in generated key happened during multiple runs!\n");
+}
+END_TEST
+// }}} aes_random_key_gen)
+// }}} keys generated
+
+// {{{ aes_creation_suite
 Suite *
 aes_creation_suite(void) {
   Suite *s = suite_create("AES creation suite");
@@ -119,12 +234,18 @@ aes_creation_suite(void) {
 
   tc = tcase_create("Settings");
   tcase_add_test(tc, aes_set_keys_start);
-
   tcase_add_test(tc, aes_set_keys_end);
+  tcase_add_test(tc, aes_set_keys_changing);
+  tcase_add_test(tc, aes_set_counter_changing);
+
+  tcase_add_test(tc, aes_random_key_startup);
+  tcase_add_test(tc, aes_random_key_end);
+  tcase_add_test(tc, aes_random_key_gen);
   suite_add_tcase(s, tc);
 
   return s;
 }
+// }}} aes_creation_suite
 // }}} AES setup
 /** *******************************************************************/
 /**             MAIN                                                  */

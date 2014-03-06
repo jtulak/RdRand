@@ -1,4 +1,4 @@
-/* vim: set expandtab cindent fdm=marker ts=2 sw=2: */
+/* vim: set expandtab cindent fdm=marker ts=4 sw=4: */
 /*
  * Copyright (C) 2013  Jan Tulak <jan@tulak.me>
  *
@@ -35,8 +35,9 @@ enum {
 
 
 typedef struct s_keys {
-    size_t amount;
+    unsigned int amount;
     unsigned int index;
+    unsigned int next_counter;
     unsigned char **nonces;
     size_t nonce_length; // in bits
     unsigned char **keys;
@@ -53,31 +54,27 @@ typedef struct aes_cfg_s {
 #endif
 
 /**
- * Set key for AES to a next in the list.
- * Will call keys_shuffle at the end.
+ * Set key index for AES to another random one.
  * Used when rdrand_set_aes_keys() was set.
  * TODO
  */
+int keys_change();
 
-int keys_next();
 /**
- * Shuffle list of keys.
- * Used when rdrand_set_aes_keys() was set.
+ * Set a random timeout for new key generation/step.
+ * Called on every key change.
  * TODO
  */
-int keys_shuffle();
-
+int keys_randomize();
 
 /**
  * Generate a random key.
  * Used when rdrand_set_aes_random_key() was set.
  * TODO
  */
-int keys_generate();
+int key_generate();
 
 /**
- * Set a random timeout for new key generation/step.
- * Called on every key change.
  * TODO
  */
 unsigned keys_new_timeout();
@@ -88,7 +85,7 @@ unsigned keys_new_timeout();
  * @param  key_length length of each key, must be pow(2)
  * @return            true if it was successful
  */
-int keys_allocate(size_t amount, size_t key_length);
+int keys_allocate(unsigned int amount, size_t key_length);
 
 /**
  * Destroy saved keys and free the memory.

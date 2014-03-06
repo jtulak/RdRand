@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-DSTUB_RDRAND -DNO_MAIN -DNO_ERROR_PRINTS -c -Wall -Wextra -g -O0 -fopenmp  -fPIC
-LDFLAGS=-fopenmp -lrt -lm -mrdrnd -lcheck
+LDFLAGS=-fopenmp -lrt -lm -mrdrnd -lcheck -lcrypto
 
 SRCS=../src/librdrand.c\
      ../src/librdrand-aes.c\
