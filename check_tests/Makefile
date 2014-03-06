@@ -10,7 +10,9 @@ OSRCS=$(SRCS:.c=.o)
 
 all: check
 
-check: check_aes check_rdrand-gen check_rdrand 
+build: check_aes check_rdrand-gen check_rdrand
+
+check: build
 	./check_rdrand
 	./check_rdrand-gen
 	./check_aes

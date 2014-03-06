@@ -56,34 +56,30 @@ typedef struct aes_cfg_s {
 /**
  * Set key index for AES to another random one.
  * Used when rdrand_set_aes_keys() was set.
- * TODO
+ * @return            1 if it was successful
  */
 int keys_change();
 
 /**
  * Set a random timeout for new key generation/step.
  * Called on every key change.
- * TODO
+ * @return            1 if it was successful
  */
 int keys_randomize();
 
 /**
  * Generate a random key.
  * Used when rdrand_set_aes_random_key() was set.
- * TODO
+ * @return            1 if it was successful
  */
 int key_generate();
 
-/**
- * TODO
- */
-unsigned keys_new_timeout();
 
 /**
  * Allocate memory for keys.
  * @param  amount     is number of keys
  * @param  key_length length of each key, must be pow(2)
- * @return            true if it was successful
+ * @return            1 if it was successful
  */
 int keys_allocate(unsigned int amount, size_t key_length);
 

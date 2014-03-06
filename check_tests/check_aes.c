@@ -99,6 +99,14 @@ START_TEST(aes_set_keys_start) {
 END_TEST
 // }}} aes_set_keys_start
 
+// {{{ aes_set_keys_boundaries
+START_TEST(aes_set_keys_boundaries) {
+   // TODO What could be tested there? 
+}
+END_TEST
+// }}} aes_set_keys_boundaries
+
+
 // {{{ aes_set_keys_changing
 START_TEST(aes_set_keys_changing) {
     unsigned int i, old_index, index, changes;
@@ -201,13 +209,18 @@ START_TEST(aes_random_key_gen) {
     unsigned char old_key[DEFAULT_KEY_LEN] = {};
     unsigned int changes=0, i;
 
+    // generate
     rdrand_set_aes_random_key();
-    ck_assert(AES_CFG.keys.key_length == DEFAULT_KEY_LEN);
+    // test if the key was generated at the beginning 
+    ck_assert_msg(memcmp(AES_CFG.keys.keys[0], old_key, AES_CFG.keys.key_length) ==  0,
+            "Key wasn't generated at initialization, but is still all zero.\n");
 
+    // save the generated key
     memcpy(old_key, AES_CFG.keys.keys[0], AES_CFG.keys.key_length);
+
     for (i=0; i<5; i++) {
         ck_assert(key_generate() == 1);
-        // if there is a difference
+        // if there is a difference, increment counter
         if(memcmp(AES_CFG.keys.keys[0], old_key, AES_CFG.keys.key_length) != 0) {
             changes++;
             memcpy(old_key, AES_CFG.keys.keys[0], AES_CFG.keys.key_length);
@@ -235,6 +248,7 @@ aes_creation_suite(void) {
   tc = tcase_create("Settings");
   tcase_add_test(tc, aes_set_keys_start);
   tcase_add_test(tc, aes_set_keys_end);
+  tcase_add_test(tc, aes_set_keys_boundaries);
   tcase_add_test(tc, aes_set_keys_changing);
   tcase_add_test(tc, aes_set_counter_changing);
 
