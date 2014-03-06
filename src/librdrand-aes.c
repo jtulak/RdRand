@@ -302,6 +302,7 @@ int key_generate() {
         fprintf(stderr, "ERROR: can't generate key, not enough entropy!\n");
         return 0;
     }
+    //printf("%.*s\n",AES_CFG.keys.key_length,buf);
     memcpy(AES_CFG.keys.keys[0],buf, AES_CFG.keys.key_length);
     return 1;
 }

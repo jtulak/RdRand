@@ -212,9 +212,11 @@ START_TEST(aes_random_key_gen) {
     unsigned int changes=0, i;
 
     // generate
-    rdrand_set_aes_random_key();
+    ck_assert(rdrand_set_aes_random_key());
+    //mem_dump(old_key, DEFAULT_KEY_LEN);
+    //mem_dump(AES_CFG.keys.keys[0], AES_CFG.keys.key_length);
     // test if the key was generated at the beginning 
-    ck_assert_msg(memcmp(AES_CFG.keys.keys[0], old_key, AES_CFG.keys.key_length) ==  0,
+    ck_assert_msg(memcmp(AES_CFG.keys.keys[0], old_key, AES_CFG.keys.key_length) !=  0,
             "Key wasn't generated at initialization, but is still all zero.\n");
 
     // save the generated key
