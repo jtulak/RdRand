@@ -240,15 +240,6 @@ unsigned int rdrand_get_bytes_aes_ctr(
     (void) count;
     (void) retry_limit;
 
-    if (--AES_CFG.keys.next_counter <= 0) {
-        if (AES_CFG.keys_type == KEYS_GIVEN) { 
-            keys_change(); // set a new random index 
-            keys_randomize(); // set a new random timer
-        } else { // KEYS_GENERATED
-            key_generate(); // generate a new key and nonce
-            keys_randomize(); // set a new random timer
-        }
-    }
 
     
     // TODO
@@ -258,6 +249,20 @@ unsigned int rdrand_get_bytes_aes_ctr(
 
 // }}} rdrand_get_bytes_aes_ctr
 
+/**
+ * Decrement counter and if needed, change used key.
+ */
+void counter() {
+    if (AES_CFG.keys.next_counter-- == 0) {
+        if (AES_CFG.keys_type == KEYS_GIVEN) { 
+            keys_change(); // set a new random index 
+            keys_randomize(); // set a new random timer
+        } else { // KEYS_GENERATED
+            key_generate(); // generate a new key and nonce
+            keys_randomize(); // set a new random timer
+        }
+    }
+}
 
 // {{{ keys and randomizing
 /**

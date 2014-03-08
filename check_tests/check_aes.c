@@ -240,7 +240,7 @@ START_TEST(aes_random_key_gen) {
         if(memcmp(AES_CFG.keys.keys[0], old_key, AES_CFG.keys.key_length) != 0) {
             changes++;
             memcpy(old_key, AES_CFG.keys.keys[0], AES_CFG.keys.key_length);
-        }
+         }
         // print the keys
         //mem_dump(AES_CFG.keys.keys[0],AES_CFG.keys.key_length);
     }
@@ -249,6 +249,50 @@ START_TEST(aes_random_key_gen) {
 END_TEST
 // }}} aes_random_key_gen)
 // }}} keys generated
+
+// {{{ aes_keys_counter_zero
+// Test whether counter() expects also zero value
+START_TEST(aes_keys_counter_zero) {
+    unsigned char key[DEFAULT_KEY_LEN];
+
+    rdrand_set_aes_random_key();
+    // set the zero
+    AES_CFG.keys.next_counter = 0;
+
+    memcpy(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN);
+    counter();
+    // now has to change
+    ck_assert(memcmp(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN) != 0);
+    
+}
+END_TEST
+// }}}
+// {{{ aes_keys_counter
+// Test whether counter() really counts and change key.
+START_TEST(aes_keys_counter) {
+    unsigned int i, changes=0, rounds=2;
+    unsigned char key[DEFAULT_KEY_LEN];
+
+    rdrand_set_aes_random_key();
+    memcpy(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN);
+    
+    for (i=0; i<MAX_COUNTER*rounds+1; i++) {
+        counter();
+        if (memcmp(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN) != 0) {
+            changes++;
+            memcpy(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN);
+        }
+    }
+
+    rdrand_clean_aes();
+    // at least "rounds" times should the key change,
+    // but it can change more times
+    ck_assert(changes >= rounds);
+    
+}
+END_TEST
+// }}}
+
 
 // {{{ aes_creation_suite
 Suite *
@@ -271,7 +315,12 @@ aes_creation_suite(void) {
   tcase_add_test(tc, aes_random_key_startup);
   tcase_add_test(tc, aes_random_key_end);
   tcase_add_test(tc, aes_random_key_gen);
+
+  tcase_add_test(tc, aes_keys_counter_zero);
+  tcase_add_test(tc, aes_keys_counter);
+
   suite_add_tcase(s, tc);
+    
 
   return s;
 }

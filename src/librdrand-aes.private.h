@@ -54,6 +54,11 @@ typedef struct aes_cfg_s {
 #endif
 
 /**
+ * Decrement counter and if needed, change used key.
+ */
+void counter();
+
+/**
  * Set key index for AES to another random one.
  * Used when rdrand_set_aes_keys() was set.
  * @return            1 if it was successful
