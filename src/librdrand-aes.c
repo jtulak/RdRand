@@ -225,10 +225,10 @@ void rdrand_clean_aes() {
  * Either rdrand_set_aes_keys or rdrand_set_aes_random_key
  * has to be set in advance.
  * 
- * @param  dest        [description]
- * @param  count       [description]
- * @param  retry_limit [description]
- * @return             [description]
+ * @param  dest        destination location
+ * @param  count       bytes to generate
+ * @param  retry_limit how many times to retry the RdRand instruction
+ * @return             amount of sucessfully generated and ecrypted bytes
  */
 // {{{ rdrand_get_bytes_aes_ctr
 unsigned int rdrand_get_bytes_aes_ctr(
@@ -238,22 +238,33 @@ unsigned int rdrand_get_bytes_aes_ctr(
 
     // allow enough space in output buffer for additional block (padding)
     unsigned char output[MAX_BUFFER_SIZE + EVP_MAX_BLOCK_LENGTH];
-    unsigned int buffers, tail;
+    unsigned int buffers, tail, i, generated=0;
 
     (void) dest;
     (void) count;
     (void) retry_limit;
 
+    // keys change and such
     counter();
 
+    memset(output, 0, MAX_BUFFER_SIZE);
+    // compute cycles 
     buffers = count/MAX_BUFFER_SIZE;
     tail = count % MAX_BUFFER_SIZE; 
 
-
+    for (i=0; i < buffers; i++) {
+        // TODO generate full BUFFER
+        // TODO encrypt full BUFFER
+        memcpy(dest + i*MAX_BUFFER_SIZE, output, MAX_BUFFER_SIZE);
+    }
     
-    // TODO
+    if(tail) {
+        // TODO generate tail
+        // TODO encrypt tail
+        memcpy(dest + i*MAX_BUFFER_SIZE, output, tail);
+    }
 
-    return 0;
+    return generated;
 }
 
 // }}} rdrand_get_bytes_aes_ctr

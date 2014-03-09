@@ -329,7 +329,34 @@ aes_creation_suite(void) {
 // {{{ AES generation
 // {{{ aes_get_bytes
 START_TEST (aes_get_bytes) {
+    unsigned char buf[MAX_BUFFER_SIZE * 50 + 31]; 
+    unsigned int i,SIZE=MAX_BUFFER_SIZE * 50 + 31;
+    rdrand_set_aes_random_key();
+    
+    ck_assert(rdrand_get_bytes_aes_ctr(buf, SIZE, 3) == SIZE);
+   
+    // test whether two following buffer spaces are different.
+    for (i=0; i< 49; i++) {
+        ck_assert_msg(
+                memcmp(
+                    &buf[i*MAX_BUFFER_SIZE], 
+                    &buf[(i+1)*MAX_BUFFER_SIZE], 
+                    MAX_BUFFER_SIZE
+                ) != 0
+        , "Two following buffer spaces are identical!\n");
 
+    }
+    // test tail if it is not the same as the previous data
+    ck_assert_msg(
+            memcmp(
+                &buf[49*MAX_BUFFER_SIZE],
+                &buf[50*MAX_BUFFER_SIZE],
+                31
+                ) != 0
+            , "Tail is identical to previous data!\n");
+
+
+    rdrand_clean_aes();
 }
 END_TEST
 // }}} aes_get_bytes
