@@ -321,11 +321,33 @@ aes_creation_suite(void) {
 
   suite_add_tcase(s, tc);
     
-
   return s;
 }
 // }}} aes_creation_suite
 // }}} AES setup
+
+// {{{ AES generation
+// {{{ aes_get_bytes
+START_TEST (aes_get_bytes) {
+
+}
+END_TEST
+// }}} aes_get_bytes
+// {{{ aes_generation_suite
+Suite *
+aes_generation_suite(void) {
+    Suite *s = suite_create("AES generation suite");
+    TCase *tc;
+
+    tc = tcase_create("get_bytes");
+    tcase_add_test(tc, aes_get_bytes);    
+    suite_add_tcase(s, tc);
+
+
+  return s;
+}
+// }}} aes_generation_suite
+// }}} AES generation
 /** *******************************************************************/
 /**             MAIN                                                  */
 /** *******************************************************************/
@@ -347,8 +369,8 @@ int main(void) {
   sr = srunner_create(s);
 
 
-  // s = aes_creation_suite ();
-  // srunner_add_suite(sr, s);
+   s = aes_generation_suite ();
+   srunner_add_suite(sr, s);
 
 
   srunner_run_all(sr, CK_NORMAL);

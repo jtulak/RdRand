@@ -236,9 +236,18 @@ unsigned int rdrand_get_bytes_aes_ctr(
     const unsigned int count,
     int retry_limit) {
 
+    // allow enough space in output buffer for additional block (padding)
+    unsigned char output[MAX_BUFFER_SIZE + EVP_MAX_BLOCK_LENGTH];
+    unsigned int buffers, tail;
+
     (void) dest;
     (void) count;
     (void) retry_limit;
+
+    counter();
+
+    buffers = count/MAX_BUFFER_SIZE;
+    tail = count % MAX_BUFFER_SIZE; 
 
 
     
