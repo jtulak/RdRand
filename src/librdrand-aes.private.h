@@ -39,8 +39,10 @@ typedef struct s_keys {
     unsigned int index;
     unsigned int next_counter;
     unsigned char **nonces;
+    unsigned char *nonce_current; //  pointer to the current nonce
     size_t nonce_length; // in bits
     unsigned char **keys;
+    unsigned char *key_current; // pointer to the current index of keys
     size_t key_length; // in bits
 } t_keys;
 

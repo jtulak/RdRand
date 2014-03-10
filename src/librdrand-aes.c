@@ -84,7 +84,8 @@ int keys_allocate(unsigned int amount, size_t key_length) {
             keys_mem_lock (AES_CFG.keys.nonces[i], key_length/2);
         }
     }
-
+    AES_CFG.keys.key_current = AES_CFG.keys.keys[0];
+    AES_CFG.keys.nonce_current = AES_CFG.keys.nonces[0];
 
     return 1;
 }
@@ -97,6 +98,9 @@ void keys_free() {
         // If there is nothing to free
         return;
     }
+
+    AES_CFG.keys.key_current = NULL;
+    AES_CFG.keys.nonce_current = NULL;
 
     // Destroy keays in memory.
     // Overwrite all keys and nonces, then free them.
@@ -177,7 +181,7 @@ int rdrand_set_aes_keys(unsigned int amount,
             memcpy(AES_CFG.keys.nonces[i], nonces[i], (key_length/2));
         }
     }
-    return TRUE;
+    return 1;
 }
 // }}} rdrand_set_aes_keys
 
@@ -201,6 +205,10 @@ int rdrand_set_aes_random_key() {
 }
 //}}} rdrand_set_aes_random_key
 
+/**
+ * Perform cleaning of all AES related settings:
+ * Discard keys, ...
+ */
 // {{{ rdrand_clean_aes
 void rdrand_clean_aes() {
     keys_free();
@@ -238,7 +246,9 @@ unsigned int rdrand_get_bytes_aes_ctr(
 
     // allow enough space in output buffer for additional block (padding)
     unsigned char output[MAX_BUFFER_SIZE + EVP_MAX_BLOCK_LENGTH];
-    unsigned int buffers, tail, i, generated=0;
+    unsigned char buf[MAX_BUFFER_SIZE];
+    unsigned int buffers, tail, i, generated=0i, out_len;
+    EVP_CIPHER_CTX en;
 
     (void) dest;
     (void) count;
@@ -250,19 +260,58 @@ unsigned int rdrand_get_bytes_aes_ctr(
     memset(output, 0, MAX_BUFFER_SIZE);
     // compute cycles 
     buffers = count/MAX_BUFFER_SIZE;
-    tail = count % MAX_BUFFER_SIZE; 
+    tail = count % MAX_BUFFER_SIZE;
+
+    // init OpenSSL
+    EVP_CIPHER_CTX_init( &en );
+
+    // TODO don't make initialization on every call of get_bytes and join it with counter
+    if ( EVP_CipherInit_ex( 
+                &en,
+                EVP_aes_128_ctr(),
+                NULL,
+                AES_CFG.keys.key_current,
+                AES_CFG.keys.nonce_current,
+                1 ) != 1 ) { 
+        // enc=1 => encryption, enc=0 => decryption
+        perror("EVP_CipherInit_ex");
+        return 1;
+    };
+
 
     for (i=0; i < buffers; i++) {
         // TODO generate full BUFFER
+        generated += rdrand_get_bytes_retry(buf, MAX_BUFFER_SIZE, retry_limit);
         // TODO encrypt full BUFFER
+         if( EVP_EncryptUpdate(&en, output, &out_len, buf, MAX_BUFFER_SIZE) != 1 ) {
+            perror("EVP_EncryptUpdate");
+            return 1;
+        };
+
         memcpy(dest + i*MAX_BUFFER_SIZE, output, MAX_BUFFER_SIZE);
     }
     
     if(tail) {
         // TODO generate tail
+        generated += rdrand_get_bytes_retry(buf, tail, retry_limit);
         // TODO encrypt tail
+         if( EVP_EncryptUpdate(&en, output, &out_len, buf, tail) != 1 ) {
+            perror("EVP_EncryptUpdate");
+            return 1;
+        };
         memcpy(dest + i*MAX_BUFFER_SIZE, output, tail);
     }
+
+    // TODO move this cleaning somewhere else
+    if ( EVP_EncryptFinal_ex(&en, output, &out_len) != 1 ) {
+        perror("EVP_CIPHER_CTX_cleanup");
+        return 1;
+    }
+    if ( EVP_CIPHER_CTX_cleanup(&en) != 1 ) {
+        perror("EVP_CIPHER_CTX_cleanup");
+        return 1;
+    }
+
 
     return generated;
 }
@@ -272,6 +321,7 @@ unsigned int rdrand_get_bytes_aes_ctr(
 /**
  * Decrement counter and if needed, change used key.
  */
+// {{{ counter
 void counter() {
     if (AES_CFG.keys.next_counter-- == 0) {
         if (AES_CFG.keys_type == KEYS_GIVEN) { 
@@ -283,6 +333,7 @@ void counter() {
         }
     }
 }
+// }}}
 
 // {{{ keys and randomizing
 /**
@@ -297,6 +348,8 @@ int keys_change() {
         return 0;
     }
     AES_CFG.keys.index = ((double)buf / UINT_MAX)*AES_CFG.keys.amount;
+    AES_CFG.keys.key_current = AES_CFG.keys.keys[AES_CFG.keys.index];
+    AES_CFG.keys.nonce_current = AES_CFG.keys.nonces[AES_CFG.keys.index];
     return 1;
 }
 

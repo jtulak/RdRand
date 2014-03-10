@@ -92,6 +92,8 @@ START_TEST(aes_set_keys_start) {
     ck_assert(AES_CFG.keys.key_length == key_length);
     ck_assert(AES_CFG.keys.nonce_length == key_length/2);
     ck_assert(AES_CFG.keys.index == 0);
+    ck_assert(AES_CFG.keys.key_current == AES_CFG.keys.keys[0]);
+    ck_assert(AES_CFG.keys.nonce_current == AES_CFG.keys.nonces[0]);
 
     ck_assert(memcmp(AES_CFG.keys.keys[0], keys[0],amount) == 0);
     ck_assert(memcmp(AES_CFG.keys.keys[1], keys[1],amount) == 0);
@@ -121,12 +123,20 @@ START_TEST(aes_set_keys_changing) {
 
     old_index = AES_CFG.keys.index;
     for (i=0; i < 5; i++) {
-        keys_change();
-        index = AES_CFG.keys.index;
+        keys_change(); // do the change
+        index = AES_CFG.keys.index; // save variable for shorter typing
+        
         // test boundaries
         ck_assert_msg( index < AES_CFG.keys.amount, 
                 "Generated index is out of <0,%u) boundaries. Value: %u.\n",
                 AES_CFG.keys.amount, index);
+
+        // test _current pointers
+        ck_assert_msg(AES_CFG.keys.nonce_current == AES_CFG.keys.nonces[index],
+                "nonce_current wasn't changed accordingly to the index!\n");
+        ck_assert_msg(AES_CFG.keys.key_current == AES_CFG.keys.keys[index],
+                "key_current wasn't changed accordingly to the index!\n");
+
         if (index != old_index) {
             old_index = AES_CFG.keys.index;
             changes++;
@@ -343,7 +353,7 @@ START_TEST (aes_get_bytes) {
                     &buf[(i+1)*MAX_BUFFER_SIZE], 
                     MAX_BUFFER_SIZE
                 ) != 0
-        , "Two following buffer spaces are identical!\n");
+        , "Two following buffer spaces are identical (at i=%u)!\n",i);
 
     }
     // test tail if it is not the same as the previous data
