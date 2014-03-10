@@ -431,21 +431,35 @@ START_TEST ( aes_compare_ecrypt_data) {
   //char nonce_hex[16]="0000000000000000"; //only upper 64-bits
   unsigned char output [4096]={0};
 
+  // expected value - gained with another program (openssl-demo/aesctr.c)
+  char expected_result_hex[64] = "2c6e98c0f3e667673bb3fe2fb1b2ca4dfb2211f3bdf0231ab266fa8a045f8562";
+  unsigned char expected_result[32];
+
   keys[0]=key;
   nonces[0]=nonce_counter;
 
   hex2byte(key_hex, SIZEOF(key_hex), key, SIZEOF(key));
   hex2byte(nonce_hex, SIZEOF(nonce_hex), nonce_counter, SIZEOF(nonce_counter)/2); //Only upper 64-bits, lower bits are 0
 
-    printf("key: ");
-    mem_dump(keys[0],16);
-    printf("nonce: ");
-    mem_dump(nonces[0],16);
+    // printf("key: ");
+    // mem_dump(*keys,16);
+    // printf("nonce: ");
+    // mem_dump(*nonces,16);
     // set manual keys
     rdrand_set_aes_keys(1, 16, nonces, keys);
 
-    rdrand_get_bytes_aes_ctr(output, 32, 3);
-    mem_dump(output, 32);
+    ck_assert_msg(rdrand_get_bytes_aes_ctr(output, 32, 3)== 32,
+            "Not enough bytes generated!\n");
+    //mem_dump(output, 32);
+
+    // compare expected value
+    hex2byte(expected_result_hex, 64, expected_result, 32);
+    ck_assert_msg(memcmp(output, expected_result, 32)==0,
+            "Encrypted value is different from expected one.\n");
+
+    // try another run
+    ck_assert_msg(rdrand_get_bytes_aes_ctr(output, 32, 3)== 32,
+            "Not enough bytes generated!\n");
 
     // TODO compare the value
 

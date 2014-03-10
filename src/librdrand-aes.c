@@ -266,7 +266,6 @@ void rdrand_clean_aes() {
  * @param  retry_limit how many times to retry the RdRand instruction
  * @return             amount of sucessfully generated and ecrypted bytes
  */
-
 // {{{ rdrand_get_bytes_aes_ctr
 unsigned int rdrand_get_bytes_aes_ctr(
     void *dest,
