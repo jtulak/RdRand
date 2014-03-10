@@ -429,7 +429,7 @@ START_TEST ( aes_compare_ecrypt_data) {
   //char key_hex[32]="00000000000000000000000000000000";
   char nonce_hex[16]="41e31e41e3f8c26f"; //only upper 64-bits
   //char nonce_hex[16]="0000000000000000"; //only upper 64-bits
-  unsigned char output [4096]={0};
+  unsigned char output [8192]={0};
 
   // expected value - gained with another program (openssl-demo/aesctr.c)
   char expected_result_hex[64] = "2c6e98c0f3e667673bb3fe2fb1b2ca4dfb2211f3bdf0231ab266fa8a045f8562";
@@ -457,10 +457,11 @@ START_TEST ( aes_compare_ecrypt_data) {
     ck_assert_msg(memcmp(output, expected_result, 32)==0,
             "Encrypted value is different from expected one.\n");
 
-    // try another run
+    // try another runs
     ck_assert_msg(rdrand_get_bytes_aes_ctr(output, 32, 3)== 32,
             "Not enough bytes generated!\n");
-
+    ck_assert_msg(rdrand_get_bytes_aes_ctr(output, 8000, 3)== 8000,
+            "Not enough bytes generated!\n");
     // TODO compare the value
 
     rdrand_clean_aes();
