@@ -49,6 +49,21 @@ aes_cfg_t AES_CFG = {.keys={.amount=0}};
 int isPowerOfTwo(ulong x) {
     return x && (x & (x - 1)) == 0;
 }
+// bind current key to openssl, return 0 on failure
+int key_to_openssl() {
+    if ( EVP_CipherInit_ex( 
+                &(AES_CFG.en),
+                EVP_aes_128_ctr(),
+                NULL,
+                AES_CFG.keys.key_current,
+                AES_CFG.keys.nonce_current,
+                1 ) != 1 ) { 
+        // enc=1 => encryption, enc=0 => decryption
+        perror("EVP_CipherInit_ex");
+        return 0;
+    };
+    return 1;
+}
 // }}} misc
 
 // {{{ keys_allocate/free
@@ -58,32 +73,38 @@ int keys_allocate(unsigned int amount, size_t key_length) {
         return 0;
     AES_CFG.keys.amount = amount;
     AES_CFG.keys.key_length = key_length;
-    AES_CFG.keys.nonce_length = key_length/2; 
+    //AES_CFG.keys.nonce_length = key_length/2; 
 
+    // init OpenSSL
+    EVP_CIPHER_CTX_init( &(AES_CFG.en) );
 
-//    printf("allocating: %zu B x %zu\n",AES_CFG.keys.key_length,amount);
-//    AES_CFG.keys.keys = calloc(AES_CFG.keys.key_length , amount);
-//    AES_CFG.keys.nonces = calloc(AES_CFG.keys.nonce_length , amount);
+    // allocate first level of array
     AES_CFG.keys.keys = malloc(sizeof(char*) *  amount);
     AES_CFG.keys.nonces = malloc(sizeof(char*) * amount);
     if (AES_CFG.keys.keys == NULL || AES_CFG.keys.nonces == NULL)
         return 0;
-
+    // and lock it
     keys_mem_lock(AES_CFG.keys.keys, amount*sizeof(char*));
     keys_mem_lock(AES_CFG.keys.nonces, amount*sizeof(char*));
+
     // block
     {
         unsigned int i;
         for (i=0; i < amount; i++){
+            // for keys and nonces
+            // allocate strings
             AES_CFG.keys.keys[i]=malloc(key_length * sizeof(char));
+            // set it zero
             memset(AES_CFG.keys.keys[i], 0, AES_CFG.keys.key_length);
+            // lock it
             keys_mem_lock (AES_CFG.keys.keys[i], AES_CFG.keys.key_length);
 
-            AES_CFG.keys.nonces[i]=malloc(key_length/2 * sizeof(char));
-            memset(AES_CFG.keys.nonces[i], 0, AES_CFG.keys.nonce_length);
-            keys_mem_lock (AES_CFG.keys.nonces[i], key_length/2);
+            AES_CFG.keys.nonces[i]=malloc(key_length * sizeof(char));
+            memset(AES_CFG.keys.nonces[i], 0, key_length);
+            keys_mem_lock (AES_CFG.keys.nonces[i], key_length);
         }
     }
+    // set current to [0]
     AES_CFG.keys.key_current = AES_CFG.keys.keys[0];
     AES_CFG.keys.nonce_current = AES_CFG.keys.nonces[0];
 
@@ -101,6 +122,7 @@ void keys_free() {
 
     AES_CFG.keys.key_current = NULL;
     AES_CFG.keys.nonce_current = NULL;
+    AES_CFG.keys.index = 0;
 
     // Destroy keays in memory.
     // Overwrite all keys and nonces, then free them.
@@ -112,8 +134,8 @@ void keys_free() {
             keys_mem_unlock (AES_CFG.keys.keys[i], AES_CFG.keys.key_length);
             free(AES_CFG.keys.keys[i]);
 
-            memset(AES_CFG.keys.nonces[i], 0, AES_CFG.keys.nonce_length);
-            keys_mem_unlock(AES_CFG.keys.nonces[i], AES_CFG.keys.nonce_length);
+            memset(AES_CFG.keys.nonces[i], 0, AES_CFG.keys.key_length);
+            keys_mem_unlock(AES_CFG.keys.nonces[i], AES_CFG.keys.key_length);
             free(AES_CFG.keys.nonces[i]);
         }
     }
@@ -130,6 +152,10 @@ void keys_free() {
     AES_CFG.keys.keys = NULL;
     AES_CFG.keys.nonces = NULL;
 
+    // clean openssl
+    if ( EVP_CIPHER_CTX_cleanup(&(AES_CFG.en)) != 1 ) {
+        perror("EVP_CIPHER_CTX_cleanup");
+    }
 }
 // }}} keys_allocate/free
 
@@ -165,8 +191,8 @@ int keys_mem_unlock(void * ptr, size_t len) {
 // {{{ rdrand_set_aes_keys
 int rdrand_set_aes_keys(unsigned int amount,
                         size_t key_length,
-                        char **nonces,
-                        char **keys) {
+                        unsigned char **nonces,
+                        unsigned char **keys) {
     AES_CFG.keys.index=0;
     AES_CFG.keys.next_counter=0;
     AES_CFG.keys_type = KEYS_GIVEN;
@@ -181,6 +207,8 @@ int rdrand_set_aes_keys(unsigned int amount,
             memcpy(AES_CFG.keys.nonces[i], nonces[i], (key_length/2));
         }
     }
+    // random index
+    keys_change();
     return 1;
 }
 // }}} rdrand_set_aes_keys
@@ -215,7 +243,7 @@ void rdrand_clean_aes() {
     AES_CFG.keys_type=0;
     AES_CFG.keys.amount=0;
     AES_CFG.keys.key_length=0;
-    AES_CFG.keys.nonce_length=0;
+//    AES_CFG.keys.nonce_length=0;
     AES_CFG.keys.next_counter=0;
 
 }
@@ -238,6 +266,7 @@ void rdrand_clean_aes() {
  * @param  retry_limit how many times to retry the RdRand instruction
  * @return             amount of sucessfully generated and ecrypted bytes
  */
+
 // {{{ rdrand_get_bytes_aes_ctr
 unsigned int rdrand_get_bytes_aes_ctr(
     void *dest,
@@ -247,12 +276,8 @@ unsigned int rdrand_get_bytes_aes_ctr(
     // allow enough space in output buffer for additional block (padding)
     unsigned char output[MAX_BUFFER_SIZE + EVP_MAX_BLOCK_LENGTH];
     unsigned char buf[MAX_BUFFER_SIZE];
-    unsigned int buffers, tail, i, generated=0i, out_len;
-    EVP_CIPHER_CTX en;
-
-    (void) dest;
-    (void) count;
-    (void) retry_limit;
+    unsigned int buffers, tail, i, generated=0;
+    int out_len;
 
     // keys change and such
     counter();
@@ -262,55 +287,41 @@ unsigned int rdrand_get_bytes_aes_ctr(
     buffers = count/MAX_BUFFER_SIZE;
     tail = count % MAX_BUFFER_SIZE;
 
-    // init OpenSSL
-    EVP_CIPHER_CTX_init( &en );
-
-    // TODO don't make initialization on every call of get_bytes and join it with counter
-    if ( EVP_CipherInit_ex( 
-                &en,
-                EVP_aes_128_ctr(),
-                NULL,
-                AES_CFG.keys.key_current,
-                AES_CFG.keys.nonce_current,
-                1 ) != 1 ) { 
-        // enc=1 => encryption, enc=0 => decryption
-        perror("EVP_CipherInit_ex");
-        return 1;
-    };
-
-
     for (i=0; i < buffers; i++) {
-        // TODO generate full BUFFER
-        generated += rdrand_get_bytes_retry(buf, MAX_BUFFER_SIZE, retry_limit);
-        // TODO encrypt full BUFFER
-         if( EVP_EncryptUpdate(&en, output, &out_len, buf, MAX_BUFFER_SIZE) != 1 ) {
+        // generate full buffer
+        if(rdrand_get_bytes_retry(buf, MAX_BUFFER_SIZE, retry_limit) != MAX_BUFFER_SIZE) {
+            return generated;
+        }
+        // encrypt full buffer
+         if( EVP_EncryptUpdate(&(AES_CFG.en), output, &out_len, buf, MAX_BUFFER_SIZE) != 1 ) {
             perror("EVP_EncryptUpdate");
-            return 1;
+            return generated;
         };
 
         memcpy(dest + i*MAX_BUFFER_SIZE, output, MAX_BUFFER_SIZE);
+        generated += MAX_BUFFER_SIZE;
+
     }
     
     if(tail) {
-        // TODO generate tail
-        generated += rdrand_get_bytes_retry(buf, tail, retry_limit);
-        // TODO encrypt tail
-         if( EVP_EncryptUpdate(&en, output, &out_len, buf, tail) != 1 ) {
+        // generate tail
+        if(rdrand_get_bytes_retry(buf, tail, retry_limit) != tail) {
+            return generated;
+        }
+        // encrypt tail
+         if( EVP_EncryptUpdate(&(AES_CFG.en), output, &out_len, buf, tail) != 1 ) {
             perror("EVP_EncryptUpdate");
-            return 1;
+            return generated;
         };
         memcpy(dest + i*MAX_BUFFER_SIZE, output, tail);
+        generated += tail;
     }
 
-    // TODO move this cleaning somewhere else
-    if ( EVP_EncryptFinal_ex(&en, output, &out_len) != 1 ) {
-        perror("EVP_CIPHER_CTX_cleanup");
-        return 1;
-    }
-    if ( EVP_CIPHER_CTX_cleanup(&en) != 1 ) {
-        perror("EVP_CIPHER_CTX_cleanup");
-        return 1;
-    }
+    // TODO is this important?
+    //if ( EVP_EncryptFinal_ex(&(AES_CFG.en), output, &out_len) != 1 ) {
+    //    perror("EVP_CIPHER_CTX_cleanup");
+    //    return 1;
+    //}
 
 
     return generated;
@@ -350,6 +361,8 @@ int keys_change() {
     AES_CFG.keys.index = ((double)buf / UINT_MAX)*AES_CFG.keys.amount;
     AES_CFG.keys.key_current = AES_CFG.keys.keys[AES_CFG.keys.index];
     AES_CFG.keys.nonce_current = AES_CFG.keys.nonces[AES_CFG.keys.index];
+
+    key_to_openssl();
     return 1;
 }
 
@@ -379,11 +392,12 @@ int key_generate() {
     }
     memcpy(AES_CFG.keys.keys[0],buf, AES_CFG.keys.key_length);
 
-    if (RAND_bytes(buf, AES_CFG.keys.nonce_length) != 1) { 
+    if (RAND_bytes(buf, AES_CFG.keys.key_length) != 1) { 
         fprintf(stderr, "ERROR: can't generate nonce, not enough entropy!\n");
         return 0;
     }
-    memcpy(AES_CFG.keys.nonces[0],buf, AES_CFG.keys.nonce_length);
+    memcpy(AES_CFG.keys.nonces[0],buf, AES_CFG.keys.key_length);
+    key_to_openssl();
     return 1;
 }
 // }}} keys and randomizing

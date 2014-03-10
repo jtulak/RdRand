@@ -23,6 +23,8 @@
 #ifndef LIBRDRAND_AES_PRIVATE_H_INCLUDED
 #define LIBRDRAND_AES_PRIVATE_H_INCLUDED
 
+#include <openssl/evp.h>
+
 #ifndef TRUE
     #define TRUE 1
     #define FALSE 0
@@ -40,7 +42,7 @@ typedef struct s_keys {
     unsigned int next_counter;
     unsigned char **nonces;
     unsigned char *nonce_current; //  pointer to the current nonce
-    size_t nonce_length; // in bits
+    //size_t nonce_length; // in bits
     unsigned char **keys;
     unsigned char *key_current; // pointer to the current index of keys
     size_t key_length; // in bits
@@ -48,6 +50,7 @@ typedef struct s_keys {
 
 typedef struct aes_cfg_s {
     t_keys keys;
+    EVP_CIPHER_CTX en; 
     int keys_type;
 } aes_cfg_t;
 

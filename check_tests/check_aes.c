@@ -26,18 +26,60 @@
 #include <stdint.h>
 #include <string.h>
 #include <check.h>
+#include <assert.h>
 #include "../src/librdrand.h"
 #include "../src/librdrand-aes.private.h"
 #include "../src/librdrand-aes.h"
 
 extern aes_cfg_t AES_CFG;
+
+// {{{ helpers
+
+#define SIZEOF(a) ( sizeof (a) / sizeof (a[0]) )
+
 void mem_dump(unsigned char *mem, unsigned int length) {
     unsigned i;
     for (i=0; length > i; i++){
-        printf("%x",mem[i]);
+        printf("%02x",mem[i]);
     }
     printf("\n");
-}   
+} 
+ 
+int hex2byte(const char *hex, size_t hex_length, unsigned char* byte, size_t byte_length) {
+  size_t i;
+  int rc;
+  unsigned int n;
+  assert(hex_length==2*byte_length);
+
+  for (i=0; i<byte_length;++i) {
+      rc = sscanf(hex, "%02x", &n);
+      if ( rc != 1 ) {
+        fprintf(stderr, "Error during sscanf\n");
+        fprintf(stderr, "Read %d bytes\n",rc);
+        fprintf(stderr, "%x", *byte);
+        return 1;
+      }
+      *byte = (unsigned char) n;
+      hex+=2;
+      byte+=1;
+  }
+  return 0;
+}
+
+void
+dump_hex_byte_string (const unsigned char* data, const unsigned int size, const char* message) {
+  unsigned int i;
+  if (message)
+    fprintf(stderr,"%s",message);
+
+  for (i=0; i<size; ++i) {
+  fprintf(stderr,"%02x",data[i]);
+  }
+  fprintf(stderr,"\n");
+}
+// }}}
+
+
 /** ******************************************************************/
 /**                      aes setup                                   */
 /** ******************************************************************/
@@ -69,15 +111,15 @@ END_TEST
   unsigned int amount = 3;\
   size_t key_length = 32;\
   /*size_t nonce_length = 16;*/\
-  char *nonces[] = {\
-    "aa",\
-    "bb",\
-    "cc"\
+  unsigned char *nonces[] = {\
+    (unsigned char*) "aa",\
+    (unsigned char*) "bb",\
+    (unsigned char*) "cc"\
   };\
-  char *keys[] = {\
-    "aaaa",\
-    "bbbb",\
-    "cccc"\
+  unsigned char *keys[] = {\
+    (unsigned char*) "aaaa",\
+    (unsigned char*) "bbbb",\
+    (unsigned char*) "cccc"\
   };\
   ck_assert(rdrand_set_aes_keys(amount, key_length, nonces, keys) == TRUE);
 // }}}
@@ -90,10 +132,13 @@ START_TEST(aes_set_keys_start) {
     ck_assert(AES_CFG.keys_type == KEYS_GIVEN);
     ck_assert(AES_CFG.keys.amount == amount);
     ck_assert(AES_CFG.keys.key_length == key_length);
-    ck_assert(AES_CFG.keys.nonce_length == key_length/2);
-    ck_assert(AES_CFG.keys.index == 0);
-    ck_assert(AES_CFG.keys.key_current == AES_CFG.keys.keys[0]);
-    ck_assert(AES_CFG.keys.nonce_current == AES_CFG.keys.nonces[0]);
+//    ck_assert(AES_CFG.keys.nonce_length == key_length/2);
+    ck_assert(AES_CFG.keys.index < amount);
+    
+    ck_assert(AES_CFG.keys.key_current 
+            == AES_CFG.keys.keys[AES_CFG.keys.index]);
+    ck_assert(AES_CFG.keys.nonce_current 
+            == AES_CFG.keys.nonces[AES_CFG.keys.index]);
 
     ck_assert(memcmp(AES_CFG.keys.keys[0], keys[0],amount) == 0);
     ck_assert(memcmp(AES_CFG.keys.keys[1], keys[1],amount) == 0);
@@ -181,7 +226,7 @@ START_TEST(aes_set_keys_end) {
     ck_assert(AES_CFG.keys_type == 0);
     ck_assert(AES_CFG.keys.amount == 0);
     ck_assert(AES_CFG.keys.key_length == 0);
-    ck_assert(AES_CFG.keys.nonce_length == 0);
+//    ck_assert(AES_CFG.keys.nonce_length == 0);
     ck_assert(AES_CFG.keys.index == 0);
     ck_assert(AES_CFG.keys.keys == NULL);
     ck_assert(AES_CFG.keys.nonces == NULL);
@@ -198,7 +243,7 @@ START_TEST(aes_random_key_startup) {
     ck_assert(AES_CFG.keys.key_length == DEFAULT_KEY_LEN);
     ck_assert(AES_CFG.keys_type == KEYS_GENERATED);
     ck_assert(AES_CFG.keys.amount == 1);
-    ck_assert(AES_CFG.keys.nonce_length == AES_CFG.keys.key_length/2);
+//    ck_assert(AES_CFG.keys.nonce_length == AES_CFG.keys.key_length/2);
     ck_assert(AES_CFG.keys.index == 0);
     ck_assert(AES_CFG.keys.keys != NULL);
     ck_assert(AES_CFG.keys.nonces != NULL);
@@ -215,7 +260,7 @@ START_TEST(aes_random_key_end) {
     ck_assert(AES_CFG.keys_type == 0);
     ck_assert(AES_CFG.keys.amount == 0);
     ck_assert(AES_CFG.keys.key_length == 0);
-    ck_assert(AES_CFG.keys.nonce_length == 0);
+//    ck_assert(AES_CFG.keys.nonce_length == 0);
     ck_assert(AES_CFG.keys.index == 0);
     ck_assert(AES_CFG.keys.keys == NULL);
     ck_assert(AES_CFG.keys.nonces == NULL);
@@ -239,7 +284,7 @@ START_TEST(aes_random_key_gen) {
             "Key wasn't generated at initialization, but is still all zero.\n");
     
     // nonce is too all zero by default, so it can be checked this way
-    ck_assert(memcmp(AES_CFG.keys.nonces[0], old_key, AES_CFG.keys.nonce_length) !=  0);
+//    ck_assert(memcmp(AES_CFG.keys.nonces[0], old_key, AES_CFG.keys.nonce_length) !=  0);
 
     // save the generated key
     memcpy(old_key, AES_CFG.keys.keys[0], AES_CFG.keys.key_length);
@@ -336,6 +381,9 @@ aes_creation_suite(void) {
 // }}} aes_creation_suite
 // }}} AES setup
 
+/** ******************************************************************/
+/**                      aes generation                              */
+/** ******************************************************************/
 // {{{ AES generation
 // {{{ aes_get_bytes
 START_TEST (aes_get_bytes) {
@@ -370,6 +418,42 @@ START_TEST (aes_get_bytes) {
 }
 END_TEST
 // }}} aes_get_bytes
+
+// {{{ aes_compare_ecrypt_data
+START_TEST ( aes_compare_ecrypt_data) {
+  unsigned char key[16];
+  unsigned char *keys[1];
+  unsigned char nonce_counter[16]={0};
+  unsigned char *nonces[1];
+  char key_hex[32]="c96b8a45affc5c9050378dd32168c381";
+  //char key_hex[32]="00000000000000000000000000000000";
+  char nonce_hex[16]="41e31e41e3f8c26f"; //only upper 64-bits
+  //char nonce_hex[16]="0000000000000000"; //only upper 64-bits
+  unsigned char output [4096]={0};
+
+  keys[0]=key;
+  nonces[0]=nonce_counter;
+
+  hex2byte(key_hex, SIZEOF(key_hex), key, SIZEOF(key));
+  hex2byte(nonce_hex, SIZEOF(nonce_hex), nonce_counter, SIZEOF(nonce_counter)/2); //Only upper 64-bits, lower bits are 0
+
+    printf("key: ");
+    mem_dump(keys[0],16);
+    printf("nonce: ");
+    mem_dump(nonces[0],16);
+    // set manual keys
+    rdrand_set_aes_keys(1, 16, nonces, keys);
+
+    rdrand_get_bytes_aes_ctr(output, 32, 3);
+    mem_dump(output, 32);
+
+    // TODO compare the value
+
+    rdrand_clean_aes();
+}
+END_TEST
+// }}}
+
 // {{{ aes_generation_suite
 Suite *
 aes_generation_suite(void) {
@@ -378,6 +462,7 @@ aes_generation_suite(void) {
 
     tc = tcase_create("get_bytes");
     tcase_add_test(tc, aes_get_bytes);    
+    tcase_add_test(tc, aes_compare_ecrypt_data);    
     suite_add_tcase(s, tc);
 
 
