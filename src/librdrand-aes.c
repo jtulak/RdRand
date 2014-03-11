@@ -260,6 +260,8 @@ void rdrand_clean_aes() {
  *
  * Either rdrand_set_aes_keys or rdrand_set_aes_random_key
  * has to be set in advance.
+ *
+ * TODO parallel encryption/generation
  * 
  * @param  dest        destination location
  * @param  count       bytes to generate

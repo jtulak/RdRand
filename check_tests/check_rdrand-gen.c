@@ -37,7 +37,7 @@
 
 #define TRUE 1
 #define FALSE 0
-
+// {{{ str_compare
 int str_compare(char * a, char * b)
 {
     if (a == NULL){
@@ -53,7 +53,9 @@ int str_compare(char * a, char * b)
     return TRUE;
 
 }
+// }}} str_compare
 
+// {{{ compareConfigs
 int compareConfigs(cnf_t a, cnf_t b) {
     if(!str_compare(a.output_filename, b.output_filename)){
         fprintf(stderr, "ERROR: Different output_filename! \n");
@@ -124,6 +126,7 @@ int compareConfigs(cnf_t a, cnf_t b) {
     }
     return TRUE;
 }
+// }}} compareConfigs
 
 /** ******************************************************************/
 /**                      arguments parsing                           */
@@ -343,11 +346,12 @@ parseArgs_suite (void)
 
   return s;
 }
+// }}}
 
 /** *******************************************************************/
 /**             MAIN                                                  */
 /** *******************************************************************/
-
+// {{{
 int main (void){
 	Suite *s;
   	SRunner *sr;

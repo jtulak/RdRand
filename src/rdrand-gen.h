@@ -82,6 +82,7 @@ enum {
     GET_BYTES,
     GET_RESEED64_DELAY,
     GET_RESEED64_SKIP,
+    GET_BYTES_AES,
 
     // helper constants
     METHODS_COUNT

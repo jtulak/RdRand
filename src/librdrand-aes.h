@@ -33,7 +33,7 @@
  */
 #ifndef LIBRDRAND_AES_H_INCLUDED
 #define LIBRDRAND_AES_H_INCLUDED
-
+#include <stdlib.h>
 /**
  * Default length of a key in bits.
  * Used when key is generated.

@@ -1,9 +1,11 @@
 CC=gcc
 CFLAGS=-c -Wall  -Wextra -O3 -fopenmp  -fPIC
-LDFLAGS=-fopenmp -lrt -lm -mrdrnd 
+LDFLAGS=-fopenmp -lrt -lm -mrdrnd -lcrypto
 
 SOURCES_COMMON=../src/librdrand.h\
-               ../src/librdrand.c
+	       ../src/librdrand-aes.h\
+               ../src/librdrand.c\
+	       ../src/librdrand-aes.c
 OBJECTS_COMMON=$(SOURCES_COMMON:.c=.o) 
                
 SOURCES_TEST=       test_throughput.c
