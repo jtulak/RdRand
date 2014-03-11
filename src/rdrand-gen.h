@@ -62,7 +62,6 @@
     0, /* help flag*/ \
     0, /* version flag*/ \
     0, /* verbose flag */ \
-    0, /* aesctr flag */ \
     0, /* printWarning flag */ \
     DEFAULT_THREADS, /* default number of threads - CAN CHANGE*/ \
     DEFAULT_BYTES, /* default amount of bytes generated - CAN CHANGE */ \
@@ -80,9 +79,9 @@
  */
 enum {
     GET_BYTES,
+    GET_BYTES_AES,
     GET_RESEED64_DELAY,
     GET_RESEED64_SKIP,
-    GET_BYTES_AES,
 
     // helper constants
     METHODS_COUNT
@@ -112,8 +111,6 @@ typedef struct cnf {
     int version_flag;
     /** Flag of --verbose/-v */
     int verbose_flag;
-    /** flag of --aes-ctr/-a*/
-    int aesctr_flag;
     /** Flag of printed warning about underflow, when only one thread is running */
     int printedWarningFlag;
     /** number of threads */

@@ -89,10 +89,6 @@ int compareConfigs(cnf_t a, cnf_t b) {
         fprintf(stderr, "ERROR: Different verbose_flag!\n");
         return FALSE;
     }
-    if (a.aesctr_flag != b.aesctr_flag) {
-        fprintf(stderr, "ERROR: Different aesctr_flag!\n");
-        return FALSE;
-    }
     if (a.printedWarningFlag != b.printedWarningFlag) {
         fprintf(stderr, "ERROR: Different printedWarningFlag!\n");
         return FALSE;

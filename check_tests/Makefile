@@ -8,7 +8,7 @@ SRCS=../src/librdrand.c\
 
 OSRCS=$(SRCS:.c=.o)
 
-all: check
+all: clean check
 
 build: check_aes check_rdrand-gen check_rdrand
 
