@@ -516,6 +516,67 @@ size_t generate(cnf_t *config)
 }
 // }}} generate
 
+/**
+ * @param config
+ * @return
+ */
+// {{{ load_keys
+int load_keys(cnf_t * config) {
+    FILE*file;
+    file=fopen(config->aeskeys_filename,"r");
+    if(file == NULL){
+      EPRINT("ERROR: Can't open file %s!\n", config->aeskeys_filename);
+      exit(EXIT_FAILURE);
+    }
+    // TODO load lines and parse them
+    fclose(file);
+    return 1;
+}
+// }}}
+/** Load a single line from given file. Key and nonce will be returned
+ *  by parameter.
+ *
+ * @param file
+ * @param key
+ * @param nonce
+ *
+ * @return FILE_ERRORS enum
+ */
+// {{{ load_key_line
+int load_key_line(FILE*file, char ** key, char ** nonce) {
+  // TODO check line length
+    char c;
+    int i,set_nonce=0;
+  *key=malloc(sizeof(char)*MAX_KEY_LENGTH);
+  *nonce=malloc(sizeof(char)*MAX_KEY_LENGTH);
+    if( *key==NULL || *nonce==NULL)
+        return E_ERROR;
+    
+    i=0;
+    while ( (c=getc(file)) != EOF) {
+        if (c == ';' && !set_nonce) {
+            // flip to nonce
+           set_nonce = 1; 
+           i=0;
+        } else if (
+                (c >= 'a' && c <= 'f') ||
+                (c >= 'A' && c <= 'F') ||
+                (c >= '0' && c <= '9')
+                ) {
+            // valid char
+            if (set_nonce) {
+                *nonce[i] = c;
+            } else {
+                *key[i] = c;
+            }
+
+        }
+    }
+    
+  return E_OK;//fscanf(file, "%s;%s", key, nonce);
+}
+// }}}
+
 /*****************************************************************************/
 // {{{ MAIN
 #ifndef NO_MAIN // for testing
@@ -554,12 +615,6 @@ int main(int argc, char** argv)
   if(config.method == GET_BYTES_AES) {
     // if key filename is given
     if(config.aeskeys_filename != NULL) {
-      config.aeskeys_file = fopen(config.output_filename, "r");
-      if( config.aeskeys_file == NULL )
-      {
-        EPRINT("ERROR: Can't open file %s!\n", config.aeskeys_filename);
-        exit(EXIT_FAILURE);
-      }
       // TODO: test if it contain keys
     } else {
       // key filename is not set, generate keys

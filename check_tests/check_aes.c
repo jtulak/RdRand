@@ -109,19 +109,19 @@ END_TEST
 // return amount of keys
 #define SETUP_KEYS() \
   unsigned int amount = 3;\
-  size_t key_length = 32;\
+  size_t key_length = 16;\
   /*size_t nonce_length = 16;*/\
   unsigned char *nonces[] = {\
-    (unsigned char*) "aa",\
-    (unsigned char*) "bb",\
-    (unsigned char*) "cc"\
+    (unsigned char*) "aaaabbbb",\
+    (unsigned char*) "bbbbcccc",\
+    (unsigned char*) "ccccdddd"\
   };\
   unsigned char *keys[] = {\
-    (unsigned char*) "aaaa",\
-    (unsigned char*) "bbbb",\
-    (unsigned char*) "cccc"\
+    (unsigned char*) "aaaabbbbccccdddd",\
+    (unsigned char*) "bbbbccccddddeeee",\
+    (unsigned char*) "ccccddddeeeeffff"\
   };\
-  ck_assert(rdrand_set_aes_keys(amount, key_length, nonces, keys) == TRUE);
+  ck_assert(rdrand_set_aes_keys(amount, key_length, nonces, keys) == 1);
 // }}}
 
 
@@ -156,6 +156,14 @@ END_TEST
 // {{{ aes_set_keys_boundaries
 START_TEST(aes_set_keys_boundaries) {
    // TODO What could be tested there? 
+    unsigned char* keys[]={(unsigned char*)"aa"};
+    unsigned char* nonces[]={(unsigned char*)"b"};
+    unsigned int amount = 1;
+    size_t len=2;
+    
+    // too short key, shouldn't be allowed
+    ck_assert(rdrand_set_aes_keys(amount, len, nonces, keys) == 0);
+
 }
 END_TEST
 // }}} aes_set_keys_boundaries
@@ -315,7 +323,7 @@ START_TEST(aes_keys_counter_zero) {
     AES_CFG.keys.next_counter = 0;
 
     memcpy(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN);
-    counter();
+    counter(1);
     // now has to change
     ck_assert(memcmp(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN) != 0);
     
@@ -332,7 +340,7 @@ START_TEST(aes_keys_counter) {
     memcpy(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN);
     
     for (i=0; i<MAX_COUNTER*rounds+1; i++) {
-        counter();
+        counter(1);
         if (memcmp(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN) != 0) {
             changes++;
             memcpy(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN);
@@ -348,6 +356,36 @@ START_TEST(aes_keys_counter) {
 END_TEST
 // }}}
 
+
+
+// {{{ aes_keys_counter_in_generation
+// Test whether counter() really counts and change key.
+// Tested in generation
+START_TEST(aes_keys_counter_in_generation) {
+    unsigned int i, changes=0, rounds=5;
+    unsigned char key[DEFAULT_KEY_LEN];
+    // if the buffer is fully generated, the key has to change
+    unsigned char buf[MAX_COUNTER];
+
+    rdrand_set_aes_random_key();
+    memcpy(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN);
+    
+    for (i=0; i<rounds; i++) {
+        ck_assert(rdrand_get_bytes_aes_ctr(buf, MAX_COUNTER, 3));
+        if (memcmp(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN) != 0) {
+            changes++;
+            memcpy(key, AES_CFG.keys.keys[0], DEFAULT_KEY_LEN);
+        }
+    }
+
+    rdrand_clean_aes();
+    // at least "rounds" times should the key change,
+    // but it can change more times
+    ck_assert(changes >= rounds);
+    
+}
+END_TEST
+// }}}
 
 // {{{ aes_creation_suite
 Suite *
@@ -373,6 +411,7 @@ aes_creation_suite(void) {
 
   tcase_add_test(tc, aes_keys_counter_zero);
   tcase_add_test(tc, aes_keys_counter);
+  tcase_add_test(tc, aes_keys_counter_in_generation);
 
   suite_add_tcase(s, tc);
     
@@ -432,6 +471,7 @@ START_TEST ( aes_compare_ecrypt_data) {
   unsigned char output [8192]={0};
 
   // expected value - gained with another program (openssl-demo/aesctr.c)
+  // for input 0xFFFFFFFF...
   char expected_result_hex[64] = "2c6e98c0f3e667673bb3fe2fb1b2ca4dfb2211f3bdf0231ab266fa8a045f8562";
   unsigned char expected_result[32];
 

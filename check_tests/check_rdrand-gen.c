@@ -69,10 +69,6 @@ int compareConfigs(cnf_t a, cnf_t b) {
         fprintf(stderr, "ERROR: Different output!\n");
         return FALSE;
     }
-    if (a.aeskeys_file != b.aeskeys_file) {
-        fprintf(stderr, "ERROR: Different aeskeys_file!\n");
-        return FALSE;
-    }
     if (a.method != b.method) {
         fprintf(stderr, "ERROR: Different method!\n");
         return FALSE;
@@ -344,6 +340,28 @@ parseArgs_suite (void)
 }
 // }}}
 
+/** ******************************************************************/
+/**                       keys loading                               */
+/** ******************************************************************/
+// {{{
+START_TEST (keys_open_file){
+
+}
+END_TEST
+
+Suite *
+keys_load_suite (void) {
+  Suite *s = suite_create ("Keys loading suite");
+  TCase *tc;
+
+  tc = tcase_create ("Opening the key file");
+  tcase_add_test (tc, keys_open_file);
+  suite_add_tcase (s, tc);
+ 
+  return s;
+}
+// }}}
+
 /** *******************************************************************/
 /**             MAIN                                                  */
 /** *******************************************************************/
@@ -381,6 +399,4 @@ int main (void){
 	return EXIT_FAILURE;
 
 }
-
-
 #endif // CHECK_RDRAND_GEN_INCLUDE

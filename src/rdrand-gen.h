@@ -57,7 +57,6 @@
     NULL, /* output filename */ \
     NULL, /* aes filename */ \
     stdout, /* output stream - CAN CHANGE*/ \
-    NULL, /* aes keys input stream */ \
     DEFAULT_METHOD, /* default generating method - CAN CHANGE*/ \
     0, /* help flag*/ \
     0, /* version flag*/ \
@@ -87,6 +86,16 @@ enum {
     METHODS_COUNT
 };
 
+enum FILE_ERRORS {
+  E_OK,
+  E_ERROR,
+  E_KEY_NONCE_LENGTH_MISMATCH,
+  E_KEY_NONCE_TOO_LONG,
+  E_KEY_NONCE_NOT_POW2,
+  E_KEY_NONCE_INVALID_CHAR
+
+};
+
 /**
  * List of names of methods for printing.
  * Has to be in the same order as in the enum.
@@ -101,8 +110,6 @@ typedef struct cnf {
     char* aeskeys_filename;
     /** output file stream */
     FILE* output;
-    /** file for --aes-keys/-k*/
-    FILE* aeskeys_file;
     /** ENUM of the used method */
     int method;
     /** Flag of --help/-h */
@@ -132,5 +139,17 @@ typedef struct cnf {
  * Parse arguments and save flags/values to cnf_t* config.
  */
 int parse_args(int argc, char** argv, cnf_t* config);
+
+/**
+ * @param config
+ * @return
+ */
+int load_keys(cnf_t * config);
+
+/**
+ * @param key
+ * @param nonce
+ */
+int load_key_line(FILE*file, char ** key, char ** nonce);
 
 #endif  // RDRAND_GEN_H

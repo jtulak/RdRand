@@ -60,8 +60,10 @@ typedef struct aes_cfg_s {
 
 /**
  * Decrement counter and if needed, change used key.
+ *
+ * @param num   How many changes to count
  */
-void counter();
+void counter(unsigned int num);
 
 /**
  * Set key index for AES to another random one.
