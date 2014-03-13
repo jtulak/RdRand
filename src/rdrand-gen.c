@@ -24,6 +24,10 @@
     ./rdrand-gen |pv -c >/dev/null
 */
 
+
+
+
+
 // {{{ INCLUDES
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,6 +74,13 @@
 #define VERSION "1.1.0"
 // }}} macros
 
+void memDump_gen(unsigned char *mem, unsigned int length) {
+        unsigned i;
+            for (i=0; length > i; i++){
+                        printf("%02x",mem[i]);
+                            }
+                printf("\n");
+}
 /**
  * List of names of methods for printing.
  * Has to be in the same order as in the enum.
@@ -85,6 +96,7 @@ const char *METHOD_NAMES[] =
 // }}} METHOD_NAMES
 
 // {{{ HELP_TEXT
+#ifndef NO_MAIN // for testing
 static const char* HELP_TEXT =
 	"Usage: %s [OPTIONS]\n"
 	"If no output file is specified, the program will print random values to STDOUT.\n\n"
@@ -99,6 +111,7 @@ static const char* HELP_TEXT =
 	"  --verbose    -v      Be verbose (will print on stderr).\n"
 	"  --version    -V      Print version.\n"
 	"\n";
+#endif // NO_MAIN
 // }}} HELP_TEXT
 
 // {{{ VERSION_TEXT
@@ -133,6 +146,31 @@ void print_available_methods(FILE* stream){
     }
 }
 // }}} print_available_methods
+
+// {{{ hex2byte
+int hexToByte(const char *hex, size_t hex_length, unsigned char* byte, size_t byte_length) {
+  size_t i;
+  int rc;
+  unsigned int n;
+  if (hex_length!=2*byte_length) return 0;
+    
+  for (i=0; i<byte_length;++i) {
+      rc = sscanf(hex, "%02x", &n);
+      if ( rc != 1 ) {
+        fprintf(stderr, "Error during sscanf\n");
+        fprintf(stderr, "Read %d bytes\n",rc);
+        fprintf(stderr, "%x", *byte);
+        return 0;
+      }
+      *byte = (unsigned char) n;
+      hex+=2;
+      byte+=1;
+  }
+  return 1;
+}
+
+// }}}
+
 
 /** Compute the size of a chunk:
  *  Total bytes / 8 = number of 64bit blocks.
@@ -204,7 +242,7 @@ int parse_args(int argc, char** argv, cnf_t* config)
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		optC = getopt_long (argc, argv, "hakvVn:m:o:t:",
+		optC = getopt_long (argc, argv, "hak:vVn:m:o:t:",
 				    long_options, &option_index);
 
 		/* Detect the end of the options. */
@@ -516,21 +554,87 @@ size_t generate(cnf_t *config)
 }
 // }}} generate
 
-/**
+
+
+// {{{
+
+// }}}
+
+
+/** load keys from file saved in config into AES_CFG
+ *
  * @param config
- * @return
+ *
+ * @return  FILE_ERRORS enum
  */
 // {{{ load_keys
 int load_keys(cnf_t * config) {
     FILE*file;
+    unsigned char *key, *nonce, *keys[MAX_KEYS], *nonces[MAX_KEYS];
+    unsigned int key_len, nonce_len, first_len=0, amount =0, i;
+    int res;
+
     file=fopen(config->aeskeys_filename,"r");
     if(file == NULL){
       EPRINT("ERROR: Can't open file %s!\n", config->aeskeys_filename);
       exit(EXIT_FAILURE);
     }
     // TODO load lines and parse them
+    
+    //while( (res = load_key_line(file, &key, &key_len, &nonce, &nonce_len)) != E_EOF) {
+    while( 1 ) {
+        key=malloc(sizeof(char)*MAX_KEY_LENGTH);
+        nonce=malloc(sizeof(char)*MAX_KEY_LENGTH);
+        if( key==NULL || nonce==NULL)
+            return E_ERROR;
+
+        res = load_key_line(file, &key, &key_len, &nonce, &nonce_len);
+        if(res == E_EOF){
+            free(key);
+            free(nonce);
+            break;
+        }
+        if(res == E_OK) {
+            // skip empty line
+            if(key_len == 0) {
+                continue;
+            }
+            // no need for nonce_len check, because it is computed from key length
+            if(key_len > MAX_KEY_LENGTH || key_len < MIN_KEY_LENGTH)
+                return E_KEY_NONCE_BAD_LENGTH;
+            // initialize key length on first key
+            if(first_len == 0)
+                first_len = key_len;
+            // if some other key length is different, it is ERROR
+            if(first_len != key_len)
+                return E_KEY_NONCE_BAD_LENGTH;
+            // now everything is checked, add the Key
+            keys[amount] = key;
+            nonces[amount]=nonce;
+            amount++;
+        }else {
+            return res;
+        }
+
+    }
     fclose(file);
-    return 1;
+    if(amount == 0)
+        return E_KEY_NONCE_BAD_LENGTH;
+    
+    if(rdrand_set_aes_keys(amount, first_len, keys, nonces) == 0)
+        return E_KEY_NONCE_BAD_LENGTH;
+
+    // free memory, keys are copied into AES_CFG
+    for(i=0; amount > i; i++) {
+        // set memory to zero at first
+        memset(keys[i], 0, MAX_KEY_LENGTH*sizeof(char));
+        memset(nonces[i], 0, MAX_KEY_LENGTH*sizeof(char));
+        //free 
+        free(keys[i]);
+        free(nonces[i]);
+    }
+
+    return E_OK;
 }
 // }}}
 /** Load a single line from given file. Key and nonce will be returned
@@ -543,37 +647,56 @@ int load_keys(cnf_t * config) {
  * @return FILE_ERRORS enum
  */
 // {{{ load_key_line
-int load_key_line(FILE*file, char ** key, char ** nonce) {
-  // TODO check line length
+int load_key_line(
+        FILE*file, 
+        unsigned char ** key, 
+        unsigned int *key_len,  
+        unsigned char ** nonce, 
+        unsigned int *nonce_len
+        ) {
+    
     char c;
-    int i,set_nonce=0;
-  *key=malloc(sizeof(char)*MAX_KEY_LENGTH);
-  *nonce=malloc(sizeof(char)*MAX_KEY_LENGTH);
-    if( *key==NULL || *nonce==NULL)
-        return E_ERROR;
+    unsigned int i;
+    char buf[2*MAX_KEY_LENGTH] = {};
+
     
     i=0;
-    while ( (c=getc(file)) != EOF) {
-        if (c == ';' && !set_nonce) {
-            // flip to nonce
-           set_nonce = 1; 
-           i=0;
-        } else if (
-                (c >= 'a' && c <= 'f') ||
-                (c >= 'A' && c <= 'F') ||
-                (c >= '0' && c <= '9')
-                ) {
-            // valid char
-            if (set_nonce) {
-                *nonce[i] = c;
-            } else {
-                *key[i] = c;
-            }
-
+    while ( (c=getc(file)) != EOF && c != '\n') {
+        if (
+            (c >= 'a' && c <= 'f') ||
+            (c >= 'A' && c <= 'F') ||
+            (c >= '0' && c <= '9')
+            ) {
+            
+            if(i > MAX_KEY_LENGTH*2)
+                return E_KEY_NONCE_BAD_LENGTH;
+            buf[i] = c;
+        } else {
+            printf("Unknown: %c (%02x)\n",c,c);
+            return E_KEY_INVALID_CHARACTER;
         }
+        i++;
     }
+    // nonce is half of key, so key is first 2/3 of line and nonce the last 1/3
+    *key_len = (i/3)*2;
+    *nonce_len = i/3;
+
+    // special cases, when there is no need for malloc
+    if(*key_len + *nonce_len != i)
+        return E_KEY_NONCE_BAD_LENGTH;
+    if(c == EOF)
+        return E_EOF;
+    if(*key_len == 0)
+        return E_OK;
+
+    // convert to bytes 
+    hexToByte(buf, *key_len, *key, *key_len/2);
+    hexToByte(buf+*key_len, *nonce_len, *nonce, *nonce_len/2);
+    // set key/nonce length to bytes
+    *nonce_len=*nonce_len/2;
+    *key_len = *key_len/2;
     
-  return E_OK;//fscanf(file, "%s;%s", key, nonce);
+    return E_OK;
 }
 // }}}
 
@@ -583,6 +706,7 @@ int load_key_line(FILE*file, char ** key, char ** nonce) {
 int main(int argc, char** argv)
 {
 	size_t generated;
+
 	cnf_t config = DEFAULT_CONFIG_SETTING;
     // {NULL, NULL, stdout, NULL, DEFAULT_METHOD, 0, 0, 0, 0, 0, DEFAULT_THREADS, DEFAULT_BYTES,0,0,0,0};
 	if( parse_args(argc, argv,&config) == EXIT_FAILURE) {
@@ -615,7 +739,24 @@ int main(int argc, char** argv)
   if(config.method == GET_BYTES_AES) {
     // if key filename is given
     if(config.aeskeys_filename != NULL) {
-      // TODO: test if it contain keys
+        switch( load_keys(&config)){
+            case E_KEY_NONCE_BAD_LENGTH:
+                EPRINT("ERROR: File %s has incorrect syntax!\n"
+                        "All keys has to be the same length.\n",
+                        config.aeskeys_filename);
+                exit(EXIT_FAILURE);
+                break;
+            case E_KEY_INVALID_CHARACTER:
+                EPRINT("ERROR: Keys has to be saved as hexa strings.\n");
+                exit(EXIT_FAILURE);
+                break;
+            case E_ERROR:
+                EPRINT("ERROR: An error happened when opening file %s.\n",
+                        config.aeskeys_filename);
+                exit(EXIT_FAILURE);
+                break;
+        }
+        
     } else {
       // key filename is not set, generate keys
       rdrand_set_aes_random_key();

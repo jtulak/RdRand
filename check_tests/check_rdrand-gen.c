@@ -1,4 +1,4 @@
-/* vim: set expandtab cindent fdm=marker ts=2 sw=2: */
+/* vim: set expandtab cindent fdm=marker ts=4 sw=4: */
 /*
  * Copyright (C) 2013  Jan Tulak <jan@tulak.me>
  *
@@ -31,12 +31,21 @@
 #include <string.h>
 #include <stdio.h>
 #include <check.h>
+#include "./tools.h"
 #include "../src/librdrand.h"
+#include "../src/librdrand-aes.private.h"
+#include "../src/librdrand-aes.h"
 #include "../src/rdrand-gen.h"
 
+#define KEYS_FILE "keys.txt"
+#define FIXED_KEY "c96b8a45affc5c9050378dd32168c381"
+#define FIXED_NONCE "41e31e41e3f8c26f"
 
 #define TRUE 1
 #define FALSE 0
+
+extern aes_cfg_t AES_CFG;
+
 // {{{ str_compare
 int str_compare(char * a, char * b)
 {
@@ -344,10 +353,59 @@ parseArgs_suite (void)
 /**                       keys loading                               */
 /** ******************************************************************/
 // {{{
-START_TEST (keys_open_file){
+// {{{ keys_read_line
+START_TEST (keys_read_line){
+    FILE *f;
+    unsigned char **keys, **nonces;
+    unsigned int key_len, nonce_len, res;
+    unsigned char fixed_key[MAX_KEY_LENGTH], fixed_nonce[MAX_KEY_LENGTH];
 
+    hex2byte(FIXED_KEY, DEFAULT_KEY_LEN*2, fixed_key, DEFAULT_KEY_LEN);
+    hex2byte(FIXED_NONCE, DEFAULT_KEY_LEN, fixed_nonce, DEFAULT_KEY_LEN/2);
+    
+    
+    keys = malloc (1);
+    nonces=malloc (1);
+    keys[0]= malloc(MAX_KEY_LENGTH);
+    nonces[0]= malloc(MAX_KEY_LENGTH);
+
+    f=fopen(KEYS_FILE, "r");
+
+    // BEGIN    
+    // load key
+    res = load_key_line(f, keys, &key_len, nonces, &nonce_len);
+    ck_assert_msg(res == E_OK, "Bad return code from load_key_lin: %u\n",res);
+
+    ck_assert(memcmp(keys[0], fixed_key, key_len) == 0);
+    ck_assert(memcmp(nonces[0], fixed_nonce, nonce_len) == 0);
+    // load empty line at the end
+    res = load_key_line(f, keys, &key_len, nonces, &nonce_len);
+    ck_assert_msg(res == E_EOF, "Bad return code from load_key_lin: %u\n",res);
+    // END
+
+    fclose(f);
 }
 END_TEST
+// }}} keys_read_line
+
+
+// {{{ keys_open_file
+START_TEST (keys_open_file){
+    cnf_t cfg = {.aeskeys_filename=KEYS_FILE};
+    unsigned char fixed_key[MAX_KEY_LENGTH], fixed_nonce[MAX_KEY_LENGTH];
+
+    hex2byte(FIXED_KEY, DEFAULT_KEY_LEN*2, fixed_key, DEFAULT_KEY_LEN);
+    hex2byte(FIXED_NONCE, DEFAULT_KEY_LEN, fixed_nonce, DEFAULT_KEY_LEN/2);
+    
+    ck_assert(load_keys(&cfg)==E_OK);
+
+    ck_assert(AES_CFG.keys.amount == 1);
+    ck_assert(memcmp(AES_CFG.keys.keys[0], fixed_key, AES_CFG.keys.key_length) == 0);
+    ck_assert(memcmp(AES_CFG.keys.nonces[0], fixed_nonce, AES_CFG.keys.key_length/2) == 0);
+    
+}
+END_TEST
+// }}} keys_open_file
 
 Suite *
 keys_load_suite (void) {
@@ -355,6 +413,7 @@ keys_load_suite (void) {
   TCase *tc;
 
   tc = tcase_create ("Opening the key file");
+  tcase_add_test (tc, keys_read_line);
   tcase_add_test (tc, keys_open_file);
   suite_add_tcase (s, tc);
  
@@ -380,8 +439,8 @@ int main (void){
 	s = parseArgs_suite ();
 	sr = srunner_create (s);
 
-    //s = some_suite ();
-	//srunner_add_suite(sr, s);
+    s = keys_load_suite ();
+	srunner_add_suite(sr, s);
 
 
 	srunner_run_all (sr, CK_NORMAL);

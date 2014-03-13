@@ -1,4 +1,4 @@
-/* vim: set expandtab cindent fdm=marker ts=2 sw=2: */
+/* vim: set expandtab cindent fdm=marker ts=4 sw=4: */
 /*
  * Copyright (C) 2013  Jan Tulak <jan@tulak.me>
  *
@@ -40,6 +40,7 @@
 #define DEFAULT_BYTES 0
 
 #define MAX_CHUNK_SIZE 2048
+#define MAX_KEYS 128
 
 /* Macro for default config settings.
  * Please note, changing of values not marked as CAN CHANGE
@@ -88,11 +89,10 @@ enum {
 
 enum FILE_ERRORS {
   E_OK,
+  E_EOF,
   E_ERROR,
-  E_KEY_NONCE_LENGTH_MISMATCH,
-  E_KEY_NONCE_TOO_LONG,
-  E_KEY_NONCE_NOT_POW2,
-  E_KEY_NONCE_INVALID_CHAR
+  E_KEY_NONCE_BAD_LENGTH,
+  E_KEY_INVALID_CHARACTER,
 
 };
 
@@ -140,16 +140,31 @@ typedef struct cnf {
  */
 int parse_args(int argc, char** argv, cnf_t* config);
 
-/**
+
+
+/** load keys from file saved in config into AES_CFG
+ *
  * @param config
- * @return
+ *
+ * @return  FILE_ERRORS enum
  */
 int load_keys(cnf_t * config);
 
-/**
+/** Load a single line from given file. Key and nonce will be returned
+ *  by parameter.
+ *
+ * @param file
  * @param key
  * @param nonce
+ *
+ * @return FILE_ERRORS enum
  */
-int load_key_line(FILE*file, char ** key, char ** nonce);
+int load_key_line(
+          FILE*file,
+          unsigned char ** key,
+          unsigned int *key_len,
+          unsigned char ** nonce,
+          unsigned int *nonce_len
+          );  
 
 #endif  // RDRAND_GEN_H

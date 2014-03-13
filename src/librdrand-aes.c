@@ -64,6 +64,13 @@ int key_to_openssl() {
     };
     return 1;
 }
+void memDump(unsigned char *mem, unsigned int length) {
+        unsigned i;
+            for (i=0; length > i; i++){
+                        printf("%02x",mem[i]);
+                            }
+                printf("\n");
+}
 // }}} misc
 
 // {{{ keys_allocate/free
@@ -186,13 +193,13 @@ int keys_mem_unlock(void * ptr, size_t len) {
  * @param  nonces     Array of nonces. Nonces have to be half of 
  *                    length of keys.
  * @param  keys       Array of keys. All have to be the same length.
- * @return            True if the keys were successfuly set
+ * @return            1 if the keys were successfuly set
 */
 // {{{ rdrand_set_aes_keys
 int rdrand_set_aes_keys(unsigned int amount,
                         size_t key_length,
-                        unsigned char **nonces,
-                        unsigned char **keys) {
+                        unsigned char **keys,
+                        unsigned char **nonces) {
     // don't allow bad key lengths
     if(key_length <= MIN_KEY_LENGTH || key_length >= MAX_KEY_LENGTH)
         return 0;
@@ -203,7 +210,6 @@ int rdrand_set_aes_keys(unsigned int amount,
     if (keys_allocate(amount, key_length) == 0) {
         return 0;
     }
-    
     { // subblock for var. i
         unsigned int i;
         for (i=0; i<amount; i++) {

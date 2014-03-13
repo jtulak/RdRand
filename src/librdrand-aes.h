@@ -99,8 +99,8 @@ unsigned int rdrand_get_bytes_aes_ctr(void *dest,
 int rdrand_set_aes_keys(
     unsigned int amount,
     size_t key_length,
-    unsigned char **nonces,
-    unsigned char **keys);
+    unsigned char **keys,
+    unsigned char **nonces);
 
 /**
  * Set automatic key generation.

@@ -83,7 +83,9 @@
  * When STUB_RDRAND is defined, any rdrand calls will set all bits 
  * to 1. For access to the real rdrand, use rdrandXX_step_native()
  */
- 
+
+#define STUB_RDRAND
+
 #ifdef STUB_RDRAND
 	#define RDRAND16_STEP rdrand16_step_native
 	#define RDRAND32_STEP rdrand32_step_native

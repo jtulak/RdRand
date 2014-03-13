@@ -4,7 +4,8 @@ LDFLAGS=-fopenmp -lrt -lm -mrdrnd -lcheck -lcrypto
 
 SRCS=../src/librdrand.c\
      ../src/librdrand-aes.c\
-     ../src/rdrand-gen.c
+     ../src/rdrand-gen.c\
+     ./tools.c
 
 OSRCS=$(SRCS:.c=.o)
 
