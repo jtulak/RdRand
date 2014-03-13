@@ -46,6 +46,19 @@
 #include "./rdrand-gen.h"
 // }}} INCLUDES
 
+
+// just for debug
+//#include "./librdrand-aes.private.h"
+//extern aes_cfg_t AES_CFG;
+//void memDump_gen(unsigned char *mem, unsigned int length) {
+//        unsigned i;
+//            for (i=0; length > i; i++){
+//                        fprintf(stderr,"%02x",mem[i]);
+//                            }
+//                fprintf(stderr,"\n");
+//}
+
+
 // {{{ IFDEFs
 #ifdef _OPENMP
     #include <omp.h>
@@ -74,13 +87,6 @@
 #define VERSION "1.1.0"
 // }}} macros
 
-void memDump_gen(unsigned char *mem, unsigned int length) {
-        unsigned i;
-            for (i=0; length > i; i++){
-                        printf("%02x",mem[i]);
-                            }
-                printf("\n");
-}
 /**
  * List of names of methods for printing.
  * Has to be in the same order as in the enum.
@@ -415,6 +421,11 @@ size_t generate_chunk(cnf_t *config)
 	size_t written, written_total,buf_size;
 	uint64_t buf[config->chunk_size*config->threads];
 
+// EPRINT("key: ");
+// memDump_gen(AES_CFG.keys.key_current, AES_CFG.keys.key_length);
+// EPRINT("nonce: ");
+// memDump_gen(AES_CFG.keys.nonce_current, AES_CFG.keys.key_length);
+
 	buf_size = SIZEOF(buf);
 	written_total = 0;
 	// for all chunks (or indefinitely if bytes are set to 0)
@@ -737,6 +748,8 @@ int main(int argc, char** argv)
 
   // if AES is used
   if(config.method == GET_BYTES_AES) {
+      // FIXME until it will be solved, work just in single thread on aes
+      config.threads = 1;
     // if key filename is given
     if(config.aeskeys_filename != NULL) {
         switch( load_keys(&config)){
