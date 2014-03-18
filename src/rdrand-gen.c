@@ -438,15 +438,24 @@ size_t generate_chunk(cnf_t *config)
 		  omp_set_num_threads(config->threads);
       #pragma omp parallel for reduction(+:written)
     #endif // _OPENMP
-		for ( i=0; i < config->threads; ++i)
+		for ( i=0; i <= config->threads; ++i)
 		{
-			written += generate_with_metod(
-          config, 
-          &buf[i*config->chunk_size], 
-          config->chunk_size, 
-          RETRY_LIMIT);
+            // all threads set in settings will generate values
+            // but one more will encrypt them if needed
+            if(i < config->threads) {
+                written += generate_with_metod(
+                config, 
+                &buf[i*config->chunk_size], 
+                config->chunk_size, 
+                RETRY_LIMIT);
+
+            }else if(config->method == GET_BYTES_AES) {
+                // encrypt the previous buffer
+            }
+
 		}
 
+        // if not enough data was generated, try to slow down and print an error
 		if ( written != buf_size )
 		{
 			/* if we can't lower threads count anymore */
@@ -455,9 +464,8 @@ size_t generate_chunk(cnf_t *config)
 				if(config->printedWarningFlag == 0)
 				{
 					config->printedWarningFlag++;
-					//EPRINT( "Warning: %zu bytes generated, but %zu bytes expected. Trying to get randomness with slower speed.\n", written, buf_size);
 					EPRINT( "Warning: Less than expected amount of bytes was generated. "
-              "Trying to get randomness with slower speed.\n");
+                            "Trying to get randomness with slower speed.\n");
 				}
 				// reset the retry - LIMIT should work work for each run independently
 				// and also the delay should be as small as possible

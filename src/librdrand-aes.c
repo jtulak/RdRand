@@ -259,6 +259,59 @@ void rdrand_clean_aes() {
 }
 // }}} rdrand_clean_aes
 
+/**
+ * Encrypt the given buffer.
+ * 
+ * @param src    source data
+ * @param dest   destination buffer
+ * @param len    length of the buffer
+ *
+ * @return       1 on success
+ */
+// {{{ rdrand_enc_buffer
+int rdrand_enc_buffer(void* src, void* dest, size_t len) {
+    size_t i,chunks, tail;
+    int out_len;
+    chunks = len / MAX_BUFFER_SIZE;
+    tail = len % MAX_BUFFER_SIZE;
+
+    for (i=0; i<chunks; i++) {
+        // By placing the counter at the beginning of the cycle
+        // avoid situation, when counter would be just few bytes from regenerating,
+        // but all MAX_BUFFER_SIZE would be generated with old key.
+        counter(MAX_BUFFER_SIZE);
+        
+        // encrypt full buffer
+        if( EVP_EncryptUpdate(
+            &(AES_CFG.en), 
+            dest+i*MAX_BUFFER_SIZE, 
+            &out_len, 
+            src+i*MAX_BUFFER_SIZE, 
+            MAX_BUFFER_SIZE) != 1 ) {
+
+            perror("EVP_EncryptUpdate");
+            return 0;
+        }
+    }
+
+    if (tail != 0) {
+        counter(tail);
+        if( EVP_EncryptUpdate(
+            &(AES_CFG.en), 
+            dest + i*MAX_BUFFER_SIZE, 
+            &out_len, 
+            src + i*MAX_BUFFER_SIZE, 
+            tail) != 1 ) {
+
+            perror("EVP_EncryptUpdate");
+            return 0;
+        }
+    }
+
+
+    return 1;
+}
+// }}}
 
 /**
  * Get an array of 64 bit random values.

@@ -413,6 +413,48 @@ START_TEST (aes_get_bytes) {
 END_TEST
 // }}} aes_get_bytes
 
+
+// {{{ aes_enc_buffer
+START_TEST (aes_enc_buffer) {
+    unsigned char key[16];
+    unsigned char *keys[1];
+    unsigned char nonce_counter[16]={0};
+    unsigned char *nonces[1];
+    char key_hex[32]="c96b8a45affc5c9050378dd32168c381";
+    //char key_hex[32]="00000000000000000000000000000000";
+    char nonce_hex[16]="41e31e41e3f8c26f"; //only upper 64-bits
+    //char nonce_hex[16]="0000000000000000"; //only upper 64-bits
+    unsigned char input [64];
+    unsigned char output [64]={0};
+      
+    // expected value - gained with another program (openssl-demo/aesctr.c)
+    // for input 0xFFFFFFFF...
+    char expected_result_hex[64] = "2c6e98c0f3e667673bb3fe2fb1b2ca4dfb2211f3bdf0231ab266fa8a045f8562"; 
+    unsigned char expected_result[32];
+
+    memset(input, -1, SIZEOF(input));
+
+    keys[0]=key;
+    nonces[0]=nonce_counter;
+
+    hex2byte(expected_result_hex, 64, expected_result, 32);
+
+
+    hex2byte(key_hex, SIZEOF(key_hex), key, SIZEOF(key));
+    hex2byte(nonce_hex, SIZEOF(nonce_hex), nonce_counter, SIZEOF(nonce_counter)/2); //Only upper 64-bits, lower bits are 0
+    rdrand_set_aes_keys(1, 16, keys, nonces);
+   
+    // here do the test 
+    ck_assert(rdrand_enc_buffer(input, output, 32) == 1);
+
+    ck_assert_msg(memcmp(output, expected_result, 32)==0,
+            "Encrypted value is different from expected one.\n");
+
+    rdrand_clean_aes();
+}
+END_TEST
+// }}}
+
 // {{{ aes_compare_ecrypt_data
 START_TEST ( aes_compare_ecrypt_data) {
   unsigned char key[16];
@@ -472,6 +514,7 @@ aes_generation_suite(void) {
 
     tc = tcase_create("get_bytes");
     tcase_add_test(tc, aes_get_bytes);    
+    tcase_add_test(tc, aes_enc_buffer);
     tcase_add_test(tc, aes_compare_ecrypt_data);    
     suite_add_tcase(s, tc);
 

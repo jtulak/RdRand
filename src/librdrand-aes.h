@@ -64,6 +64,17 @@
 #define MAX_BUFFER_SIZE 2048
 
 /**
+ * Encrypt the given buffer.
+ * 
+ * @param src    source data
+ * @param dest   destination buffer
+ * @param len    length of the buffer
+ *
+ * @return       1 on success
+ */
+int rdrand_enc_buffer(void* src, void* dest, size_t len);
+
+/**
  * Get an array of 64 bit random values.
  * Will retry up to retry_limit times. Negative retry_limit
  * implies default retry_limit RETRY_LIMIT
