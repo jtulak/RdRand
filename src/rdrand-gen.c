@@ -442,6 +442,7 @@ size_t generate_chunk(cnf_t *config)
 
 	buf_size = config->chunk_size*config->threads;
 	buf_size_bytes = buf_size*8;
+	written_total = 0;
 
     // decide whether aes is used and thus one more thread will run or not
     if(config->aes_flag) {
@@ -450,15 +451,16 @@ size_t generate_chunk(cnf_t *config)
     }else {
         ptr_buf = buf;
     }
-    //fprintf(stderr,"chunk size: %u\n", config->chunk_size);
-	written_total = 0;
+    
+    #ifdef _OPENMP
+        omp_set_num_threads(config->threads+aes_thread);
+    #endif // _OPENMP
 	// for all chunks (or indefinitely if bytes are set to 0)
 	for(n = 0; n < config->chunk_count+aes_thread || config->bytes == 0; n++)
 	{
 		written = 0;
 		/** At first fill chunks in all parallel threads */
     #ifdef _OPENMP
-        omp_set_num_threads(config->threads+aes_thread);
         #pragma omp parallel for reduction(+:written)
     #endif // _OPENMP
 		for ( i=0; i < config->threads+aes_thread; ++i)
@@ -655,7 +657,6 @@ int load_keys(cnf_t * config) {
       EPRINT("ERROR: Can't open file %s!\n", config->aeskeys_filename);
       exit(EXIT_FAILURE);
     }
-    // TODO load lines and parse them
     
     //while( (res = load_key_line(file, &key, &key_len, &nonce, &nonce_len)) != E_EOF) {
     while( 1 ) {
@@ -840,7 +841,11 @@ int main(int argc, char** argv)
     }
   }
   // FIXME valgrind...
-    if(1 || rdrand_testSupport() == RDRAND_SUPPORTED)
+    #ifdef STUB_RDRAND
+    if(1)
+    #else 
+    if(rdrand_testSupport() == RDRAND_SUPPORTED)
+    #endif // STUB_RDRAND
     {
 
         if(config.verbose_flag)
