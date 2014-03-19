@@ -113,7 +113,8 @@ static const char* HELP_TEXT =
 	"  --method     -m NAME Use method NAME (default is %s).\n"
 	"  --output     -o FILE Save the generated data to the file.\n"
 	"  --threads    -t NUM  Run the generator in NUM threads (default %u).\n"
-	"  --aes-keys   -k FILE Use given key file for the AES method instead of random one.\n"
+    "  --aes-ctr    -a      Encrypt the output with AES-CTR.\n"
+	"  --aes-keys   -k FILE Use given key file for the AES encryption instead of random one.\n"
 	"  --verbose    -v      Be verbose (will print on stderr).\n"
 	"  --version    -V      Print version.\n"
 	"\n";
@@ -199,7 +200,8 @@ void compute_chunk_size(cnf_t * config){
             // get how many iterations in all threads is needed to generate all the data.
             config->chunk_count = config->blocks / (config->chunk_size*config->threads);
             // And how many bytes is left, because they could fit into chunks (just few bytes)
-            config->ending_bytes = config->bytes % (config->chunk_size*config->chunk_count*config->threads*8);
+            config->ending_bytes = config->bytes % 
+                (config->chunk_size*config->chunk_count*config->threads*8);
         }
         else
         {
@@ -207,11 +209,18 @@ void compute_chunk_size(cnf_t * config){
             config->ending_bytes = config->bytes;
         }
 
-
-        //printf("Will generate %u of 64bit blocks using %u chunks of size %u blocks per thread, ending: %u bytes.\n", (uint)config->blocks, (uint)config->chunk_count, (uint)config->chunk_size, (uint)config->ending_bytes);
+        /*
+        printf( "Will generate %u of 64bit blocks using %u chunks of size %u "
+                "blocks per thread, ending: %u bytes.\n", 
+                (uint)config->blocks, 
+                (uint)config->chunk_count, 
+                (uint)config->chunk_size, 
+                (uint)config->ending_bytes);
+                // */
     }
     else if(config->bytes == 0)
     {
+        // infinite generation
         config->chunk_size = MAX_CHUNK_SIZE;
     }
 }
@@ -233,6 +242,7 @@ int parse_args(int argc, char** argv, cnf_t* config)
 		{"help", no_argument,       0, 'h'},
 		{"verbose",  no_argument, 0, 'v'},
 		{"version",  no_argument, 0, 'V'},
+		{"aes-ctr",  no_argument, 0, 'a'},
 		{"amount",    required_argument, 0, 'n'},
 		{"method",  required_argument, 0, 'm'},
 		{"output",  required_argument, 0, 'o'},
@@ -265,6 +275,9 @@ int parse_args(int argc, char** argv, cnf_t* config)
             break;
 		case 'h':
 			config->help_flag = 1;
+			break;
+		case 'a':
+			config->aes_flag = 1;
 			break;
 
 		case 'k':
@@ -395,9 +408,6 @@ size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int blocks, int
 	case GET_BYTES:
 		return rdrand_get_bytes_retry((uint8_t*)buf, blocks*8,retry)/8;
 		break;
-  case GET_BYTES_AES:
-    return rdrand_get_bytes_aes_ctr((unsigned char*)buf, blocks*8,retry)/8;
-
 	case GET_RESEED64_DELAY:
 		return rdrand_get_uint64_array_reseed_delay(buf, blocks, retry);
 		break;
@@ -417,46 +427,70 @@ size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int blocks, int
 // {{{ generate_chunk
 size_t generate_chunk(cnf_t *config)
 {
-	unsigned int i, n, retry;
-	size_t written, written_total,buf_size;
-	uint64_t buf[config->chunk_size*config->threads];
+	unsigned int i, n, retry, first_run=1, aes_thread=0;
+	size_t written, written_total,buf_size, buf_size_bytes;
+    // NOTE: chunk_size is count of 64bit blocks!
+	uint64_t buf[config->chunk_size*config->threads],
+             gen_buf[config->chunk_size*config->threads],
+             enc_buf[config->chunk_size*config->threads],
+             *ptr_buf;
 
 // EPRINT("key: ");
 // memDump_gen(AES_CFG.keys.key_current, AES_CFG.keys.key_length);
 // EPRINT("nonce: ");
 // memDump_gen(AES_CFG.keys.nonce_current, AES_CFG.keys.key_length);
 
-	buf_size = SIZEOF(buf);
+	buf_size = config->chunk_size*config->threads;
+	buf_size_bytes = buf_size*8;
+
+    // decide whether aes is used and thus one more thread will run or not
+    if(config->aes_flag) {
+        ptr_buf = gen_buf;
+        aes_thread=1;
+    }else {
+        ptr_buf = buf;
+    }
+    //fprintf(stderr,"chunk size: %u\n", config->chunk_size);
 	written_total = 0;
 	// for all chunks (or indefinitely if bytes are set to 0)
-	for(n = 0; n < config->chunk_count || config->bytes == 0; n++)
+	for(n = 0; n < config->chunk_count+aes_thread || config->bytes == 0; n++)
 	{
 		written = 0;
 		/** At first fill chunks in all parallel threads */
-
     #ifdef _OPENMP
-		  omp_set_num_threads(config->threads);
-      #pragma omp parallel for reduction(+:written)
+        omp_set_num_threads(config->threads+aes_thread);
+        #pragma omp parallel for reduction(+:written)
     #endif // _OPENMP
-		for ( i=0; i <= config->threads; ++i)
+		for ( i=0; i < config->threads+aes_thread; ++i)
 		{
+            //EPRINT("XXX - thread: %u, n: %u\n", i,n);
             // all threads set in settings will generate values
             // but one more will encrypt them if needed
-            if(i < config->threads) {
-                written += generate_with_metod(
-                config, 
-                &buf[i*config->chunk_size], 
-                config->chunk_size, 
-                RETRY_LIMIT);
-
-            }else if(config->method == GET_BYTES_AES) {
-                // encrypt the previous buffer
+            //if(i < config->threads && (n < config->chunk_count || config->bytes == 0) ) {
+            if (i < config->threads) {
+                if(n < config->chunk_count || config->bytes == 0 ) {
+                    
+                    //fprintf(stderr,"  Generating thread: %u, n: %u\n",i,n);
+                    written += generate_with_metod(
+                        config, 
+                        &ptr_buf[i*config->chunk_size], 
+                        config->chunk_size, 
+                        RETRY_LIMIT);
+                }
+            } else if (!first_run ){
+                // running just in single thread if aes is used
+                // and don't run in first cycle
+                // - no data in buffers.
+                
+                //fprintf(stderr,"  Encrypting i: %u, n: %u\n",i,n);
+                rdrand_enc_buffer(buf, enc_buf, buf_size_bytes);
             }
 
 		}
 
         // if not enough data was generated, try to slow down and print an error
-		if ( written != buf_size )
+        // {{{ error handling
+		if ( written != buf_size && n < config->chunk_count)
 		{
 			/* if we can't lower threads count anymore */
 			if ( config->threads == 1 )
@@ -464,8 +498,10 @@ size_t generate_chunk(cnf_t *config)
 				if(config->printedWarningFlag == 0)
 				{
 					config->printedWarningFlag++;
-					EPRINT( "Warning: Less than expected amount of bytes was generated. "
-                            "Trying to get randomness with slower speed.\n");
+					EPRINT( "Warning: %zu bytes was generated, "
+                            "but %zu was expected. "
+                            "Trying to get randomness with slower speed.\n",
+                            written, buf_size);
 				}
 				// reset the retry - LIMIT should work work for each run independently
 				// and also the delay should be as small as possible
@@ -475,30 +511,31 @@ size_t generate_chunk(cnf_t *config)
 					usleep(retry*SLOW_RETRY_DELAY);
 					// try to generate the rest
 					written += generate_with_metod(
-              config, 
-              buf+written, 
-              config->threads*config->chunk_size-written, 
-              SLOW_RETRY_LIMIT);
+                        config, 
+                        ptr_buf+written, 
+                        config->threads*config->chunk_size-written, 
+                        SLOW_RETRY_LIMIT);
 				}
 				if( written != buf_size )
 				{
 					EPRINT( "Error:  %zu bytes generated, but %zu bytes expected. "
-              "Probably there is a hardware problem with your CPU.\n", 
-              written, 
-              buf_size);
+                            "Probably there is a hardware problem with your CPU.\n", 
+                            written, 
+                            buf_size);
 					break;
 				}
 			}
 			else
 			{
+                EPRINT("n: %u\n",n);
 				/* try to lower threads count to avoid underflow */
 				config->threads--;
 				EPRINT( "Warning: %zu bytes generated, but %zu bytes expected. "
-            "Probably slow internal generator "
-            "- decreaseing threads count by one to %d to avoid problems.\n", 
-            written, 
-            buf_size, 
-            config->threads);
+                        "Probably slow internal generator "
+                        "- decreaseing threads count by one to %d to avoid problems.\n", 
+                        written, 
+                        buf_size, 
+                        config->threads);
 				buf_size -= config->chunk_size;
 
 				/* run this iteration again */
@@ -506,6 +543,19 @@ size_t generate_chunk(cnf_t *config)
 				continue;
 			}
 		}
+        // }}} error handling
+
+        // If the chunk was generated ok (we are here),
+        // move it to the encryption buffer.
+        // From there it will be moved in next round to the output.
+        if( config->aes_flag){
+            memcpy(enc_buf, gen_buf, buf_size_bytes);
+            if (first_run) {
+                // if it is first run, skip it - no data ready
+                first_run = 0;
+                continue;
+            }
+        }
 
 		written = fwrite(buf, sizeof(buf[0]), buf_size, config->output);
 		written_total += written;
@@ -518,7 +568,8 @@ size_t generate_chunk(cnf_t *config)
           buf_size);
       break;
 		}
-	}
+
+	} // for all chunks
 	return written_total*8;
 }
 // }}} generate_chunk
@@ -532,18 +583,30 @@ size_t generate_chunk(cnf_t *config)
 size_t generate_ending(cnf_t *config)
 {
 	size_t written_total;
-  uint8_t buf[MAX_CHUNK_SIZE];
-  written_total = generate_with_metod(config, (uint64_t*)buf, MAX_CHUNK_SIZE/8, RETRY_LIMIT)*8;
+  uint8_t buf[config->ending_bytes];
+  uint8_t enc_buf[config->ending_bytes];
+
+  written_total = generate_with_metod(config, (uint64_t*)enc_buf, config->ending_bytes/8, RETRY_LIMIT)*8;
 	/* test generated amount */
-	if ( written_total != MAX_CHUNK_SIZE )
+	if ( written_total != config->ending_bytes )
 	{
-		EPRINT( "ERROR: bytes generated %zu, bytes expected %d\n", written_total, MAX_CHUNK_SIZE);
+		EPRINT( "ERROR: bytes generated %zu, bytes expected %zu\n", written_total, config->ending_bytes);
 		return written_total;
 	}
+    
+    if(config->aes_flag) {
+        //fprintf(stderr,"Encrypting tail\n");
+        // encrypt the previous-run buffer
+        rdrand_enc_buffer(buf, enc_buf, config->ending_bytes);
+    } else {
+        //fprintf(stderr,"Just memcpy tail\n");
+        // this will run in single thread
+        memcpy(buf, enc_buf, config->ending_bytes);
+    }
+
 	written_total = fwrite(buf, sizeof(buf[0]), config->ending_bytes, config->output);
 	if ( written_total !=  config->ending_bytes )
 	{
-		perror("fwrite");
 		EPRINT( "ERROR: fwrite - bytes written %zu, bytes to write %zu\n", written_total, config->ending_bytes);
 		return written_total;
 
@@ -572,12 +635,6 @@ size_t generate(cnf_t *config)
 	return written;
 }
 // }}} generate
-
-
-
-// {{{
-
-// }}}
 
 
 /** load keys from file saved in config into AES_CFG
@@ -755,9 +812,7 @@ int main(int argc, char** argv)
 	}
 
   // if AES is used
-  if(config.method == GET_BYTES_AES) {
-      // FIXME until it will be solved, work just in single thread on aes
-      config.threads = 1;
+  if(config.aes_flag) {
     // if key filename is given
     if(config.aeskeys_filename != NULL) {
         switch( load_keys(&config)){
@@ -784,7 +839,8 @@ int main(int argc, char** argv)
 
     }
   }
-    if(rdrand_testSupport() == RDRAND_SUPPORTED)
+  // FIXME valgrind...
+    if(1 || rdrand_testSupport() == RDRAND_SUPPORTED)
     {
 
         if(config.verbose_flag)
@@ -820,7 +876,7 @@ int main(int argc, char** argv)
 
 	fclose(config.output);
 
-  if(config.method == GET_BYTES_AES) {
+  if(config.aes_flag) {
     rdrand_clean_aes();
   }
 

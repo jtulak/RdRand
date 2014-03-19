@@ -63,6 +63,7 @@
     0, /* version flag*/ \
     0, /* verbose flag */ \
     0, /* printWarning flag */ \
+    0, /* aes flag */ \
     DEFAULT_THREADS, /* default number of threads - CAN CHANGE*/ \
     DEFAULT_BYTES, /* default amount of bytes generated - CAN CHANGE */ \
     0, /* blocks */ \
@@ -120,6 +121,8 @@ typedef struct cnf {
     int verbose_flag;
     /** Flag of printed warning about underflow, when only one thread is running */
     int printedWarningFlag;
+    /** Flag for --aes-ctr */
+    int aes_flag;
     /** number of threads */
     unsigned int threads;
     /** number of bytes to generate */

@@ -269,7 +269,7 @@ void rdrand_clean_aes() {
  * @return       1 on success
  */
 // {{{ rdrand_enc_buffer
-int rdrand_enc_buffer(void* src, void* dest, size_t len) {
+int rdrand_enc_buffer(void* dest, void* src, size_t len) {
     size_t i,chunks, tail;
     int out_len;
     chunks = len / MAX_BUFFER_SIZE;

@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall  -Wextra -O3 -fopenmp  -fPIC
+CFLAGS=-c -Wall  -Wextra  -O3 -fopenmp  -fPIC
 LDFLAGS=-fopenmp -lrt -lm -mrdrnd -lcrypto
 
 SOURCES_COMMON=../src/librdrand.h\

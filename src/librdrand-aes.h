@@ -72,7 +72,7 @@
  *
  * @return       1 on success
  */
-int rdrand_enc_buffer(void* src, void* dest, size_t len);
+int rdrand_enc_buffer(void* dest, void* src, size_t len);
 
 /**
  * Get an array of 64 bit random values.

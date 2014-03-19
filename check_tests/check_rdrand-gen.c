@@ -166,6 +166,23 @@ START_TEST (parseArgs_help)
 }
 END_TEST
 
+START_TEST (parseArgs_aes)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    cc.chunk_size=MAX_CHUNK_SIZE;
+    cc.aes_flag=1;
+    // arguments
+    int argc = 2;
+    char *argv[] = {"rdrand-gen","-a"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
 START_TEST (parseArgs_amount_missingNumber)
 {
     // default config
@@ -232,6 +249,46 @@ START_TEST (parseArgs_amount_suffixK)
     // arguments
     int argc = 3;
     char *argv[] = {"rdrand-gen","--amount","1k"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_amount_suffixK2)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    cc.bytes=51200;
+    cc.blocks=6400; // bytes/8
+    cc.chunk_size=2048; // blocks/2
+    cc.chunk_count=1;
+    cc.ending_bytes=18432; // difference in bytes between bytes and blocks
+    // arguments
+    int argc = 3;
+    char *argv[] = {"rdrand-gen","--amount","50k"};
+    // call
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+    ck_assert(compareConfigs(config, cc));
+}
+END_TEST
+
+START_TEST (parseArgs_amount_suffixK3)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    cc.bytes=102400;
+    cc.blocks=12800; // bytes/8
+    cc.chunk_size=2048; // blocks/2
+    cc.chunk_count=3;
+    cc.ending_bytes=4096; // difference in bytes between bytes and blocks
+    // arguments
+    int argc = 3;
+    char *argv[] = {"rdrand-gen","--amount","100k"};
     // call
     ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
     ck_assert(compareConfigs(config, cc));
@@ -327,6 +384,7 @@ parseArgs_suite (void)
   tc = tcase_create ("Basic arguments");
   tcase_add_test (tc, parseArgs_no_args);
   tcase_add_test (tc, parseArgs_help);
+  tcase_add_test (tc, parseArgs_aes);
   suite_add_tcase (s, tc);
 
   tc = tcase_create ("Amount");
@@ -334,6 +392,8 @@ parseArgs_suite (void)
   tcase_add_test (tc, parseArgs_amount_decimalNumber);
   tcase_add_test (tc, parseArgs_amount_simpleNumber);
   tcase_add_test (tc, parseArgs_amount_suffixK);
+  tcase_add_test (tc, parseArgs_amount_suffixK2);
+  tcase_add_test (tc, parseArgs_amount_suffixK3);
   tcase_add_test (tc, parseArgs_amount_suffix_bad);
   tcase_add_test (tc, parseArgs_amount_negative);
   suite_add_tcase (s, tc);
