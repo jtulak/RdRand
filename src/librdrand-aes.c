@@ -323,8 +323,6 @@ int rdrand_enc_buffer(void* dest, void* src, size_t len) {
  *
  * Either rdrand_set_aes_keys or rdrand_set_aes_random_key
  * has to be set in advance.
- *
- * TODO parallel encryption/generation
  * 
  * @param  dest        destination location
  * @param  count       bytes to generate
@@ -457,6 +455,7 @@ int keys_randomize() {
         return 0;
     } 
     AES_CFG.keys.next_counter = ((double)buf/UINT_MAX)*MAX_COUNTER;
+    
     return 1;
 }
 

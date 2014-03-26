@@ -84,8 +84,10 @@
  * to 1. For access to the real rdrand, use rdrandXX_step_native()
  */
 
-#define STUB_RDRAND
 
+//#define STUB_RDRAND
+
+// {{{ STUB_RDRAND
 #ifdef STUB_RDRAND
 	#define RDRAND16_STEP rdrand16_step_native
 	#define RDRAND32_STEP rdrand32_step_native
@@ -111,8 +113,9 @@
 	#define RDRAND32_STEP rdrand32_step
 	#define RDRAND64_STEP rdrand64_step
 #endif // STUB_RDRAND
+// }}}
 
-
+// {{{ RDRAND_STEPs
 #if defined(HAVE_RDRAND_IN_GCC) && defined(HAVE_X86INTRIN_H)
         #include <x86intrin.h>
         inline int RDRAND16_STEP(uint16_t *x)
@@ -204,7 +207,9 @@
             return RDRAND_FAILURE;
         }
 #endif /* HAVE_X86INTRIN_H && HAVE_RDRAND_IN_GCC*/
+// }}} RDRAND_STEPs
 
+// {{{ rdrand_testSupport
 struct cpuid
 {
 	uint32_t eax,ebx,ecx,edx;
@@ -264,7 +269,7 @@ int rdrand_testSupport()
 
 	return RDRAND_UNSUPPORTED;
 }
-
+// }}} rdrand_testSupport
 
 
 /**
@@ -275,6 +280,7 @@ int rdrand_testSupport()
  * implies default retry_limit RETRY_LIMIT.
  * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
  */
+// {{{ rdrand_get_uint16_retry
 int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit)
 {
 	int rc;
@@ -299,7 +305,7 @@ int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit)
 	}
 	return RDRAND_FAILURE;
 }
-
+// }}} rdrand_get_uint16_retry
 
 /**
  * Get a 32 bit random number
@@ -308,6 +314,7 @@ int rdrand_get_uint16_retry(uint16_t *dest, int retry_limit)
  * implies default retry_limit RETRY_LIMIT.
  * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
  */
+// {{{ rdrand_get_uint32_retry
 int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit)
 {
 	int rc;
@@ -332,6 +339,7 @@ int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit)
 	}
 	return RDRAND_FAILURE;
 }
+// }}}
 
 
 /**
@@ -341,6 +349,7 @@ int rdrand_get_uint32_retry(uint32_t *dest, int retry_limit)
  * implies default retry_limit RETRY_LIMIT.
  * Returns RDRAND_SUCCESS on success, or RDRAND_FAILURE on underflow.
  */
+// {{{ rdrand_get_uint64_retry
 int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit)
 {
 	int rc;
@@ -365,7 +374,7 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit)
 	}
 	return RDRAND_FAILURE;
 }
-
+// }}}
 
 /**
  * Get an array of 16 bit random numbers
@@ -374,6 +383,7 @@ int rdrand_get_uint64_retry(uint64_t *dest, int retry_limit)
  * Returns the number of bytes successfully acquired
  * For higher speed, uses 64bit generating when possible.
  */
+// {{{ unsigned int rdrand_get_uint16_array_retry
 unsigned int rdrand_get_uint16_array_retry(uint16_t *dest,  const unsigned int count, int retry_limit)
 {
 	int rc;
@@ -420,7 +430,7 @@ unsigned int rdrand_get_uint16_array_retry(uint16_t *dest,  const unsigned int c
 	generated_16 += 4 * generated_64;
 	return generated_16;
 }
-
+// }}}
 
 /**
  * Get an array of 32 bit random numbers
@@ -429,6 +439,7 @@ unsigned int rdrand_get_uint16_array_retry(uint16_t *dest,  const unsigned int c
  * Returns the number of bytes successfully acquired
  * For higher speed, uses 64bit generating when possible.
  */
+// {{{ rdrand_get_uint32_array_retry
 unsigned int rdrand_get_uint32_array_retry(uint32_t *dest,  const unsigned int count, int retry_limit)
 {
 	int rc;
@@ -475,7 +486,7 @@ unsigned int rdrand_get_uint32_array_retry(uint32_t *dest,  const unsigned int c
 	generated_32 += 2 * generated_64;
 	return generated_32;
 }
-
+// }}}
 
 /**
  * Get an array of 64 bit random numbers
@@ -483,6 +494,7 @@ unsigned int rdrand_get_uint32_array_retry(uint32_t *dest,  const unsigned int c
  * implies default retry_limit RETRY_LIMIT
  * Returns the number of bytes successfully acquired
  */
+// {{{ rdrand_get_uint64_array_retry
 unsigned int rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int count, int retry_limit)
 {
 	int rc;
@@ -519,7 +531,7 @@ unsigned int rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int co
 
 	return generated_64;
 }
-
+// }}}
 
 /**
  * Get an array of 8 bit random numbers
@@ -528,6 +540,7 @@ unsigned int rdrand_get_uint64_array_retry(uint64_t *dest, const unsigned int co
  * Returns the number of bytes successfully acquired
  * For higher speed, uses 64bit generating when possible.
  */
+// {{{  rdrand_get_uint8_array_retry
 unsigned int rdrand_get_uint8_array_retry(uint8_t *dest,  const unsigned int count, int retry_limit)
 {
 	int rc;
@@ -575,7 +588,7 @@ unsigned int rdrand_get_uint8_array_retry(uint8_t *dest,  const unsigned int cou
 	generated_8 += 8 * generated_64;
 	return generated_8;
 }
-
+// }}}
 
 /**
  * Get bytes of random values.
@@ -584,6 +597,7 @@ unsigned int rdrand_get_uint8_array_retry(uint8_t *dest,  const unsigned int cou
  * Returns the number of bytes successfully acquired.
  * For higher speed, uses 64bit generating when possible.
  */
+// {{{ rdrand_get_bytes_retry
 size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit)
 {
 	uint64_t *start = dest;
@@ -658,13 +672,14 @@ size_t rdrand_get_bytes_retry(void *dest, const size_t size, int retry_limit)
 
 	return generatedBytes;
 }
-
+// }}}
 
 /**
  * Write count bytes of random data to a file.
  * implies default retry_limit RETRY_LIMIT
  * Returns the number of bytes successfully acquired.
  */
+// {{{  rdrand_fwrite
 size_t rdrand_fwrite(FILE *f, const size_t count, int retry_limit)
 {
 	uint64_t tmprand;
@@ -697,7 +712,7 @@ size_t rdrand_fwrite(FILE *f, const size_t count, int retry_limit)
 
 	return generated;
 }
-
+// }}}
 
 
 /**
@@ -708,6 +723,7 @@ size_t rdrand_fwrite(FILE *f, const size_t count, int retry_limit)
  *
  * Force reseed by waiting few microseconds before each generating.
  */
+// {{{ rdrand_get_uint64_array_reseed_delay
 unsigned int rdrand_get_uint64_array_reseed_delay(uint64_t *dest, const unsigned int count, int retry_limit)
 {
 	int rc;
@@ -737,7 +753,7 @@ unsigned int rdrand_get_uint64_array_reseed_delay(uint64_t *dest, const unsigned
 
 	return generated_64;
 }
-
+// }}}
 
 /**
  * Get an array of 64 bit random values.
@@ -747,6 +763,7 @@ unsigned int rdrand_get_uint64_array_reseed_delay(uint64_t *dest, const unsigned
  *
  * Force reseed by generating and throwing away 1024 values per one saved.
  */
+// {{{ rdrand_get_uint64_array_reseed_skip
 unsigned int rdrand_get_uint64_array_reseed_skip(uint64_t *dest, const unsigned int count, int retry_limit)
 {
 	int rc;
@@ -782,4 +799,4 @@ unsigned int rdrand_get_uint64_array_reseed_skip(uint64_t *dest, const unsigned 
 
 	return generated_64;
 }
-
+// }}}

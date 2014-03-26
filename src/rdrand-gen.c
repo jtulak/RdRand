@@ -24,7 +24,15 @@
     ./rdrand-gen |pv -c >/dev/null
 */
 
-
+/* FIXME why on aes is generating taking two times longer time?
+ *
+ * clocks with aes:
+ * delta in aes thread: 79 
+ * delta in generating thread: 189
+ *
+ * without aes:
+ * delta in generating thread: 94
+ */
 
 
 
@@ -34,6 +42,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <unistd.h> // usleep
+#include <time.h> // debug
 #include <getopt.h>
 #include <string.h>
 #include <math.h>       /* floor */
@@ -86,6 +95,28 @@
 
 #define VERSION "1.1.0"
 // }}} macros
+
+// {{{
+struct timespec time_diff(struct timespec * start, struct timespec * end) {
+   struct timespec diff;
+   diff.tv_sec = end->tv_sec - start->tv_sec;
+   if(end->tv_nsec < start->tv_sec){
+       diff.tv_sec--;
+       diff.tv_nsec = start->tv_sec - end->tv_nsec;
+   }else{
+       diff.tv_nsec = end->tv_nsec - start->tv_sec;
+   }
+   return diff;
+}
+void printTimer(int thread, struct timespec diff){
+    fprintf(stderr,"Time difference (%d): %lld secs, %lld nsecs\n",
+            thread,
+            (long long) diff.tv_sec,
+            (long long) diff.tv_nsec);
+}
+
+// }}}
+
 
 /**
  * List of names of methods for printing.
@@ -402,20 +433,25 @@ int parse_args(int argc, char** argv, cnf_t* config)
 // {{{ generate_with_metod
 size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int blocks, int retry)
 {
+    size_t res = 0;
+    clock_t tic, toc;
 
+    tic = clock();
 	switch(config->method)
 	{
 	case GET_BYTES:
-		return rdrand_get_bytes_retry((uint8_t*)buf, blocks*8,retry)/8;
+		res= rdrand_get_bytes_retry((uint8_t*)buf, blocks*8,retry)/8;
 		break;
 	case GET_RESEED64_DELAY:
-		return rdrand_get_uint64_array_reseed_delay(buf, blocks, retry);
+		res= rdrand_get_uint64_array_reseed_delay(buf, blocks, retry);
 		break;
 	case GET_RESEED64_SKIP:
-		return rdrand_get_uint64_array_reseed_skip(buf, blocks, retry);
+		res= rdrand_get_uint64_array_reseed_skip(buf, blocks, retry);
 		break;
 	}
-	return 0;
+            toc = clock();
+//            EPRINT("delta in generate: %d (blocks: %u)\n", (toc-tic), blocks );
+	return res;
 }
 // }}} generate_with_metod
 
@@ -431,9 +467,10 @@ size_t generate_chunk(cnf_t *config)
 	size_t written, written_total,buf_size, buf_size_bytes;
     // NOTE: chunk_size is count of 64bit blocks!
 	uint64_t buf[config->chunk_size*config->threads],
-             gen_buf[config->chunk_size*config->threads],
-             enc_buf[config->chunk_size*config->threads],
-             *ptr_buf;
+             gen_buf1[config->chunk_size*config->threads],
+             gen_buf2[config->chunk_size*config->threads],
+             *gen_current, *gen_previous;
+    clock_t tic, toc;
 
 // EPRINT("key: ");
 // memDump_gen(AES_CFG.keys.key_current, AES_CFG.keys.key_length);
@@ -446,10 +483,14 @@ size_t generate_chunk(cnf_t *config)
 
     // decide whether aes is used and thus one more thread will run or not
     if(config->aes_flag) {
-        ptr_buf = gen_buf;
+        // when aes is used, two buffers are needed.
+        // While one is filled by rdrand, the other one is being encrypted.
+        // Swaping them is faster than copying.
+        gen_current = gen_buf1;
+        gen_previous = gen_buf2;
         aes_thread=1;
     }else {
-        ptr_buf = buf;
+        gen_current = buf;
     }
     
     #ifdef _OPENMP
@@ -458,6 +499,7 @@ size_t generate_chunk(cnf_t *config)
 	// for all chunks (or indefinitely if bytes are set to 0)
 	for(n = 0; n < config->chunk_count+aes_thread || config->bytes == 0; n++)
 	{
+        tic = clock();
 		written = 0;
 		/** At first fill chunks in all parallel threads */
     #ifdef _OPENMP
@@ -471,11 +513,10 @@ size_t generate_chunk(cnf_t *config)
             //if(i < config->threads && (n < config->chunk_count || config->bytes == 0) ) {
             if (i < config->threads) {
                 if(n < config->chunk_count || config->bytes == 0 ) {
-                    
                     //fprintf(stderr,"  Generating thread: %u, n: %u\n",i,n);
                     written += generate_with_metod(
                         config, 
-                        &ptr_buf[i*config->chunk_size], 
+                        &gen_current[i*config->chunk_size], 
                         config->chunk_size, 
                         RETRY_LIMIT);
                 }
@@ -484,8 +525,8 @@ size_t generate_chunk(cnf_t *config)
                 // and don't run in first cycle
                 // - no data in buffers.
                 
-                //fprintf(stderr,"  Encrypting i: %u, n: %u\n",i,n);
-                rdrand_enc_buffer(buf, enc_buf, buf_size_bytes);
+                //fprintf(stderr,"  Encrypting thread: %u, n: %u\n",i,n);
+                rdrand_enc_buffer(buf, gen_previous, buf_size_bytes);
             }
 
 		}
@@ -514,7 +555,7 @@ size_t generate_chunk(cnf_t *config)
 					// try to generate the rest
 					written += generate_with_metod(
                         config, 
-                        ptr_buf+written, 
+                        gen_current+written, 
                         config->threads*config->chunk_size-written, 
                         SLOW_RETRY_LIMIT);
 				}
@@ -551,7 +592,13 @@ size_t generate_chunk(cnf_t *config)
         // move it to the encryption buffer.
         // From there it will be moved in next round to the output.
         if( config->aes_flag){
-            memcpy(enc_buf, gen_buf, buf_size_bytes);
+            //memcpy(enc_buf, gen_buf, buf_size_bytes);
+            //Swap current and previous buffer
+            { uint64_t*tmp;
+                tmp = gen_current;
+                gen_current = gen_previous;
+                gen_previous = tmp;
+            }
             if (first_run) {
                 // if it is first run, skip it - no data ready
                 first_run = 0;
@@ -570,6 +617,8 @@ size_t generate_chunk(cnf_t *config)
           buf_size);
       break;
 		}
+        toc = clock();
+  //      EPRINT("Total delta: %d\n", (toc-tic));
 
 	} // for all chunks
 	return written_total*8;
