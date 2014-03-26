@@ -80,6 +80,10 @@ int keys_change();
 int keys_randomize();
 
 /**
+ * Encrypt the current key and nonce to prevent reusing the same counter.
+ */
+void keys_change_rotation();
+/**
  * Generate a random key.
  * Used when rdrand_set_aes_random_key() was set.
  * @return            1 if it was successful

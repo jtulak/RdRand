@@ -122,10 +122,20 @@ int keys_allocate(unsigned int amount, size_t key_length) {
  * Destroy saved keys and free the memory.
  */
 void keys_free() {
+    unsigned char tmp[EVP_MAX_BLOCK_LENGTH];
+    int tmpInt = EVP_MAX_BLOCK_LENGTH;
+
     if (AES_CFG.keys.keys == NULL) {
         // If there is nothing to free
         return;
     }
+
+    // encrypt final...
+   // if ( EVP_EncryptFinal_ex(&AES_CFG.en, tmp, &tmpInt) != 1 ) {
+   //     perror("EVP_CIPHER_CTX_cleanup");
+   //     return;
+   // }
+
 
     AES_CFG.keys.key_current = NULL;
     AES_CFG.keys.nonce_current = NULL;
@@ -205,8 +215,9 @@ int rdrand_set_aes_keys(unsigned int amount,
         return 0;
 
     AES_CFG.keys.index=0;
-    AES_CFG.keys.next_counter=0;
+    AES_CFG.keys.next_counter=MAX_COUNTER;
     AES_CFG.keys_type = KEYS_GIVEN;
+    AES_CFG.keys.key_current = NULL;
     if (keys_allocate(amount, key_length) == 0) {
         return 0;
     }
@@ -217,8 +228,9 @@ int rdrand_set_aes_keys(unsigned int amount,
             memcpy(AES_CFG.keys.nonces[i], nonces[i], (key_length/2));
         }
     }
+    key_to_openssl();
     // random index
-    keys_change();
+    //keys_change();
     return 1;
 }
 // }}} rdrand_set_aes_keys
@@ -232,6 +244,7 @@ int rdrand_set_aes_random_key() {
     AES_CFG.keys_type = KEYS_GENERATED;
     AES_CFG.keys.index=0;
     AES_CFG.keys.next_counter=0;
+    AES_CFG.keys.key_current = NULL;
     
     if (keys_allocate(1, DEFAULT_KEY_LEN) == 0){
         return 0;
@@ -239,6 +252,7 @@ int rdrand_set_aes_random_key() {
     if(key_generate() == 0){
         return 0;
     }
+
     return 1;
 }
 //}}} rdrand_set_aes_random_key
@@ -412,7 +426,8 @@ void counter(unsigned int num) {
         //perror("!!! DEBUG: KEY CHANGED !!!\n");
         if (AES_CFG.keys_type == KEYS_GIVEN) { 
             keys_change(); // set a new random index 
-            keys_randomize(); // set a new random timer
+            //keys_randomize(); // set a new random timer
+            AES_CFG.keys.next_counter = MAX_COUNTER;
         } else { // KEYS_GENERATED
             key_generate(); // generate a new key and nonce
             keys_randomize(); // set a new random timer
@@ -430,19 +445,51 @@ void counter(unsigned int num) {
  * Will call keys_shuffle at the end.
  * Used when rdrand_set_aes_keys() was set.
  */
-int keys_change() {
-    unsigned int buf;
+int keys_change(int rotate) {
+    /*unsigned int buf;
     if (RAND_bytes((unsigned char*)&buf, sizeof(unsigned int)) != 1) {
         fprintf(stderr, "ERROR: can't change keys index, not enough entropy!\n");
         return 0;
     }
     AES_CFG.keys.index = ((double)buf / UINT_MAX)*AES_CFG.keys.amount;
+    */
+    AES_CFG.keys.index = (AES_CFG.keys.index+1) % AES_CFG.keys.amount;
     AES_CFG.keys.key_current = AES_CFG.keys.keys[AES_CFG.keys.index];
     AES_CFG.keys.nonce_current = AES_CFG.keys.nonces[AES_CFG.keys.index];
 
     key_to_openssl();
+    keys_change_rotation();
     return 1;
 }
+
+/**
+ * Encrypt the current key and nonce to prevent reusing the same counter.
+ */
+void keys_change_rotation(){
+    unsigned char K[AES_CFG.keys.key_length];
+    unsigned char N[AES_CFG.keys.key_length];
+    int tmp;
+
+    if ( AES_CFG.keys.key_current == NULL)
+        return;
+
+    EVP_EncryptUpdate(
+            &(AES_CFG.en),
+            K,
+            &tmp,
+            AES_CFG.keys.key_current,
+            AES_CFG.keys.key_length) ;
+    EVP_EncryptUpdate(
+            &(AES_CFG.en),
+            N,
+            &tmp,
+            AES_CFG.keys.nonce_current,
+            AES_CFG.keys.key_length) ;
+
+    memcpy(AES_CFG.keys.key_current, K, AES_CFG.keys.key_length);
+    memcpy(AES_CFG.keys.nonce_current, N, AES_CFG.keys.key_length);
+}
+
 
 /**
  * Set a random timeout for new key generation/step.

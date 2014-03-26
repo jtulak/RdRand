@@ -24,17 +24,6 @@
     ./rdrand-gen |pv -c >/dev/null
 */
 
-/* FIXME why on aes is generating taking two times longer time?
- *
- * clocks with aes:
- * delta in aes thread: 79 
- * delta in generating thread: 189
- *
- * without aes:
- * delta in generating thread: 94
- */
-
-
 
 // {{{ INCLUDES
 #include <stdio.h>

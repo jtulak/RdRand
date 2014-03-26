@@ -251,9 +251,13 @@ void cpuid(cpuid_t *result,uint32_t eax)
 int rdrand_testSupport()
 {
 	cpuid_t reg;
+
+  #ifdef STUB_RDRAND
+    return RDRAND_SUPPORTED;
+  #endif
+
 	// test if an Intel CPU
 	cpuid(&reg,0); // get vendor
-
 	if(reg.ebx == 0x756e6547 && // Genu
 	   reg.ecx == 0x6c65746e && // ntel
 	   reg.edx == 0x49656e69 ) // ineI
