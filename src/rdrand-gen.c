@@ -423,9 +423,6 @@ int parse_args(int argc, char** argv, cnf_t* config)
 size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int blocks, int retry)
 {
     size_t res = 0;
-    clock_t tic, toc;
-
-    tic = clock();
 	switch(config->method)
 	{
 	case GET_BYTES:
@@ -438,8 +435,6 @@ size_t generate_with_metod(cnf_t *config,uint64_t *buf, unsigned int blocks, int
 		res= rdrand_get_uint64_array_reseed_skip(buf, blocks, retry);
 		break;
 	}
-            toc = clock();
-//            EPRINT("delta in generate: %d (blocks: %u)\n", (toc-tic), blocks );
 	return res;
 }
 // }}} generate_with_metod
@@ -459,7 +454,6 @@ size_t generate_chunk(cnf_t *config)
              gen_buf1[config->chunk_size*config->threads],
              gen_buf2[config->chunk_size*config->threads],
              *gen_current, *gen_previous;
-    clock_t tic, toc;
 
 // EPRINT("key: ");
 // memDump_gen(AES_CFG.keys.key_current, AES_CFG.keys.key_length);
@@ -488,7 +482,6 @@ size_t generate_chunk(cnf_t *config)
 	// for all chunks (or indefinitely if bytes are set to 0)
 	for(n = 0; n < config->chunk_count+aes_thread || config->bytes == 0; n++)
 	{
-        tic = clock();
 		written = 0;
 		/** At first fill chunks in all parallel threads */
     #ifdef _OPENMP
@@ -606,8 +599,6 @@ size_t generate_chunk(cnf_t *config)
           buf_size);
       break;
 		}
-        toc = clock();
-  //      EPRINT("Total delta: %d\n", (toc-tic));
 
 	} // for all chunks
 	return written_total*8;

@@ -25,7 +25,6 @@ rdrand-gen
       get_uint64_array_reseed_delay
       get_uint64_array_reseed_skip
 
-
 Usage (of test)
 ---------------
 Test has its own Makefile in tests directory.
@@ -99,3 +98,8 @@ and is limiting all threads to only one socket.*
       rdrand_get_uint64_retry
       rdrand_get_uint64_array_reseed_delay
       rdrand_get_uint64_array_reseed_skip
+
+Automated testing 
+-----------------
+In check_tests directory are some automated tests. Compile and run them by 
+make.

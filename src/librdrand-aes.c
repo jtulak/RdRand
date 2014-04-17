@@ -122,19 +122,11 @@ int keys_allocate(unsigned int amount, size_t key_length) {
  * Destroy saved keys and free the memory.
  */
 void keys_free() {
-    unsigned char tmp[EVP_MAX_BLOCK_LENGTH];
-    int tmpInt = EVP_MAX_BLOCK_LENGTH;
-
     if (AES_CFG.keys.keys == NULL) {
         // If there is nothing to free
         return;
     }
 
-    // encrypt final...
-   // if ( EVP_EncryptFinal_ex(&AES_CFG.en, tmp, &tmpInt) != 1 ) {
-   //     perror("EVP_CIPHER_CTX_cleanup");
-   //     return;
-   // }
 
 
     AES_CFG.keys.key_current = NULL;
@@ -397,12 +389,6 @@ unsigned int rdrand_get_bytes_aes_ctr(
         memcpy(dest + i*MAX_BUFFER_SIZE, output, tail);
         generated += tail;
     }
-
-    // TODO is this important?
-    //if ( EVP_EncryptFinal_ex(&(AES_CFG.en), output, &out_len) != 1 ) {
-    //    perror("EVP_CIPHER_CTX_cleanup");
-    //    return 1;
-    //}
 
 
     return generated;
