@@ -19,7 +19,7 @@
  */
 
 /*
-    Now the legal stuff is done. This file contain the library itself.
+    Now the legal stuff is done. This file contain AES methods for the library.
 */
 #include <limits.h>
 #include <stddef.h>
@@ -441,9 +441,11 @@ void counter(unsigned int num) {
 
 // {{{ keys and randomizing
 /**
- * Set key index for AES to another random one.
+ * Set key index (and nonce too) for AES to another random one.
  * Will call keys_shuffle at the end.
  * Used when rdrand_set_aes_keys() was set.
+ *
+ * @param rotate    TODO Currently not used - why I put it there? :-(
  */
 int keys_change(int rotate) {
     /*unsigned int buf;
