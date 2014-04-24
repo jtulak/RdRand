@@ -169,4 +169,6 @@ int load_key_line(
           unsigned int *nonce_len
           );  
 
+size_t generate(cnf_t *config);
+
 #endif  // RDRAND_GEN_H
