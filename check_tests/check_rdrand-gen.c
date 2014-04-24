@@ -544,6 +544,34 @@ START_TEST (run_amount_generation_5)
 }
 END_TEST
 
+START_TEST (run_amount_generation_20k)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    // arguments
+    int argc = 5;
+    char *argv[] = {"rdrand-gen", "-t", "1", "-n", "20000"};
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+
+    size_t generated;
+
+    // now redirect stdout to NULL
+    stdout_to_null();
+
+    // now run generation
+    generated=generate(&config);
+
+    // and restore it
+    stdout_restore();
+
+
+    ck_assert(generated == 20000);
+
+}
+END_TEST
+
 Suite *
 run_suite (void)
 {
@@ -553,6 +581,7 @@ run_suite (void)
   tc = tcase_create ("Generating");
   tcase_add_test (tc, run_amount_generation_16);
   tcase_add_test (tc, run_amount_generation_5);
+  tcase_add_test (tc, run_amount_generation_20k);
   suite_add_tcase (s, tc);
 
   return s;
