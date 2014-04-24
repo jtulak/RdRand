@@ -135,7 +135,6 @@ typedef struct cnf {
     size_t chunk_count;
     /** amount of bytes to be generated at last */
     size_t ending_bytes;
-
 } cnf_t;
 
 /**
