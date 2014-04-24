@@ -1,10 +1,15 @@
 .\" Manpage for rdrand-gen.
 .\" Contact jan@tulak.me to correct errors or typos.
-.TH man 7 "25 November 2013" "1.0" "rdrand-gen man page"
+.TH man 7 "24 April 2014" "1.2" "rdrand-gen man page"
 .SH NAME
 rdrand-gen \- Generate randomness by using RdRand on Intel's CPUs.
 .SH SYNOPSIS
-rdrand-gen [--amount NUM] [--method NAME] [--output FILE] [--threads NUM]
+rdrand-gen [--amount NUM] [--method NAME] [--output FILE] 
+.br
+[--threads NUM] [--aes-ctr [--aes-keys FILE]] [--verbose] [--version] 
+.br
+[--help]
+
 .SH DESCRIPTION
 RdRand is an instruction for returning random numbers from an Intel on-chip hardware random number generator. RdRand is available on Ivy Bridge and later processors.
 
@@ -34,6 +39,22 @@ The perfomance of these reseeding methods is about 1/1000 of the default one. Th
 is faster than 
 .B reseed_delay
 , while on another one it can be different.
+
+If
+.B aes-ctr
+is set, then the output of RdRand instruction is encrypted with AES-CTR from OpenSSL. It can either use a random key, or you can give it a set of keys and nonces to use by using
+.B aes-keys
+parameter. If AES is not enabled by the first flag, the keys are ignored.
+
+Syntax of the key file is following:
+.br
+On each line is a hexadecimal string containing a key and a nonce. There can be 128 lines at max. Length of a single key is twice of the nonce, so if K stands for a key character and N for a nonce, a single line in the key file will look like the following.
+.br
+.I KKKKKKKKKKKKKKKKNNNNNNNN
+
+16 hexadecimal characters for a key followed by 8 for a nonce represents a 128bit key. This is also the only currently supported length of the key.
+
+
 .SH OPTIONS
   \-\-help       \-h      Print this help.
   \-\-amount     \-n 
@@ -54,6 +75,18 @@ Save the generated data to the file.
   \-\-threads    \-t 
 .I NUM
 Run the generator in NUM threads (default 2).
+  \-\-aes-ctr    \-a
+Encrypt the output with AES-CTR.
+  \-\-aes-keys   \-k
+.I FILE 
+Use given key file for the AES encryption
+.br
+                  instead of random one.
+  \-\-verbose    \-v
+Be verbose (will print on stderr).
+  \-\-version    \-V
+Print version.
+
 .SH EXAMPLES
 rdrand-gen 
 .B -n 10.5M -o /tmp/random
@@ -97,8 +130,11 @@ rdrand-gen | pv > /dev/null
 
 .SH SEE ALSO
 librdrand(3)
+librdrand-aes(3)
+
 .SH BUGS
 No known bugs.
+
 .SH AUTHOR
 Jan Tulak (jan@tulak.me)
 Jiri Hladky (hladky.jiri@gmail.com)
