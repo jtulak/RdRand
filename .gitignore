@@ -19,6 +19,8 @@
 # other stuff
 .directory
 
+autom4te.cache
+
 tests/RdRand
 tests/rdrand-gen
 rdrand-gen

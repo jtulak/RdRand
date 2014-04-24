@@ -1,7 +1,7 @@
 ## LibRdRand:
 ## an example of using Automake and Libtool to build a shared librar
 
-AC_INIT([LibRdRand], [0.1], [jan@tulak.me], [librdrand],
+AC_INIT([LibRdRand], [1.2.0], [jan@tulak.me], [librdrand],
         [https://github.com/BroukPytlik/RdRand])
 AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([1.10  -Wall  no-define])
@@ -31,10 +31,13 @@ AC_CHECK_HEADERS([stdio.h])
 AC_CHECK_HEADERS([unistd.h])
 AC_CHECK_HEADERS([cpuid.h])
 AC_CHECK_HEADERS([x86intrin.h])
+AC_CHECK_HEADERS([limits.h])
 AC_CHECK_HEADERS([time.h])
 AC_CHECK_HEADERS([math.h])
 AC_CHECK_HEADERS([inttypes.h])
 AC_CHECK_HEADERS([errno.h])
+AC_CHECK_HEADERS([openssl/rand.h])
+AC_CHECK_HEADERS([openssl/evp.h])
 
 ###################
 # Check for OpenMP
@@ -78,8 +81,8 @@ LT_INIT([disable-static])
 # For information on how to properly maintain the library version information,
 # refer to the libtool manual, section "Updating library version information":
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-AC_SUBST([RDRAND_SO_VERSION], [1:0:0])
-AC_SUBST([RDRAND_API_VERSION], [0.1])
+AC_SUBST([RDRAND_SO_VERSION], [1:2:0])
+AC_SUBST([RDRAND_API_VERSION], [1.2.0])
 
 # Override the template file name of the generated .pc file, so that there
 # is no need to rename the template file when the API version changes.

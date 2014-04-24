@@ -16,6 +16,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
+/* Define to 1 if you have the <limits.h> header file. */
+#define HAVE_LIMITS_H 1
+
 /* Define to 1 if you have the <math.h> header file. */
 #define HAVE_MATH_H 1
 
@@ -24,6 +27,12 @@
 
 /* Define to 1 if you have the <omp.h> header file. */
 #define HAVE_OMP_H 1
+
+/* Define to 1 if you have the <openssl/evp.h> header file. */
+#define HAVE_OPENSSL_EVP_H 1
+
+/* Define to 1 if you have the <openssl/rand.h> header file. */
+#define HAVE_OPENSSL_RAND_H 1
 
 /* Define to 1 if you have the <stddef.h> header file. */
 #define HAVE_STDDEF_H 1
@@ -72,7 +81,7 @@
 #define PACKAGE_NAME "LibRdRand"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "LibRdRand 0.1"
+#define PACKAGE_STRING "LibRdRand 1.2.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "librdrand"
@@ -81,7 +90,7 @@
 #define PACKAGE_URL "https://github.com/BroukPytlik/RdRand"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.1"
+#define PACKAGE_VERSION "1.2.0"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
