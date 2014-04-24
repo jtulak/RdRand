@@ -203,7 +203,7 @@ int rdrand_set_aes_keys(unsigned int amount,
                         unsigned char **keys,
                         unsigned char **nonces) {
     // don't allow bad key lengths
-    if(key_length <= MIN_KEY_LENGTH || key_length >= MAX_KEY_LENGTH)
+    if(key_length <= RDRAND_MIN_KEY_LENGTH || key_length >= RDRAND_MAX_KEY_LENGTH)
         return 0;
 
     AES_CFG.keys.index=0;
@@ -499,7 +499,7 @@ int keys_randomize() {
  * Used when rdrand_set_aes_random_key() was set.
  */
 int key_generate() {
-    unsigned char buf[MAX_KEY_LENGTH] = {};
+    unsigned char buf[RDRAND_MAX_KEY_LENGTH] = {};
     if (RAND_bytes(buf, AES_CFG.keys.key_length) != 1) { 
         fprintf(stderr, "ERROR: can't generate key, not enough entropy!\n");
         return 0;

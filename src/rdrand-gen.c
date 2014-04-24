@@ -689,8 +689,8 @@ int load_keys(cnf_t * config) {
     
     //while( (res = load_key_line(file, &key, &key_len, &nonce, &nonce_len)) != E_EOF) {
     while( 1 ) {
-        key=malloc(sizeof(char)*MAX_KEY_LENGTH);
-        nonce=malloc(sizeof(char)*MAX_KEY_LENGTH);
+        key=malloc(sizeof(char)*RDRAND_MAX_KEY_LENGTH);
+        nonce=malloc(sizeof(char)*RDRAND_MAX_KEY_LENGTH);
         if( key==NULL || nonce==NULL)
             return E_ERROR;
 
@@ -706,7 +706,7 @@ int load_keys(cnf_t * config) {
                 continue;
             }
             // no need for nonce_len check, because it is computed from key length
-            if(key_len > MAX_KEY_LENGTH || key_len < MIN_KEY_LENGTH)
+            if(key_len > RDRAND_MAX_KEY_LENGTH || key_len < RDRAND_MIN_KEY_LENGTH)
                 return E_KEY_NONCE_BAD_LENGTH;
             // initialize key length on first key
             if(first_len == 0)
@@ -733,8 +733,8 @@ int load_keys(cnf_t * config) {
     // free memory, keys are copied into AES_CFG
     for(i=0; amount > i; i++) {
         // set memory to zero at first
-        memset(keys[i], 0, MAX_KEY_LENGTH*sizeof(char));
-        memset(nonces[i], 0, MAX_KEY_LENGTH*sizeof(char));
+        memset(keys[i], 0, RDRAND_MAX_KEY_LENGTH*sizeof(char));
+        memset(nonces[i], 0, RDRAND_MAX_KEY_LENGTH*sizeof(char));
         //free 
         free(keys[i]);
         free(nonces[i]);
@@ -763,7 +763,7 @@ int load_key_line(
     
     char c;
     unsigned int i;
-    char buf[2*MAX_KEY_LENGTH] = {};
+    char buf[2*RDRAND_MAX_KEY_LENGTH] = {};
 
     
     i=0;
@@ -774,7 +774,7 @@ int load_key_line(
             (c >= '0' && c <= '9')
             ) {
             
-            if(i > MAX_KEY_LENGTH*2)
+            if(i > RDRAND_MAX_KEY_LENGTH*2)
                 return E_KEY_NONCE_BAD_LENGTH;
             buf[i] = c;
         } else {

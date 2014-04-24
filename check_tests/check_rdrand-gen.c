@@ -418,7 +418,7 @@ START_TEST (keys_read_line){
     FILE *f;
     unsigned char **keys, **nonces;
     unsigned int key_len, nonce_len, res;
-    unsigned char fixed_key[MAX_KEY_LENGTH], fixed_nonce[MAX_KEY_LENGTH];
+    unsigned char fixed_key[RDRAND_MAX_KEY_LENGTH], fixed_nonce[RDRAND_MAX_KEY_LENGTH];
 
     hex2byte(FIXED_KEY, DEFAULT_KEY_LEN*2, fixed_key, DEFAULT_KEY_LEN);
     hex2byte(FIXED_NONCE, DEFAULT_KEY_LEN, fixed_nonce, DEFAULT_KEY_LEN/2);
@@ -426,8 +426,8 @@ START_TEST (keys_read_line){
     
     keys = malloc (sizeof(unsigned char *));
     nonces=malloc (sizeof(unsigned char *));
-    keys[0]= malloc(MAX_KEY_LENGTH);
-    nonces[0]= malloc(MAX_KEY_LENGTH);
+    keys[0]= malloc(RDRAND_MAX_KEY_LENGTH);
+    nonces[0]= malloc(RDRAND_MAX_KEY_LENGTH);
 
     f=fopen(KEYS_FILE, "r");
 
@@ -452,7 +452,7 @@ END_TEST
 // {{{ keys_open_file
 START_TEST (keys_open_file){
     cnf_t cfg = {.aeskeys_filename=KEYS_FILE};
-    unsigned char fixed_key[MAX_KEY_LENGTH], fixed_nonce[MAX_KEY_LENGTH];
+    unsigned char fixed_key[RDRAND_MAX_KEY_LENGTH], fixed_nonce[RDRAND_MAX_KEY_LENGTH];
     AES_CFG.keys.key_current = NULL;
 
     hex2byte(FIXED_KEY, DEFAULT_KEY_LEN*2, fixed_key, DEFAULT_KEY_LEN);
