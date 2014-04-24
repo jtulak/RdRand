@@ -1,7 +1,11 @@
+/* vim: set expandtab cindent fdm=marker ts=4 sw=4: */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
+#include <sys/stat.h> 
+#include <fcntl.h>
 #include "tools.h"
 
 void mem_dump(unsigned char *mem, unsigned int length) {
@@ -43,4 +47,22 @@ dump_hex_byte_string (const unsigned char* data, const unsigned int size, const 
   fprintf(stderr,"%02x",data[i]);
   }
   fprintf(stderr,"\n");
+}
+
+// stdout redirect to /dev/null
+// http://stackoverflow.com/questions/4832603/how-could-i-temporary-redirect-stdout-to-a-file-in-a-c-program
+int stdout_bak,stdout_new;
+
+void stdout_to_null(){
+    fflush(stdout);
+    stdout_bak = dup(1);
+    stdout_new = open("/dev/null", O_WRONLY);
+    dup2(stdout_new,1);
+    close(stdout_new);
+}
+
+void stdout_restore(){
+    fflush(stdout);
+    dup2(stdout_bak, 1);
+    close(stdout_bak);
 }

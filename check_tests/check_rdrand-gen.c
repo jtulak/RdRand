@@ -374,7 +374,6 @@ START_TEST (parseArgs_threads_positive)
 END_TEST
 
 
-
 Suite *
 parseArgs_suite (void)
 {
@@ -482,6 +481,84 @@ keys_load_suite (void) {
 }
 // }}}
 
+
+/** ******************************************************************/
+/**                       running                                    */
+/** ******************************************************************/
+
+// {{{ running Suite
+
+START_TEST (run_amount_generation_16)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    // arguments
+    int argc = 5;
+    char *argv[] = {"rdrand-gen", "-t", "1", "-n", "16"};
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+
+    size_t generated;
+
+    // now redirect stdout to NULL
+    stdout_to_null();
+
+    // now run generation
+    generated=generate(&config);
+
+    // and restore it
+    stdout_restore();
+
+
+    ck_assert(generated == 16);
+
+}
+END_TEST
+
+START_TEST (run_amount_generation_5)
+{
+    // default config
+    cnf_t config = DEFAULT_CONFIG_SETTING;
+    // correct result
+    cnf_t cc = DEFAULT_CONFIG_SETTING;
+    // arguments
+    int argc = 5;
+    char *argv[] = {"rdrand-gen", "-t", "1", "-n", "5"};
+    ck_assert(parse_args(argc, argv,&config) == EXIT_SUCCESS);
+
+    size_t generated;
+
+    // now redirect stdout to NULL
+    stdout_to_null();
+
+    // now run generation
+    generated=generate(&config);
+
+    // and restore it
+    stdout_restore();
+
+
+    ck_assert(generated == 5);
+
+}
+END_TEST
+
+Suite *
+run_suite (void)
+{
+  Suite *s = suite_create ("Run tests suite");
+  TCase *tc;
+
+  tc = tcase_create ("Generating");
+  tcase_add_test (tc, run_amount_generation_16);
+  tcase_add_test (tc, run_amount_generation_5);
+  suite_add_tcase (s, tc);
+
+  return s;
+}
+// }}}
+
 /** *******************************************************************/
 /**             MAIN                                                  */
 /** *******************************************************************/
@@ -501,6 +578,9 @@ int main (void){
 	sr = srunner_create (s);
 
     s = keys_load_suite ();
+	srunner_add_suite(sr, s);
+
+    s = run_suite ();
 	srunner_add_suite(sr, s);
 
 
