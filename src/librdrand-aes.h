@@ -63,6 +63,12 @@
 
 #define MAX_BUFFER_SIZE 2048
 
+// OSX compatibility
+#ifdef OSX
+	typedef	unsigned long ulong;
+#endif // OSX
+
+
 /**
  * Encrypt the given buffer.
  * 
