@@ -25,11 +25,19 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 #include "./librdrand.h"
 #include "./librdrand-aes.private.h"
 #include "./librdrand-aes.h"
+
+//memory locking
+#include <sys/mman.h>
+
+//getrlimit - memory locking
+#include <sys/time.h>
+#include <sys/resource.h>
 
 
 /*****************************************************************************/
@@ -169,18 +177,74 @@ void keys_free() {
 // }}} keys_allocate/free
 
 // {{{ keys_mem_lock/unlock
+/**
+ * Prevent memory from being swapped.
+ */
 int keys_mem_lock(void * ptr, size_t len) {
+    struct rlimit rlim;
+    unsigned int mlock_limit;
+
     // TODO
-    (void) ptr;
-    (void) len;
-    return TRUE;
+    //(void) ptr;
+    //(void) len;
+    //return TRUE;
+   
+//{{{ getrlimit
+  if ( getrlimit(RLIMIT_MEMLOCK, &rlim) == 0 ) {
+    mlock_limit = rlim.rlim_cur;
+    //fprintf(stderr, "INFO:  getrlimit(RLIMIT_MEMLOCK, rlim) reports: current limit %d, maximum (ceiling) %d.\n", rlim.rlim_cur, rlim.rlim_max);
+    mlock_limit /= 4;
+  } else {
+    mlock_limit = 16384;
+    fprintf (stderr, 
+        "\nWARNING: keys_mem_lock: "
+        "getrlimit(RLIMIT_MEMLOCK, rlim) has failed. "
+        "Using %u as default limit. Reported error: %s\n", 
+        mlock_limit,  
+        strerror (errno) 
+    );
+    return 0;
+  }
+//}}}
+
+  if ( len <= mlock_limit ) {
+    if ( mlock(ptr, len ) == 0 ) {
+    } else {
+      fprintf (stderr, 
+            "\nWARNING: Function init_buffer: "
+            "cannot lock buffer to RAM (preventing that memory "
+            "from being paged to the swap area)\n"
+            "\tSize of buffer is %lu Bytes. "
+            "Reported error: \"%s\". "
+            "See man -S2 mlock for the interpretation.\n", 
+            len, 
+            strerror (errno) 
+        );
+      return 0;
+    }
+  } 
+  return 1;
 }
 
+/**
+ * Allow memory to be swapped again.
+ */
 int keys_mem_unlock(void * ptr, size_t len) {
     // TODO
-    (void) ptr;
-    (void) len;
-    return TRUE;
+    //(void) ptr;
+    //(void) len;
+    //return TRUE;
+    
+    memset(ptr, 0, len);
+    if ( munlock(ptr, len ) != 0) {
+      fprintf (stderr, "\nWARNING: Function destroy_buffer: "
+              "cannot unlock buffer from RAM (lock prevents memory "
+              "from being paged to the swap area).\n"
+          "Size of buffer is %lu Bytes. Reported error: %s\n", 
+          len, strerror (errno) );
+      return 0;
+    }
+    return 1;
 }
 // }}} keys_mem_lock/unlock
 
