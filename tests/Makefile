@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall  -Wextra -O3 -fopenmp  -fPIC
+CFLAGS=-c -Wall  -Wextra -O3 -fopenmp  -fPIC # -DSTUB_RDRAND
 LDFLAGS=-fopenmp -lrt -lm -mrdrnd 
 
 SOURCES_COMMON=../src/librdrand.h\
