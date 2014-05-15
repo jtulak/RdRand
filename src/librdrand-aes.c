@@ -293,7 +293,7 @@ int rdrand_set_aes_keys(unsigned int amount,
 
 /**
  * Set automatic key generation.
- * /dev/random will be used as a key generator.
+ * OpenSSL will be used as a key generator.
  */
 // {{{ rdrand_set_aes_random_key
 int rdrand_set_aes_random_key() {
@@ -349,7 +349,8 @@ int rdrand_enc_buffer(void* dest, void* src, size_t len) {
         // By placing the counter at the beginning of the cycle
         // avoid situation, when counter would be just few bytes from regenerating,
         // but all MAX_BUFFER_SIZE would be generated with old key.
-        counter(MAX_BUFFER_SIZE);
+        if(counter(MAX_BUFFER_SIZE) == 0)
+            return 0;
         
         // encrypt full buffer
         if( EVP_EncryptUpdate(
@@ -365,7 +366,9 @@ int rdrand_enc_buffer(void* dest, void* src, size_t len) {
     }
 
     if (tail != 0) {
-        counter(tail);
+        if(counter(tail) == 0)
+            return 0;
+
         if( EVP_EncryptUpdate(
             &(AES_CFG.en), 
             dest + i*MAX_BUFFER_SIZE, 
@@ -463,29 +466,35 @@ unsigned int rdrand_get_bytes_aes_ctr(
 /**
  * Decrement counter and if needed, change used key.
  *
- * @param num   How many changes to count
+ * @param num   How many changes to counter
+ * @return 1 if it went ok
  */
 // {{{ counter
-void counter(unsigned int num) {
+int counter(unsigned int num) {
 
 
+    int result;
     // if the counter would be negative after substraction of "num"
     // (or if is zero, so it will catch even num == 0 in that case)
     // regenerate it
     if (AES_CFG.keys.next_counter == 0 || AES_CFG.keys.next_counter < num) {
         //perror("!!! DEBUG: KEY CHANGED !!!\n");
         if (AES_CFG.keys_type == KEYS_GIVEN) { 
-            keys_change(); // set a new random index 
+            result = keys_change(); // set a new random index 
             //keys_randomize(); // set a new random timer
             AES_CFG.keys.next_counter = MAX_COUNTER;
         } else { // KEYS_GENERATED
-            key_generate(); // generate a new key and nonce
+            result = key_generate(); // generate a new key and nonce
             keys_randomize(); // set a new random timer
         }
     } else {
         AES_CFG.keys.next_counter -= num;
     }
-    
+   
+    if(result == 0){
+        return 0;
+    }
+    return 1;
 }
 // }}}
 
@@ -497,6 +506,7 @@ void counter(unsigned int num) {
  *
  * @param rotate    TODO Currently not used - why I put it there? :-(
  */
+
 int keys_change(int rotate) {
     /*unsigned int buf;
     if (RAND_bytes((unsigned char*)&buf, sizeof(unsigned int)) != 1) {
@@ -509,21 +519,25 @@ int keys_change(int rotate) {
     AES_CFG.keys.key_current = AES_CFG.keys.keys[AES_CFG.keys.index];
     AES_CFG.keys.nonce_current = AES_CFG.keys.nonces[AES_CFG.keys.index];
 
+    if(keys_change_rotation() == 0){
+        return 0;
+    }
     key_to_openssl();
-    keys_change_rotation();
     return 1;
 }
 
 /**
  * Encrypt the current key and nonce to prevent reusing the same counter.
  */
-void keys_change_rotation(){
+int keys_change_rotation(){
     unsigned char K[AES_CFG.keys.key_length];
     unsigned char N[AES_CFG.keys.key_length];
     int tmp;
 
-    if ( AES_CFG.keys.key_current == NULL)
-        return;
+    if ( AES_CFG.keys.key_current == NULL){
+        fprintf(stderr,"An internal error in librdrand-aes.c on line %d\n", __LINE__);
+        return 0;
+    }
 
     EVP_EncryptUpdate(
             &(AES_CFG.en),
@@ -540,6 +554,7 @@ void keys_change_rotation(){
 
     memcpy(AES_CFG.keys.key_current, K, AES_CFG.keys.key_length);
     memcpy(AES_CFG.keys.nonce_current, N, AES_CFG.keys.key_length);
+    return 1;
 }
 
 

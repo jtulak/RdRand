@@ -121,7 +121,7 @@ int rdrand_set_aes_keys(
 
 /**
  * Set automatic key generation.
- * /dev/random will be used as a key generator.
+ * OpenSSL will be used as a key generator.
  * 
  * @return True if the key was successfuly set
  */

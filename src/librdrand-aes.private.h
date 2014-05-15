@@ -61,9 +61,10 @@ typedef struct aes_cfg_s {
 /**
  * Decrement counter and if needed, change used key.
  *
- * @param num   How many changes to count
+ * @param num   How many changes to count 
+ * @return 1 if it went OK
  */
-void counter(unsigned int num);
+int counter(unsigned int num);
 
 /**
  * Set key index for AES to another random one.
@@ -82,7 +83,7 @@ int keys_randomize();
 /**
  * Encrypt the current key and nonce to prevent reusing the same counter.
  */
-void keys_change_rotation();
+int keys_change_rotation();
 /**
  * Generate a random key.
  * Used when rdrand_set_aes_random_key() was set.

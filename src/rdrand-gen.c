@@ -82,7 +82,7 @@
 #define SLOW_RETRY_LIMIT 1000
 #define SLOW_RETRY_DELAY 1000 // 1 ms
 
-#define VERSION "1.1.0"
+#define VERSION "2.0.0"
 // }}} macros
 
 // {{{
@@ -134,10 +134,16 @@ static const char* HELP_TEXT =
 	"  --output     -o FILE Save the generated data to the file.\n"
 	"  --threads    -t NUM  Run the generator in NUM threads (default %u).\n"
     "  --aes-ctr    -a      Encrypt the output with AES-CTR.\n"
-	"  --aes-keys   -k FILE Use given key file for the AES encryption instead of random one.\n"
+	"  --aes-keys   -k FILE Use given key file for the AES encryption instead of random one. Works only when -a is set.\n"
 	"  --verbose    -v      Be verbose (will print on stderr).\n"
 	"  --version    -V      Print version.\n"
-	"\n";
+	"\n"
+    "AES keys in file for -k argument has to be 24 bytes long "
+    "in hexadecimal form.\n"
+    "\n"
+    "Report bugs to jan@tulak.me\n"
+    "Home page: <http://github.com/BroukPytlik/RdRand>\n"
+    ;
 #endif // NO_MAIN
 // }}} HELP_TEXT
 
@@ -403,6 +409,12 @@ int parse_args(int argc, char** argv, cnf_t* config)
 			//abort ();
 		}
 	}
+
+    if(config->aes_flag == 0 && config->aeskeys_filename != NULL){
+        EPRINT("You have specified keyfile for AES, but did not enable it.\n"
+                "The -k argument has to be specified in pair with -a.\n");
+        return EXIT_FAILURE;
+    }
 
 	  compute_chunk_size(config);
 
@@ -848,7 +860,8 @@ int main(int argc, char** argv)
         switch( load_keys(&config)){
             case E_KEY_NONCE_BAD_LENGTH:
                 EPRINT("ERROR: File %s has incorrect syntax!\n"
-                        "All keys has to be the same length.\n",
+                        "All lines has to be the same length of 24 bytes,\n"
+                        "Maximum number of allowed keys is 128.\n",
                         config.aeskeys_filename);
                 exit(EXIT_FAILURE);
                 break;
@@ -893,6 +906,15 @@ int main(int argc, char** argv)
                       config.threads);
             }
 
+            if(config.aes_flag) {
+                EPRINT("Output of RdRand is further encrypted with AES-CTR.\n");
+                if(config.aeskeys_filename == NULL){
+                    EPRINT("Encryption keys are generated automaticaly.\n");
+                }else{
+                    EPRINT("Encryption keys are loaded from file `%s'.\n",
+                            config.aeskeys_filename);
+                }
+            }
         }
         generated=generate(&config);
         if(config.verbose_flag)
