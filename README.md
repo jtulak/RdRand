@@ -21,6 +21,7 @@ Content
 2. Development with librdrand
 3. Requirements
 4. Installation
+5. Authors
 
 1. Usage
 ----------------------
@@ -90,3 +91,9 @@ And since version 2 also:
     ./configure 
     make
     make install
+
+5. Authors
+----------
+Jan Tulak (jan@tulak.me), Jiri Hladky (hladky.jiri@gmail.com)
+
+This library was created as part of Jan Tulak's thesis. For more information about the library, RdRand and performance and statistical issues see [the thesis](https://github.com/BroukPytlik/RdRand-tex/releases).
