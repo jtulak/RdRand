@@ -569,7 +569,7 @@ size_t generate_chunk(cnf_t *config)
 				config->threads--;
 				EPRINT( "Warning: %zu bytes generated, but %zu bytes expected. "
                         "Probably slow internal generator "
-                        "- decreaseing threads count by one to %d to avoid problems.\n", 
+                        "- decreaseing threads count by one to %u to avoid problems.\n", 
                         written, 
                         buf_size, 
                         config->threads);
