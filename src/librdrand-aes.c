@@ -473,7 +473,7 @@ unsigned int rdrand_get_bytes_aes_ctr(
 int counter(unsigned int num) {
 
 
-    int result;
+    int result = 0;
     // if the counter would be negative after substraction of "num"
     // (or if is zero, so it will catch even num == 0 in that case)
     // regenerate it
