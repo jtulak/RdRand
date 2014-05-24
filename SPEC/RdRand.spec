@@ -8,6 +8,7 @@ URL:            http://github.com/BroukPytlik/%{name}
 Source0:        https://github.com/BroukPytlik/%{name}/archive/%{version}.tar.gz
 ExclusiveArch: %{ix86} x86_64 
 Requires:       openssl
+BuildRequires:  openssl-devel
 %description
 RdRand is an instruction for returning random numbers from an Intel on-chip 
 hardware random number generator.RdRand is available in Ivy Bridge and later 
