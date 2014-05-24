@@ -139,7 +139,8 @@ static const char* HELP_TEXT =
 	"  --version    -V      Print version.\n"
 	"\n"
     "AES keys in file for -k argument has to be 24 bytes long "
-    "in hexadecimal form.\n"
+    "in hexadecimal form (128bit key + 64bit nonce).\n"
+    "The file can contain 128 keys at maximum.\n"
     "\n"
     "Report bugs to jan@tulak.me\n"
     "Home page: <http://github.com/BroukPytlik/RdRand>\n"
@@ -907,7 +908,7 @@ int main(int argc, char** argv)
             }
 
             if(config.aes_flag) {
-                EPRINT("Output of RdRand is further encrypted with AES-CTR.\n");
+                EPRINT("Output of RdRand is further encrypted with 128bit AES-CTR.\n");
                 if(config.aeskeys_filename == NULL){
                     EPRINT("Encryption keys are generated automaticaly.\n");
                 }else{
