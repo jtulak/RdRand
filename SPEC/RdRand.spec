@@ -56,10 +56,11 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %files devel
 %{_mandir}/man3/librdrand.3*
 %{_includedir}/librdrand.h
+%{_includedir}/librdrand-aes.h
 %{_libdir}/librdrand.so
 %{_libdir}/pkgconfig/*
 
-%changelogs
+%changelog
 * Sat May 24 2014 Jan Tulak <jan@tulak.me> - 2.0.0-1
 - Partial rewriting, added AES encryption of generated values.
 
