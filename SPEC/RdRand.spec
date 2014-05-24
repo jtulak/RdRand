@@ -1,13 +1,13 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        1.0.5
+Version:        2.0.0
 Release:        1%{?dist}
 License:        LGPLv2+
 Group:          Applications/System
 URL:            http://github.com/BroukPytlik/%{name}
 Source0:        https://github.com/BroukPytlik/%{name}/archive/%{version}.tar.gz
 ExclusiveArch: %{ix86} x86_64 
-
+Requires:       openssl
 %description
 RdRand is an instruction for returning random numbers from an Intel on-chip 
 hardware random number generator.RdRand is available in Ivy Bridge and later 
@@ -27,7 +27,7 @@ reseed, in practice it reseeds much more frequently.
 %package devel
 Summary:        Development files for the RdRand
 Group:          Development/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}%{?_isa} = %{version}-%{release}, openssl-devel
 
 %description devel
 Headers and shared object symbolic links for the RdRand.
@@ -59,7 +59,10 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/librdrand.so
 %{_libdir}/pkgconfig/*
 
-%changelog
+%changelogs
+* Sat May 24 2014 Jan Tulak <jan@tulak.me> - 2.0.0-1
+- Partial rewriting, added AES encryption of generated values.
+
 * Mon Feb 17 2014 Jan Tulak <jan@tulak.me> - 1.0.5-1
 - Fixed bug with parsing -t argument in rdrand-gen.
 
