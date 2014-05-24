@@ -445,7 +445,7 @@ START_TEST (aes_enc_buffer) {
     rdrand_set_aes_keys(1, 16, keys, nonces);
    
     // here do the test 
-    ck_assert(rdrand_enc_buffer(output, input, 32) == 1);
+    ck_assert_msg(rdrand_enc_buffer(output, input, 32) == 1,"Encrypting failed.\n");
 
     ck_assert_msg(memcmp(output, expected_result, 32)==0,
             "Encrypted value is different from expected one.\n");

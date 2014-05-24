@@ -349,8 +349,10 @@ int rdrand_enc_buffer(void* dest, void* src, size_t len) {
         // By placing the counter at the beginning of the cycle
         // avoid situation, when counter would be just few bytes from regenerating,
         // but all MAX_BUFFER_SIZE would be generated with old key.
-        if(counter(MAX_BUFFER_SIZE) == 0)
+        if(counter(MAX_BUFFER_SIZE) == 0){
+            perror("rdrand_enc_buf: counter chunks");
             return 0;
+        }
         
         // encrypt full buffer
         if( EVP_EncryptUpdate(
@@ -360,15 +362,12 @@ int rdrand_enc_buffer(void* dest, void* src, size_t len) {
             src+i*MAX_BUFFER_SIZE, 
             MAX_BUFFER_SIZE) != 1 ) {
 
-            perror("EVP_EncryptUpdate");
+            perror("rdrand_enc_buf: EVP_EncryptUpdate");
             return 0;
         }
     }
 
     if (tail != 0) {
-        if(counter(tail) == 0)
-            return 0;
-
         if( EVP_EncryptUpdate(
             &(AES_CFG.en), 
             dest + i*MAX_BUFFER_SIZE, 
@@ -376,7 +375,7 @@ int rdrand_enc_buffer(void* dest, void* src, size_t len) {
             src + i*MAX_BUFFER_SIZE, 
             tail) != 1 ) {
 
-            perror("EVP_EncryptUpdate");
+            perror("rdrand_enc_buf: EVP_EncryptUpdate");
             return 0;
         }
     }
