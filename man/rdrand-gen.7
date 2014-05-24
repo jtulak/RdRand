@@ -1,10 +1,15 @@
 .\" Manpage for rdrand-gen.
 .\" Contact jan@tulak.me to correct errors or typos.
-.TH man 7 "25 November 2013" "1.0" "rdrand-gen man page"
+.TH man 7 "24 April 2014" "1.2" "rdrand-gen man page"
 .SH NAME
 rdrand-gen \- Generate randomness by using RdRand on Intel's CPUs.
 .SH SYNOPSIS
-rdrand-gen [--amount NUM] [--method NAME] [--output FILE] [--threads NUM]
+rdrand-gen [--amount NUM] [--method NAME] [--output FILE] 
+.br
+[--threads NUM] [--aes-ctr [--aes-keys FILE]] [--verbose] [--version] 
+.br
+[--help]
+
 .SH DESCRIPTION
 RdRand is an instruction for returning random numbers from an Intel on-chip hardware random number generator. RdRand is available on Ivy Bridge and later processors.
 
@@ -34,6 +39,22 @@ The perfomance of these reseeding methods is about 1/1000 of the default one. Th
 is faster than 
 .B reseed_delay
 , while on another one it can be different.
+
+If
+.B aes-ctr
+is set, then the output of RdRand instruction is encrypted with AES-CTR from OpenSSL. It can either use a random key, or you can give it a set of keys and nonces to use by using
+.B aes-keys
+parameter. If AES is not enabled by the first flag, the keys are ignored.
+
+Syntax of the key file is following:
+.br
+On each line is a hexadecimal string containing a key and a nonce. There can be 128 lines at max. Length of a single key is twice of the nonce, so if K stands for a key character and N for a nonce, a single line in the key file will look like the following.
+.br
+.I KKKKNN
+
+24 bytes (48 characters) for a key and a nonce represents a 128bit key. This is also the only currently supported length of the key. See Examples for a simple way of generating the key file.
+
+
 .SH OPTIONS
   \-\-help       \-h      Print this help.
   \-\-amount     \-n 
@@ -54,51 +75,81 @@ Save the generated data to the file.
   \-\-threads    \-t 
 .I NUM
 Run the generator in NUM threads (default 2).
+  \-\-aes-ctr    \-a
+Encrypt the output with AES-CTR.
+  \-\-aes-keys   \-k
+.I FILE 
+Use given key file for the AES encryption
+.br
+                  instead of random one. Works only when -a is set.
+  \-\-verbose    \-v
+Be verbose (will print on stderr).
+  \-\-version    \-V
+Print version.
+
+AES keys in file for -k argument has to be 24 bytes long in hexadecimal form.
+
 .SH EXAMPLES
-rdrand-gen 
-.B -n 10.5M -o /tmp/random
-.br
-       # Write 10.5MB of random data to the file /tmp/random
 
-(rdrand-gen
-.B -n2k -m reseed_skip 
+.B Write 10.5MB of random data to the file /tmp/random
+.br
+rdrand-gen -n 10.5M -o /tmp/random
+
+.B Generate 20 random passwords of length 20 build from all letters
+.B and digits. Use the secure get_uint64_array_reseed_skip method.
+.br
+(rdrand-gen -n2k -m reseed_skip 
 | tr -cd '[:alnum:]' | fold -w 20 && echo ) | head -20
-.br
-       # Generate 20 random passwords of length 20 build from all letters
-       # and digits. Use the secure get_uint64_array_reseed_skip method.
 
-rdrand-gen 
-.B -n3705 -m reseed_skip 
+
+.B Create  GPG encrypted keyfile for aespipe. 
+.br
+.B Encrypt: 
+.br
+tar -cvf - files... | bzip2 | aespipe -w 10 -K keyfile.gpg >archive.aes
+.br
+.B Decrypt: 
+.br
+aespipe -d -K keyfile.gpg < /tmp/archive.aes | bzip2 -d -q | tar -tvf -
+.br
+rdrand-gen -n3705 -m reseed_skip 
 | uuencode -m - | head -n 66 | tail -n 65 | \\
 .br
 gpg --symmetric -a > keyfile.gpg
-.br
-       # Create  GPG encrypted keyfile for aespipe. 
-       # Encrypt: 
-       # tar -cvf - files... | bzip2 | aespipe -w 10 -K keyfile.gpg >archive.aes
-       # Decrypt: 
-       # aespipe -d -K keyfile.gpg < /tmp/archive.aes | bzip2 -d -q | tar -tvf -
 
-rdrand-gen | aespipe -v -P <(head -n 3705 /dev/random | uuencode -m - | \\
-.br
-head -n 66 | tail -n 65) | cat -A
-.br
-       # Harden the RdRand output with aespipe. aespipe will use keyfile based 
-       # on /dev/random and encrypt rdrand-gen output. It will mitigate any 
-       # back-door possibly built into RdRand.
 
+
+
+.B Test the randomness of the generated data with dieharder test suite
+.br
 rdrand-gen | dieharder -g 200 -a
-.br
-       # Test the randomness of the generated data with dieharder test suite
 
-rdrand-gen | pv > /dev/null
+
+.B Measure the speed of generation.
 .br
-       # Measure the speed of generation.
+rdrand-gen | pv > /dev/null
+
+
+.B Create a key file for AES encryption
+.br
+head -n 3100 /dev/random | xxd -p -c 24 | head -n 129 | tail -n 128 > keys.txt
+
+.B Create the keys and pass them to the rdrand-gen without saving the keys
+.B on disk
+.br
+rdrand-gen -a -k <(head -n 3100 /dev/random | \\
+.br
+xxd -p -c 24 | head -n 129 | tail -n 128)
+
+
 
 .SH SEE ALSO
 librdrand(3)
+librdrand-aes(3)
+
 .SH BUGS
 No known bugs.
+
 .SH AUTHOR
 Jan Tulak (jan@tulak.me)
 Jiri Hladky (hladky.jiri@gmail.com)

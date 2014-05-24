@@ -1,9 +1,24 @@
 CC=gcc
-CFLAGS=-c -Wall  -Wextra -O3 -fopenmp  -fPIC # -DSTUB_RDRAND
-LDFLAGS=-fopenmp -lrt -lm -mrdrnd 
+CFLAGS=-c -Wall  -Wextra  -fopenmp  -fPIC -O0 -g #-DSTUB_RDRAND
+LDFLAGS=-fopenmp  -lm -mrdrnd -lcrypto
+
+CUSTOM_LIBS=
+
+UNAME_S := $(shell uname -s)
+# OSX support
+ifeq ($(UNAME_S),Darwin)
+	CC=gcc-mp-4.8
+	CFLAGS += -D OSX
+	LDFLAGS += -Wl,-rpath,/opt/local/lib/libcrypto.dylib  -L/opt/local/lib
+endif
+ifeq ($(UNAME_S),Linux)
+	LDFLAGS += -lrt 
+endif
 
 SOURCES_COMMON=../src/librdrand.h\
-               ../src/librdrand.c
+               ../src/librdrand-aes.h\
+               ../src/librdrand.c\
+               ../src/librdrand-aes.c
 OBJECTS_COMMON=$(SOURCES_COMMON:.c=.o) 
                
 SOURCES_TEST=       test_throughput.c

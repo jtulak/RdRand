@@ -34,7 +34,7 @@ notrans_man_MANS = man/librdrand.3
 ## by the predefined variable $(bindir), along with the actual shared library
 ## file (.so).
 # lib_LTLIBRARIES = librdrand-@RDRAND_API_VERSION@.la
-lib_LTLIBRARIES = librdrand.la
+lib_LTLIBRARIES = librdrand.la 
 
 ## Define the source file list for the "librdrand-@RDRAND_API_VERSION@.la"
 ## target.  Note that @RDRAND_API_VERSION@ is not interpreted by Automake and
@@ -44,12 +44,12 @@ lib_LTLIBRARIES = librdrand.la
 ## rules which invoke the C++ compiler to produce a libtool object file (.lo)
 ## from each source file.  Note that it is not necessary to list header files
 ## which are already listed elsewhere in a _HEADERS variable assignment.
-librdrand_la_SOURCES = src/librdrand.c
+librdrand_la_SOURCES = src/librdrand.c  src/librdrand-aes.c
 
 ## Instruct libtool to include ABI version information in the generated shared
 ## library file (.so).  The library ABI version is defined in configure.ac, so
 ## that all version information is kept in one place.
-librdrand_la_LDFLAGS = -version-info $(RDRAND_SO_VERSION)
+librdrand_la_LDFLAGS = -version-info $(RDRAND_SO_VERSION) -lcrypto
 
 ## Define the list of public header files and their install location.  The
 ## nobase_ prefix instructs Automake to not strip the directory part from each
@@ -59,7 +59,7 @@ librdrand_la_LDFLAGS = -version-info $(RDRAND_SO_VERSION)
 # rdrand_includedir = $(includedir)/rdrand-$(RDRAND_API_VERSION)
 rdrand_includedir = $(includedir)/
 # nobase_rdrand_include_HEADERS = rdrand.h
-nobase_rdrand_include_HEADERS = librdrand.h
+nobase_rdrand_include_HEADERS = librdrand.h librdrand-aes.h
 
 ## The generated configuration header is installed in its own subdirectory of
 ## $(libdir).  The reason for this is that the configuration information put

@@ -53,6 +53,30 @@
 #define SLOW_RETRY_LIMIT 1000
 #define SLOW_RETRY_DELAY 1000 // 1 ms
 
+// clock_gettime hack-implementation for osx
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
+
+#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
+#define CLOCK_REALTIME 1
+    int clock_gettime(int not_used, struct timespec *tp){
+	    (void)not_used;
+	    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    tp->tv_sec = mts.tv_sec;
+    tp->tv_nsec = mts.tv_nsec;
+    return 0;
+    }
+
+#else
+#endif
+
 /**
  * List of methods available for testing.
  * THIS IS LIST OF EXISTING METHODS,
