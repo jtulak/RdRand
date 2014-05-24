@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall  -Wextra  -fopenmp  -fPIC -O0 -g
+CFLAGS=-c -Wall  -Wextra  -fopenmp  -fPIC -O0 -g #-DSTUB_RDRAND
 LDFLAGS=-fopenmp  -lm -mrdrnd -lcrypto
 
 CUSTOM_LIBS=

@@ -634,14 +634,16 @@ size_t generate_ending(cnf_t *config)
 	/* test generated amount */
 	if ( written_total != config->ending_bytes )
 	{
-		EPRINT( "1ERROR: bytes generated %zu, bytes expected %zu\n", written_total, config->ending_bytes);
+		EPRINT( "ERROR: bytes generated %zu, bytes expected %zu\n", written_total, config->ending_bytes);
 		return written_total;
 	}
     
     if(config->aes_flag) {
         //fprintf(stderr,"Encrypting tail\n");
         // encrypt the previous-run buffer
-        rdrand_enc_buffer(buf, enc_buf, config->ending_bytes);
+        if(rdrand_enc_buffer(buf, enc_buf, config->ending_bytes) != 1){
+            EPRINT("ERROR: Encryption of last %zu bytes failed!\n", config->ending_bytes);
+        }
     } else {
         //fprintf(stderr,"Just memcpy tail\n");
         // this will run in single thread
