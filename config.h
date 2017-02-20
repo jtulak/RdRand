@@ -70,8 +70,7 @@
 /* Define to 1 if you have the <x86intrin.h> header file. */
 #define HAVE_X86INTRIN_H 1
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
 
 /* Define to the address where bug reports for this package should be sent. */
