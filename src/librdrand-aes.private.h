@@ -50,7 +50,7 @@ typedef struct s_keys {
 
 typedef struct aes_cfg_s {
     t_keys keys;
-    EVP_CIPHER_CTX en; 
+    EVP_CIPHER_CTX *en;
     int keys_type;
 } aes_cfg_t;
 

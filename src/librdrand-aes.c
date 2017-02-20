@@ -43,7 +43,6 @@
 /*****************************************************************************/
 // {{{ misc
 
-
 // t_buffer* BUFFER;
 
 aes_cfg_t AES_CFG = {.keys={.amount=0}};
@@ -60,7 +59,7 @@ int isPowerOfTwo(ulong x) {
 // bind current key to openssl, return 0 on failure
 int key_to_openssl() {
     if ( EVP_CipherInit_ex( 
-                &(AES_CFG.en),
+                AES_CFG.en,
                 EVP_aes_128_ctr(),
                 NULL,
                 AES_CFG.keys.key_current,
@@ -91,7 +90,7 @@ int keys_allocate(unsigned int amount, size_t key_length) {
     //AES_CFG.keys.nonce_length = key_length/2; 
 
     // init OpenSSL
-    EVP_CIPHER_CTX_init( &(AES_CFG.en) );
+    EVP_CIPHER_CTX_init( AES_CFG.en );
 
     // allocate first level of array
     AES_CFG.keys.keys = malloc(sizeof(char*) *  amount);
@@ -170,7 +169,7 @@ void keys_free() {
     AES_CFG.keys.nonces = NULL;
 
     // clean openssl
-    if ( EVP_CIPHER_CTX_cleanup(&(AES_CFG.en)) != 1 ) {
+    if ( EVP_CIPHER_CTX_cleanup(AES_CFG.en) != 1 ) {
         perror("EVP_CIPHER_CTX_cleanup");
     }
 }
@@ -270,6 +269,7 @@ int rdrand_set_aes_keys(unsigned int amount,
     if(key_length <= RDRAND_MIN_KEY_LENGTH || key_length >= RDRAND_MAX_KEY_LENGTH)
         return 0;
 
+    AES_CFG.en = EVP_CIPHER_CTX_new();
     AES_CFG.keys.index=0;
     AES_CFG.keys.next_counter=MAX_COUNTER;
     AES_CFG.keys_type = KEYS_GIVEN;
@@ -297,6 +297,7 @@ int rdrand_set_aes_keys(unsigned int amount,
  */
 // {{{ rdrand_set_aes_random_key
 int rdrand_set_aes_random_key() {
+    AES_CFG.en = EVP_CIPHER_CTX_new();
     AES_CFG.keys_type = KEYS_GENERATED;
     AES_CFG.keys.index=0;
     AES_CFG.keys.next_counter=0;
@@ -325,6 +326,7 @@ void rdrand_clean_aes() {
     AES_CFG.keys.key_length=0;
 //    AES_CFG.keys.nonce_length=0;
     AES_CFG.keys.next_counter=0;
+    EVP_CIPHER_CTX_free(AES_CFG.en);
 
 }
 // }}} rdrand_clean_aes
@@ -356,7 +358,7 @@ int rdrand_enc_buffer(void* dest, void* src, size_t len) {
         
         // encrypt full buffer
         if( EVP_EncryptUpdate(
-            &(AES_CFG.en), 
+            AES_CFG.en,
             dest+i*MAX_BUFFER_SIZE, 
             &out_len, 
             src+i*MAX_BUFFER_SIZE, 
@@ -369,7 +371,7 @@ int rdrand_enc_buffer(void* dest, void* src, size_t len) {
 
     if (tail != 0) {
         if( EVP_EncryptUpdate(
-            &(AES_CFG.en), 
+            AES_CFG.en,
             dest + i*MAX_BUFFER_SIZE, 
             &out_len, 
             src + i*MAX_BUFFER_SIZE, 
@@ -432,7 +434,7 @@ unsigned int rdrand_get_bytes_aes_ctr(
             return generated;
         }
         // encrypt full buffer
-         if( EVP_EncryptUpdate(&(AES_CFG.en), output, &out_len, buf, MAX_BUFFER_SIZE) != 1 ) {
+         if( EVP_EncryptUpdate(AES_CFG.en, output, &out_len, buf, MAX_BUFFER_SIZE) != 1 ) {
             perror("EVP_EncryptUpdate");
             return generated;
         };
@@ -448,7 +450,7 @@ unsigned int rdrand_get_bytes_aes_ctr(
             return generated;
         }
         // encrypt tail
-         if( EVP_EncryptUpdate(&(AES_CFG.en), output, &out_len, buf, tail) != 1 ) {
+         if( EVP_EncryptUpdate(AES_CFG.en, output, &out_len, buf, tail) != 1 ) {
             perror("EVP_EncryptUpdate");
             return generated;
         };
@@ -539,13 +541,13 @@ int keys_change_rotation(){
     }
 
     EVP_EncryptUpdate(
-            &(AES_CFG.en),
+            AES_CFG.en,
             K,
             &tmp,
             AES_CFG.keys.key_current,
             AES_CFG.keys.key_length) ;
     EVP_EncryptUpdate(
-            &(AES_CFG.en),
+            AES_CFG.en,
             N,
             &tmp,
             AES_CFG.keys.nonce_current,
