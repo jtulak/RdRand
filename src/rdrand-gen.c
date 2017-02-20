@@ -776,7 +776,7 @@ int load_key_line(
         unsigned int *nonce_len
         ) {
     
-    char c;
+    int c;
     unsigned int i;
     char buf[2*RDRAND_MAX_KEY_LENGTH] = {};
 
