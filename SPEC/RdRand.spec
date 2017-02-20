@@ -1,6 +1,6 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        2.0.0
+Version:        2.1.0
 Release:        1%{?dist}
 License:        LGPLv2+
 Group:          Applications/System
@@ -62,6 +62,10 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/pkgconfig/*
 
 %changelog
+* Mon Feb 20 2017 Jan Tulak <jan@tulak.me> - 2.1.0-1
+- Update for OpenSSL 1.1.0
+- Remove an option that wasn't implemented
+
 * Sat May 24 2014 Jan Tulak <jan@tulak.me> - 2.0.0-1
 - Partial rewriting, added AES encryption of generated values.
 
