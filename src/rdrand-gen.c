@@ -115,7 +115,6 @@ void printTimer(int thread, struct timespec diff){
 const char *METHOD_NAMES[] =
 {
 	"get_bytes",
-  "get_bytes_aes",
 	"reseed_delay",
 	"reseed_skip"
 };

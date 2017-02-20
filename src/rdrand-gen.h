@@ -80,7 +80,6 @@
  */
 enum {
     GET_BYTES,
-    GET_BYTES_AES,
     GET_RESEED64_DELAY,
     GET_RESEED64_SKIP,
 
