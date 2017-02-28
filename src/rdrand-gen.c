@@ -82,7 +82,7 @@
 #define SLOW_RETRY_LIMIT 1000
 #define SLOW_RETRY_DELAY 1000 // 1 ms
 
-#define VERSION "2.0.0"
+#define VERSION "2.1.1"
 // }}} macros
 
 // {{{

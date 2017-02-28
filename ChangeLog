@@ -1,3 +1,7 @@
+2.1.1-1:
+2017-02-20 Jan Tulak <jan@tulak.me>
+	* Change the output of --version to the current version
+
 2.1.0-1:
 2017-02-20 Jan Tulak <jan@tulak.me>
 	* Update for OpenSSL 1.1.0
