@@ -15,3 +15,16 @@
 *.exe
 *.out
 *.app
+
+# other stuff
+.directory
+
+autom4te.cache
+
+tests/RdRand
+tests/rdrand-gen
+rdrand-gen
+config.log
+src/.deps/
+src/.dirstamp
+*.swp

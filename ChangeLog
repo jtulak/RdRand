@@ -1,0 +1,30 @@
+2.1.1-1:
+2017-02-20 Jan Tulak <jan@tulak.me>
+	* Change the output of --version to the current version
+
+2.1.0-1:
+2017-02-20 Jan Tulak <jan@tulak.me>
+	* Update for OpenSSL 1.1.0
+	* Remove an option that wasn't implemented
+
+2.0.0-1:
+2014-05-24 Jan Tulak <jan@tulak.me>
+	* Partial rewriting, added AES encryption of generated values.
+
+1.0.5-1:
+2014-02-17 Jan Tulak <jan@tulak.me>
+	* Fixed bug with parsing -t argument in rdrand-gen.
+
+1.2:
+2014-04-24 Jan Tulak <jan@tulak.me>
+	* Added AES encryption
+
+1.0:
+2014-02-01 Jan Tulak <jan@tulak.me>
+	* Release
+
+0.1:
+
+2013-11-01  Jan Tulak  <jan@tulak.me>
+
+	* Now uses pkg-config.
