@@ -256,20 +256,12 @@ int rdrand_testSupport()
     return RDRAND_SUPPORTED;
   #endif
 
-	// test if an Intel CPU
-	cpuid(&reg,0); // get vendor
-	if(reg.ebx == 0x756e6547 && // Genu
-	   reg.ecx == 0x6c65746e && // ntel
-	   reg.edx == 0x49656e69 ) // ineI
-	{
-		// If yes, test if know RdRand
-		cpuid(&reg,1); // get feature bits
-		if( reg.ecx & RDRAND_MASK )
-		{
-			return RDRAND_SUPPORTED;
-		}
-	}
-
+  // Test if CPU supports RdRand
+  cpuid(&reg,1); // get feature bits
+  if( reg.ecx & RDRAND_MASK )
+  {
+    return RDRAND_SUPPORTED;
+  }
 
 	return RDRAND_UNSUPPORTED;
 }
