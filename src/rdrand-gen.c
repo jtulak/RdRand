@@ -1,6 +1,7 @@
 /* vim: set expandtab cindent fdm=marker ts=4 sw=4: */
 /*
- * Copyright (C) 2013  Jan Tulak <jan@tulak.me>
+ * Copyright (C) 2013-2020  Jan Tulak <jan@tulak.me>
+ * Copyright (C) 2020       Jirka Hladky <hladky.jiri@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -82,7 +83,7 @@
 #define SLOW_RETRY_LIMIT 1000
 #define SLOW_RETRY_DELAY 1000 // 1 ms
 
-#define VERSION "2.1.1"
+#define VERSION "2.1.2"
 // }}} macros
 
 // {{{
