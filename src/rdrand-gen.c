@@ -1,6 +1,7 @@
 /* vim: set expandtab cindent fdm=marker ts=4 sw=4: */
 /*
- * Copyright (C) 2013  Jan Tulak <jan@tulak.me>
+ * Copyright (C) 2013-2020  Jan Tulak <jan@tulak.me>
+ * Copyright (C) 2013-2022 Jirka Hladky hladky DOT jiri AT gmail DOT com
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -82,7 +83,7 @@
 #define SLOW_RETRY_LIMIT 1000
 #define SLOW_RETRY_DELAY 1000 // 1 ms
 
-#define VERSION "2.1.1"
+#define VERSION "2.1.3"
 // }}} macros
 
 // {{{
@@ -150,7 +151,8 @@ static const char* HELP_TEXT =
 // {{{ VERSION_TEXT
 static const char* VERSION_TEXT =
 	"rdrand-gen, librdrand %s\n"
-	"Copyright (C) 2014 Jan Tulak <jan@tulak.me>\n"
+	"Copyright (C) 2014-2020 Jan Tulak <jan@tulak.me>\n"
+	"Copyright (C) 2020      Jirka Hladky <hladky.jiri@gmail.com>\n"
 	"License LGPLv2.1+: Lesser GNU GPL version 2.1 or newer <http://www.gnu.org/licenses/lgpl-2.1.html>\n"
 	"This is free software: you are free to change and redistribute it.\n"
 	"There is NO WARRANTY, to the extent permitted by law.\n";

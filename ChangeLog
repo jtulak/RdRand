@@ -1,3 +1,11 @@
+2.1.3-1:
+2022-02-17 Jirka Hladky <hladky.jiri@gmail.com>
+	* Updated man page
+
+2.1.2-1:
+2020-06-15 Jirka Hladky <hladky.jiri@gmail.com>
+	* Added support for AMD CPUs
+
 2.1.1-1:
 2017-02-20 Jan Tulak <jan@tulak.me>
 	* Change the output of --version to the current version

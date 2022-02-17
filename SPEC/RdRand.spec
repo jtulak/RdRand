@@ -1,33 +1,32 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        2.1.1
+Version:        2.1.3
 Release:        1%{?dist}
 License:        LGPLv2+
-Group:          Applications/System
-URL:            http://github.com/BroukPytlik/%{name}
-Source0:        https://github.com/BroukPytlik/%{name}/archive/%{version}.tar.gz
-ExclusiveArch: %{ix86} x86_64 
+URL:            https://github.com/jtulak/%{name}
+Source0:        https://github.com/jtulak/%{name}/archive/%{version}.tar.gz
+ExclusiveArch: %{ix86} x86_64
 Requires:       openssl
+BuildRequires:  gcc-c++
 BuildRequires:  openssl-devel
 %description
-RdRand is an instruction for returning random numbers from an Intel on-chip 
-hardware random number generator.RdRand is available in Ivy Bridge and later 
+RdRand is an instruction for returning random numbers from an Intel on-chip
+hardware random number generator.RdRand is available in Ivy Bridge and later
 processors.
 
 It uses cascade construction, combining a HW RNG operating at 3Gbps with CSPRNG
 with all components sealed on CPU. The entropy source is a meta-stable circuit,
-with unpredictable behavior based on thermal noise. The entropy is fed into 
-a 3:1 compression ratio entropy extractor (whitener) based on AES-CBC-MAC. 
-Online statistical tests are performed at this stage and only high quality 
-random data are used as the seed for cryptograhically secure SP800-90 AES-CTR 
-DRBG compliant PRNG. 
-This generator is producing maximum of 512 128-bit AES blocks before it's 
-reseeded. According to documentation the 512 blocks is a upper limit for 
+with unpredictable behavior based on thermal noise. The entropy is fed into
+a 3:1 compression ratio entropy extractor (whitener) based on AES-CBC-MAC.
+Online statistical tests are performed at this stage and only high quality
+random data are used as the seed for cryptograhically secure SP800-90 AES-CTR
+DRBG compliant PRNG.
+This generator is producing maximum of 512 128-bit AES blocks before it's
+reseeded. According to documentation the 512 blocks is a upper limit for
 reseed, in practice it reseeds much more frequently.
 
 %package devel
 Summary:        Development files for the RdRand
-Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}, openssl-devel
 
 %description devel
@@ -45,8 +44,7 @@ make %{?_smp_mflags}
 make install DESTDIR=$RPM_BUILD_ROOT INSTALL="%{__install} -p"
 rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdrandconfig.h}
 
-%post -p /sbin/ldconfig
-%postun -p /sbin/ldconfig
+%ldconfig_scriptlets
 
 %files
 %doc README COPYING ChangeLog NEWS
@@ -62,6 +60,36 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/pkgconfig/*
 
 %changelog
+* Thu Feb 17 2022 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.3-1
+- Updated man page
+
+* Tue Jun 16 2020 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.2-1
+- Added support for AMD CPUs
+
+* Tue Jan 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.1-9
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
+* Wed Jul 24 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.1-8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
+* Thu Jan 31 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.1-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
+* Thu Jul 12 2018 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.1-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Fri Feb 09 2018 Igor Gnatenko <ignatenkobrain@fedoraproject.org> - 2.1.1-5
+- Escape macros in %%changelog
+
+* Wed Feb 07 2018 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.1-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+* Wed Aug 02 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.1-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
 * Tue Feb 28 2017 Jan Tulak <jan@tulak.me> - 2.1.1-1
 - Fix the output of --version for current version
 
@@ -91,11 +119,11 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 - Fixed bug with parsing -t argument in rdrand-gen.
 
 * Thu Feb 6 2014 Jan Tulak <jan@tulak.me> - 1.0.4-2
-- Removed %defattr from devel subpackage, removed commented out lines,
+- Removed %%defattr from devel subpackage, removed commented out lines,
 - man page suffix changed from .gz to .*
 
 * Wed Feb 5 2014 Jan Tulak <jan@tulak.me> - 1.0.4-1
-- ExclusiveArch, removed %clean, %defattr, added blank lines between changelogs.
+- ExclusiveArch, removed %%clean, %%defattr, added blank lines between changelogs.
 - Removed temp files from package.
 
 * Fri Jan 31 2014 Jirka Hladky <jhladky@redhat.com> - 1.0.2-2
