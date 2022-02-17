@@ -1,12 +1,13 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        2.1.3
+Version:        2.1.4
 Release:        1%{?dist}
 License:        LGPLv2+
-URL:            https://github.com/jtulak/%{name}
-Source0:        https://github.com/jtulak/%{name}/archive/%{version}.tar.gz
+URL:            https://github.com/jirka-h/%{name}
+Source0:        https://github.com/jirka-h/%{name}/archive/%{version}.tar.gz
 ExclusiveArch: %{ix86} x86_64
 Requires:       openssl
+BuildRequires: make
 BuildRequires:  gcc-c++
 BuildRequires:  openssl-devel
 %description
@@ -60,8 +61,26 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/pkgconfig/*
 
 %changelog
-* Thu Feb 17 2022 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.3-1
-- Updated man page
+* Thu Feb 17 2022  Jirka Hladky <hladky.jiri@gmail.com> - 2.1.4-1
+- Updated to v2.1.4
+
+* Wed Jan 19 2022 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.2-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+* Tue Sep 14 2021 Sahana Prasad <sahana@redhat.com> - 2.1.2-6
+- Rebuilt with OpenSSL 3.0.0
+
+* Wed Jul 21 2021 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.2-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Mon Jan 25 2021 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.2-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+* Mon Jul 27 2020 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.2-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Tue Jun 16 2020 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.2-2
+- Fixed typo in rpm spec file
 
 * Tue Jun 16 2020 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.2-1
 - Added support for AMD CPUs
