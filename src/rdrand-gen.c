@@ -151,8 +151,8 @@ static const char* HELP_TEXT =
 // {{{ VERSION_TEXT
 static const char* VERSION_TEXT =
 	"rdrand-gen, librdrand %s\n"
-	"Copyright (C) 2014-2020 Jan Tulak <jan@tulak.me>\n"
-	"Copyright (C) 2020      Jirka Hladky <hladky.jiri@gmail.com>\n"
+	"Copyright (C) 2013-2020 Jan Tulak <jan@tulak.me>\n"
+	"Copyright (C) 2020-2022 Jirka Hladky <hladky.jiri@gmail.com>\n"
 	"License LGPLv2.1+: Lesser GNU GPL version 2.1 or newer <http://www.gnu.org/licenses/lgpl-2.1.html>\n"
 	"This is free software: you are free to change and redistribute it.\n"
 	"There is NO WARRANTY, to the extent permitted by law.\n";
