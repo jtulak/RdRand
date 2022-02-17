@@ -4,9 +4,9 @@
 .SH NAME
 rdrand-gen \- Generate randomness by using RdRand on Intel's CPUs.
 .SH SYNOPSIS
-rdrand-gen [--amount NUM] [--method NAME] [--output FILE] 
+rdrand-gen [--amount NUM] [--method NAME] [--output FILE]
 .br
-[--threads NUM] [--aes-ctr [--aes-keys FILE]] [--verbose] [--version] 
+[--threads NUM] [--aes-ctr [--aes-keys FILE]] [--verbose] [--version]
 .br
 [--help]
 
@@ -22,11 +22,11 @@ Despite the statistical tests did not reveal any flaws in RdRand's output, it's 
 
 rdrand-gen is a simple application for generating randomness on Intel's CPUs (Ivy Bridge and newers) using the HW RNG on the CPU.
 It can use three methods of generating:
-Default 
+Default
 .B get_bytes
-- is fastest (on a laptop with a Core i7 about 200 MiB/s in one thread) and simply pulls out randomness from the HW RNG, and two slow, but more secure methods. These two methods, 
+- is fastest (on a laptop with a Core i7 about 200 MiB/s in one thread) and simply pulls out randomness from the HW RNG, and two slow, but more secure methods. These two methods,
 .B reseed_delay
-and 
+and
 .B reseed_skip
 are enforcing full regeneration of the CPU's pool before each single value that is pushed out.
 
@@ -34,9 +34,9 @@ are enforcing full regeneration of the CPU's pool before each single value that 
 is putting small delays (20 microseconds), long enough to allow the HW to reseed the RdRand's internal generator with new thermal noise based entropy so that two consequent values returned by reseed_delay are guaranteed to be produced with different seed.
 .B reseed_skip
 is taking one of 1025 64bit values (the size of the inner pool) and throwing away the rest, forcing the HW to reseed.
-The perfomance of these reseeding methods is about 1/1000 of the default one. The performance differs on each machine, one one machine the 
+The perfomance of these reseeding methods is about 1/1000 of the default one. The performance differs on each machine, one one machine the
 .B reseed_skip
-is faster than 
+is faster than
 .B reseed_delay
 , while on another one it can be different.
 
@@ -57,28 +57,28 @@ On each line is a hexadecimal string containing a key and a nonce. There can be 
 
 .SH OPTIONS
   \-\-help       \-h      Print this help.
-  \-\-amount     \-n 
-.I NUM 
+  \-\-amount     \-n
+.I NUM
 Generate given amount of bytes. Suffixes: K, M, G, T. Without the option or when 0, generate unlimited amount.
-  \-\-method     \-m 
+  \-\-method     \-m
 .I NAME
-Use method NAME (default is 
+Use method NAME (default is
 .B get_bytes
-, others are 
+, others are
 .B reseed_skip
 and
 .B reseed_delay
 ).
-  \-\-output     \-o 
+  \-\-output     \-o
 .I FILE
 Save the generated data to the file.
-  \-\-threads    \-t 
+  \-\-threads    \-t
 .I NUM
 Run the generator in NUM threads (default 2).
   \-\-aes-ctr    \-a
 Encrypt the output with AES-CTR.
   \-\-aes-keys   \-k
-.I FILE 
+.I FILE
 Use given key file for the AES encryption
 .br
                   instead of random one. Works only when -a is set.
@@ -98,32 +98,32 @@ rdrand-gen -n 10.5M -o /tmp/random
 .B Generate 20 random passwords of length 20 build from all letters
 .B and digits. Use the secure get_uint64_array_reseed_skip method.
 .br
-(rdrand-gen -n2k -m reseed_skip 
+(rdrand-gen -n2k -m reseed_skip
 | tr -cd '[:alnum:]' | fold -w 20 && echo ) | head -20
 
 
-.B Create  GPG encrypted keyfile for aespipe. 
+.B Create  GPG encrypted keyfile for aespipe.
 .br
-.B Encrypt: 
+.B Encrypt:
 .br
 tar -cvf - files... | bzip2 | aespipe -w 10 -K keyfile.gpg >archive.aes
 .br
-.B Decrypt: 
+.B Decrypt:
 .br
 aespipe -d -K keyfile.gpg < /tmp/archive.aes | bzip2 -d -q | tar -tvf -
 .br
-rdrand-gen -n3705 -m reseed_skip 
+rdrand-gen -n3705 -m reseed_skip
 | uuencode -m - | head -n 66 | tail -n 65 | \\
 .br
 gpg --symmetric -a > keyfile.gpg
-
-
-
 
 .B Test the randomness of the generated data with dieharder test suite
 .br
 rdrand-gen | dieharder -g 200 -a
 
+.B Test the randomness of the generated data with PractRand
+.br
+rdrand-gen | practrand-RNG_test stdin8 -tlmax 4G
 
 .B Measure the speed of generation.
 .br
