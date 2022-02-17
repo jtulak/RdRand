@@ -1,28 +1,28 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        2.1.2
+Version:        2.1.3
 Release:        1%{?dist}
 License:        LGPLv2+
 URL:            https://github.com/jtulak/%{name}
 Source0:        https://github.com/jtulak/%{name}/archive/%{version}.tar.gz
-ExclusiveArch: %{ix86} x86_64 
+ExclusiveArch: %{ix86} x86_64
 Requires:       openssl
 BuildRequires:  gcc-c++
 BuildRequires:  openssl-devel
 %description
-RdRand is an instruction for returning random numbers from an Intel on-chip 
-hardware random number generator.RdRand is available in Ivy Bridge and later 
+RdRand is an instruction for returning random numbers from an Intel on-chip
+hardware random number generator.RdRand is available in Ivy Bridge and later
 processors.
 
 It uses cascade construction, combining a HW RNG operating at 3Gbps with CSPRNG
 with all components sealed on CPU. The entropy source is a meta-stable circuit,
-with unpredictable behavior based on thermal noise. The entropy is fed into 
-a 3:1 compression ratio entropy extractor (whitener) based on AES-CBC-MAC. 
-Online statistical tests are performed at this stage and only high quality 
-random data are used as the seed for cryptograhically secure SP800-90 AES-CTR 
-DRBG compliant PRNG. 
-This generator is producing maximum of 512 128-bit AES blocks before it's 
-reseeded. According to documentation the 512 blocks is a upper limit for 
+with unpredictable behavior based on thermal noise. The entropy is fed into
+a 3:1 compression ratio entropy extractor (whitener) based on AES-CBC-MAC.
+Online statistical tests are performed at this stage and only high quality
+random data are used as the seed for cryptograhically secure SP800-90 AES-CTR
+DRBG compliant PRNG.
+This generator is producing maximum of 512 128-bit AES blocks before it's
+reseeded. According to documentation the 512 blocks is a upper limit for
 reseed, in practice it reseeds much more frequently.
 
 %package devel
@@ -60,7 +60,10 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/pkgconfig/*
 
 %changelog
-* Tue Jun 16 2020 Jirka Hladky <ladky.jiri@gmail.com> - 2.1.2-1
+* Thu Feb 17 2022 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.3-1
+- Updated man page
+
+* Tue Jun 16 2020 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.2-1
 - Added support for AMD CPUs
 
 * Tue Jan 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.1-9
