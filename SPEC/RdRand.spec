@@ -20,7 +20,7 @@ with all components sealed on CPU. The entropy source is a meta-stable circuit,
 with unpredictable behavior based on thermal noise. The entropy is fed into
 a 3:1 compression ratio entropy extractor (whitener) based on AES-CBC-MAC.
 Online statistical tests are performed at this stage and only high quality
-random data are used as the seed for cryptograhically secure SP800-90 AES-CTR
+random data are used as the seed for cryptographically secure SP800-90 AES-CTR
 DRBG compliant PRNG.
 This generator is producing maximum of 512 128-bit AES blocks before it's
 reseeded. According to documentation the 512 blocks is a upper limit for
