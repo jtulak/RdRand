@@ -1,8 +1,9 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
 Version:        2.1.4
-Release:        1%{?dist}
-License:        LGPLv2+
+Release:        8%{?dist}
+# Automatically converted from old format: LGPLv2+ - review is highly recommended.
+License:        LicenseRef-Callaway-LGPLv2+
 URL:            https://github.com/jirka-h/%{name}
 Source0:        https://github.com/jirka-h/%{name}/archive/%{version}.tar.gz
 ExclusiveArch: %{ix86} x86_64
@@ -61,6 +62,27 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/pkgconfig/*
 
 %changelog
+* Wed Sep 04 2024 Miroslav Suchý <msuchy@redhat.com> - 2.1.4-8
+- convert license to SPDX
+
+* Wed Jul 17 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
+* Mon Jan 22 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Fri Jan 19 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Wed Jul 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Wed Jan 18 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Wed Jul 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
 * Thu Feb 17 2022  Jirka Hladky <hladky.jiri@gmail.com> - 2.1.4-1
 - Updated to v2.1.4
 

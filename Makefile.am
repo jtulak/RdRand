@@ -10,12 +10,16 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## to provide a way for the user to supply additional arguments.
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
+AM_CFLAGS = @OPENSSL_INCLUDES@
+AM_LDFLAGS = @OPENSSL_LDFLAGS@
+LIBS += @OPENSSL_LIBS@
+
 ################
 bin_PROGRAMS = rdrand-gen
 
 rdrand_gen_SOURCES = src/rdrand-gen.c
 rdrand_gen_LDADD = librdrand.la
-# rdrand_gen_LDADD = src/librdrand.c 
+# rdrand_gen_LDADD = src/librdrand.c
 rdrand_gen_LDFLAGS = @OPENMP_CFLAGS@ @RDRND_FLAGS@  -lrt -lm
 rdrand_gen_CFLAGS = @OPENMP_CFLAGS@ @CFLAGS@
 

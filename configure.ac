@@ -1,13 +1,15 @@
 ## LibRdRand:
 ## an example of using Automake and Libtool to build a shared librar
 
-AC_INIT([LibRdRand], [1.2.0], [jan@tulak.me], [librdrand],
-        [https://github.com/BroukPytlik/RdRand])
-AC_PREREQ([2.59])
-AM_INIT_AUTOMAKE([1.10  -Wall  no-define])
+AC_INIT([LibRdRand],[1.2.0],[jan@tulak.me],[librdrand],[https://github.com/BroukPytlik/RdRand])
+AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
-AC_CONFIG_MACRO_DIR([m4])
+# Add these lines for library support
+AM_PROG_AR
+LT_INIT
 
+AC_PROG_CC
+PKG_PROG_PKG_CONFIG
 
 
 # Generate two configuration headers; one for building the library itself with
@@ -16,34 +18,52 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h rdrandconfig.h])
 AC_PROG_CXX
 
-
-
-## Checks for header files.
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([stdlib.h])
-AC_CHECK_HEADERS([stddef.h])
-AC_CHECK_HEADERS([stdint.h])
-AC_CHECK_HEADERS([string.h])
-AC_CHECK_HEADERS([getopt.h])
-AC_CHECK_HEADERS([omp.h])
-AC_CHECK_HEADERS([stdio.h])
-AC_CHECK_HEADERS([unistd.h])
-AC_CHECK_HEADERS([cpuid.h])
-AC_CHECK_HEADERS([x86intrin.h])
-AC_CHECK_HEADERS([limits.h])
-AC_CHECK_HEADERS([time.h])
-AC_CHECK_HEADERS([math.h])
-AC_CHECK_HEADERS([inttypes.h])
-AC_CHECK_HEADERS([errno.h])
-AC_CHECK_HEADERS([openssl/rand.h])
-AC_CHECK_HEADERS([openssl/evp.h])
-
 ###################
 # Check for OpenMP
 AC_OPENMP
 
-AC_SUBST(OPENMP_CFLAGS) 
+AC_SUBST(OPENMP_CFLAGS)
+##################
+
+
+##################
+# Check for OpenSSL
+AC_ARG_WITH([openssl],
+    [AS_HELP_STRING([--with-openssl=DIR],
+        [root of OpenSSL directory])],
+    [
+        # Check if specified directory exists
+        if test ! -d "$withval"; then
+            AC_MSG_ERROR([$withval: no such directory])
+        fi
+        OPENSSL_INCLUDES="-I$withval/include"
+        OPENSSL_LDFLAGS="-L$withval/lib"
+        OPENSSL_LIBS="-lssl -lcrypto"
+    ],
+    [
+        # No explicit path specified, search in standard locations
+        PKG_CHECK_MODULES([OPENSSL], [openssl >= 1.0.1],
+            [OPENSSL_INCLUDES="$OPENSSL_CFLAGS"],
+            [
+                # Fallback to manual check if pkg-config fails
+                AC_CHECK_HEADERS([openssl/ssl.h openssl/err.h], [],
+                    [AC_MSG_ERROR([OpenSSL headers not found. Install OpenSSL development package.])])
+
+                AC_CHECK_LIB([crypto], [EVP_EncryptInit],
+                    [OPENSSL_LIBS="-lcrypto"],
+                    [AC_MSG_ERROR([libcrypto not found. Install OpenSSL.])])
+
+                AC_CHECK_LIB([ssl], [SSL_new],
+                    [OPENSSL_LIBS="$OPENSSL_LIBS -lssl"],
+                    [AC_MSG_ERROR([libssl not found. Install OpenSSL.])],
+                    [$OPENSSL_LIBS])
+            ])
+    ])
+
+# Set final flags
+AC_SUBST([OPENSSL_INCLUDES])
+AC_SUBST([OPENSSL_LDFLAGS])
+AC_SUBST([OPENSSL_LIBS])
 ##################
 
 ###########

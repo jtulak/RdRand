@@ -95,10 +95,7 @@ host_triplet = x86_64-pc-linux-gnu
 bin_PROGRAMS = rdrand-gen$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
-	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
-	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
@@ -233,8 +230,8 @@ am__define_uniq_tagged_files = \
 AM_RECURSIVE_TARGETS = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/librdrand.pc.in $(srcdir)/rdrandconfig.h.in AUTHORS \
-	COPYING ChangeLog INSTALL NEWS README compile config.guess \
-	config.sub depcomp install-sh ltmain.sh missing
+	COPYING ChangeLog INSTALL NEWS README ar-lib compile \
+	config.guess config.sub depcomp install-sh ltmain.sh missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -295,7 +292,7 @@ INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /usr/bin/ld -m elf_x86_64
 LDFLAGS = 
 LIBOBJS = 
-LIBS = 
+LIBS =  -lssl -lcrypto
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
 LN_S = ln -s
@@ -309,6 +306,10 @@ NMEDIT =
 OBJDUMP = objdump
 OBJEXT = o
 OPENMP_CFLAGS = -fopenmp
+OPENSSL_CFLAGS = 
+OPENSSL_INCLUDES = 
+OPENSSL_LDFLAGS = 
+OPENSSL_LIBS = -lssl -lcrypto
 OTOOL = 
 OTOOL64 = 
 PACKAGE = librdrand
@@ -319,6 +320,9 @@ PACKAGE_TARNAME = librdrand
 PACKAGE_URL = https://github.com/BroukPytlik/RdRand
 PACKAGE_VERSION = 1.2.0
 PATH_SEPARATOR = :
+PKG_CONFIG = /usr/bin/pkg-config
+PKG_CONFIG_LIBDIR = 
+PKG_CONFIG_PATH = /usr/lib64/pkgconfig:
 RANLIB = ranlib
 RDRAND_API_VERSION = 1.2.0
 RDRAND_SO_VERSION = 1:2:0
@@ -370,7 +374,7 @@ mandir = ${datarootdir}/man
 mkdir_p = $(MKDIR_P)
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /tmp/R
+prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
 runstatedir = ${localstatedir}/run
@@ -384,9 +388,11 @@ top_builddir = .
 top_srcdir = .
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
+AM_CFLAGS = 
+AM_LDFLAGS = 
 rdrand_gen_SOURCES = src/rdrand-gen.c
 rdrand_gen_LDADD = librdrand.la
-# rdrand_gen_LDADD = src/librdrand.c 
+# rdrand_gen_LDADD = src/librdrand.c
 rdrand_gen_LDFLAGS = -fopenmp -mrdrnd  -lrt -lm
 rdrand_gen_CFLAGS = -fopenmp -g -O2
 
@@ -424,15 +430,15 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu'; \
-	      $(am__cd) $(srcdir) && $(AUTOMAKE) --gnu \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign'; \
+	      $(am__cd) $(srcdir) && $(AUTOMAKE) --foreign \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu Makefile
+	  $(AUTOMAKE) --foreign Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
