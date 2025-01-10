@@ -1,4 +1,4 @@
-prefix=/usr/local
+prefix=/tmp/R
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include

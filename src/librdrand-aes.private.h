@@ -1,7 +1,7 @@
 /* vim: set expandtab cindent fdm=marker ts=4 sw=4: */
 /*
  * Copyright (C) 2013-2020 Jan Tulak <jan@tulak.me>
- * Copyright (C) 2013-2022 Jirka Hladky hladky DOT jiri AT gmail DOT com
+ * Copyright (C) 2013-2025 Jirka Hladky hladky DOT jiri AT gmail DOT com
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -62,7 +62,7 @@ typedef struct aes_cfg_s {
 /**
  * Decrement counter and if needed, change used key.
  *
- * @param num   How many changes to count 
+ * @param num   How many changes to count
  * @return 1 if it went OK
  */
 int counter(unsigned int num);
