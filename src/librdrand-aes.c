@@ -1,7 +1,7 @@
 /* vim: set expandtab cindent fdm=marker ts=4 sw=4: */
 /*
  * Copyright (C) 2013-2020 Jan Tulak <jan@tulak.me>
- * Copyright (C) 2013-2022 Jirka Hladky hladky DOT jiri AT gmail DOT com
+ * Copyright (C) 2013-2025 Jirka Hladky hladky DOT jiri AT gmail DOT com
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -252,11 +252,11 @@ int keys_mem_unlock(void * ptr, size_t len) {
 /**
  * Set manually keys for AES.
  * These keys will be rotated randomly.
- * 
+ *
  * @param  amount     Count of keys
  * @param  key_length Length of all keys in bytes
  *                    (must be pow(2))
- * @param  nonces     Array of nonces. Nonces have to be half of 
+ * @param  nonces     Array of nonces. Nonces have to be half of
  *                    length of keys.
  * @param  keys       Array of keys. All have to be the same length.
  * @return            1 if the keys were successfuly set
@@ -334,7 +334,7 @@ void rdrand_clean_aes() {
 
 /**
  * Encrypt the given buffer.
- * 
+ *
  * @param src    source data
  * @param dest   destination buffer
  * @param len    length of the buffer
@@ -398,7 +398,7 @@ int rdrand_enc_buffer(void* dest, void* src, size_t len) {
  *
  * Either rdrand_set_aes_keys or rdrand_set_aes_random_key
  * has to be set in advance.
- * 
+ *
  * @param  dest        destination location
  * @param  count       bytes to generate
  * @param  retry_limit how many times to retry the RdRand instruction
@@ -481,8 +481,8 @@ int counter(unsigned int num) {
     // regenerate it
     if (AES_CFG.keys.next_counter == 0 || AES_CFG.keys.next_counter < num) {
         //perror("!!! DEBUG: KEY CHANGED !!!\n");
-        if (AES_CFG.keys_type == KEYS_GIVEN) { 
-            result = keys_change(); // set a new random index 
+        if (AES_CFG.keys_type == KEYS_GIVEN) {
+            result = keys_change(); // set a new random index
             //keys_randomize(); // set a new random timer
             AES_CFG.keys.next_counter = MAX_COUNTER;
         } else { // KEYS_GENERATED
@@ -492,7 +492,7 @@ int counter(unsigned int num) {
     } else {
         AES_CFG.keys.next_counter -= num;
     }
-   
+
     if(result == 0){
         return 0;
     }
@@ -505,11 +505,9 @@ int counter(unsigned int num) {
  * Set key index (and nonce too) for AES to another random one.
  * Will call keys_shuffle at the end.
  * Used when rdrand_set_aes_keys() was set.
- *
- * @param rotate    TODO Currently not used - why I put it there? :-(
  */
 
-int keys_change(int rotate) {
+int keys_change(void) {
     /*unsigned int buf;
     if (RAND_bytes((unsigned char*)&buf, sizeof(unsigned int)) != 1) {
         fprintf(stderr, "ERROR: can't change keys index, not enough entropy!\n");

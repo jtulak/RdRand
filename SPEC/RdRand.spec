@@ -1,12 +1,14 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        2.1.3
-Release:        1%{?dist}
-License:        LGPLv2+
-URL:            https://github.com/jtulak/%{name}
-Source0:        https://github.com/jtulak/%{name}/archive/%{version}.tar.gz
+Version:        2.1.4
+Release:        8%{?dist}
+# Automatically converted from old format: LGPLv2+ - review is highly recommended.
+License:        LicenseRef-Callaway-LGPLv2+
+URL:            https://github.com/jirka-h/%{name}
+Source0:        https://github.com/jirka-h/%{name}/archive/%{version}.tar.gz
 ExclusiveArch: %{ix86} x86_64
 Requires:       openssl
+BuildRequires: make
 BuildRequires:  gcc-c++
 BuildRequires:  openssl-devel
 %description
@@ -19,7 +21,7 @@ with all components sealed on CPU. The entropy source is a meta-stable circuit,
 with unpredictable behavior based on thermal noise. The entropy is fed into
 a 3:1 compression ratio entropy extractor (whitener) based on AES-CBC-MAC.
 Online statistical tests are performed at this stage and only high quality
-random data are used as the seed for cryptograhically secure SP800-90 AES-CTR
+random data are used as the seed for cryptographically secure SP800-90 AES-CTR
 DRBG compliant PRNG.
 This generator is producing maximum of 512 128-bit AES blocks before it's
 reseeded. According to documentation the 512 blocks is a upper limit for
@@ -60,8 +62,47 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/pkgconfig/*
 
 %changelog
-* Thu Feb 17 2022 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.3-1
-- Updated man page
+* Wed Sep 04 2024 Miroslav Suchý <msuchy@redhat.com> - 2.1.4-8
+- convert license to SPDX
+
+* Wed Jul 17 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
+* Mon Jan 22 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Fri Jan 19 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Wed Jul 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Wed Jan 18 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Wed Jul 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.4-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+* Thu Feb 17 2022  Jirka Hladky <hladky.jiri@gmail.com> - 2.1.4-1
+- Updated to v2.1.4
+
+* Wed Jan 19 2022 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.2-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+* Tue Sep 14 2021 Sahana Prasad <sahana@redhat.com> - 2.1.2-6
+- Rebuilt with OpenSSL 3.0.0
+
+* Wed Jul 21 2021 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.2-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Mon Jan 25 2021 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.2-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+* Mon Jul 27 2020 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.2-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Tue Jun 16 2020 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.2-2
+- Fixed typo in rpm spec file
 
 * Tue Jun 16 2020 Jirka Hladky <hladky.jiri@gmail.com> - 2.1.2-1
 - Added support for AMD CPUs
