@@ -1,14 +1,14 @@
-Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
+Summary:        Library for generating random numbers using the RDRAND (read random) instruction
 Name:           RdRand
-Version:        2.1.4
-Release:        8%{?dist}
+Version:        2.1.6
+Release:        1%{?dist}
 # Automatically converted from old format: LGPLv2+ - review is highly recommended.
-License:        LicenseRef-Callaway-LGPLv2+
+License:        LGPLv2+
 URL:            https://github.com/jirka-h/%{name}
 Source0:        https://github.com/jirka-h/%{name}/archive/%{version}.tar.gz
 ExclusiveArch: %{ix86} x86_64
 Requires:       openssl
-BuildRequires: make
+BuildRequires: make libtool
 BuildRequires:  gcc-c++
 BuildRequires:  openssl-devel
 %description
@@ -37,6 +37,7 @@ Headers and shared object symbolic links for the RdRand.
 
 %prep
 %setup -q
+autoreconf -fi
 
 %build
 %configure
@@ -44,7 +45,7 @@ make %{?_smp_mflags}
 
 %install
 make install DESTDIR=$RPM_BUILD_ROOT INSTALL="%{__install} -p"
-rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdrandconfig.h}
+rm -vf $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand.a,%{_libdir}/librdrand/include/rdrandconfig.h}
 
 %ldconfig_scriptlets
 
@@ -62,6 +63,10 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/pkgconfig/*
 
 %changelog
+* Sat Jan 11 2025  Jirka Hladky <hladky.jiri@gmail.com> - 2.1.6-1
+- Updated to v2.1.6
+- Fixes https://bugzilla.redhat.com/show_bug.cgi?id=2336261
+
 * Wed Sep 04 2024 Miroslav Suchý <msuchy@redhat.com> - 2.1.4-8
 - convert license to SPDX
 

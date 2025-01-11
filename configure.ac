@@ -17,6 +17,7 @@ PKG_PROG_PKG_CONFIG
 # the library.
 AC_CONFIG_HEADERS([config.h rdrandconfig.h])
 AC_PROG_CXX
+AC_CONFIG_MACRO_DIRS([m4])
 
 ###################
 # Check for OpenMP
