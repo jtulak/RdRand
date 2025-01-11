@@ -1,6 +1,6 @@
 Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
 Name:           RdRand
-Version:        2.1.5
+Version:        2.1.6
 Release:        1%{?dist}
 # Automatically converted from old format: LGPLv2+ - review is highly recommended.
 License:        LicenseRef-Callaway-LGPLv2+
@@ -62,8 +62,8 @@ rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdran
 %{_libdir}/pkgconfig/*
 
 %changelog
-* Sat Jan 11 2025  Jirka Hladky <hladky.jiri@gmail.com> - 2.1.5-1
-- Updated to v2.1.5
+* Sat Jan 11 2025  Jirka Hladky <hladky.jiri@gmail.com> - 2.1.6-1
+- Updated to v2.1.6
 - Fixes https://bugzilla.redhat.com/show_bug.cgi?id=2336261
 
 * Wed Sep 04 2024 Miroslav Suchý <msuchy@redhat.com> - 2.1.4-8
