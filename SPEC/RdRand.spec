@@ -8,7 +8,7 @@ URL:            https://github.com/jirka-h/%{name}
 Source0:        https://github.com/jirka-h/%{name}/archive/%{version}.tar.gz
 ExclusiveArch: %{ix86} x86_64
 Requires:       openssl
-BuildRequires: make
+BuildRequires: make libtool
 BuildRequires:  gcc-c++
 BuildRequires:  openssl-devel
 %description
@@ -37,6 +37,7 @@ Headers and shared object symbolic links for the RdRand.
 
 %prep
 %setup -q
+autoreconf -fi
 
 %build
 %configure
