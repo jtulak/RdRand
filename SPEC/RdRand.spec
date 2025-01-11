@@ -1,9 +1,9 @@
-Summary:        Library for generating random numbers using the RdRand instruction on Intel CPUs
+Summary:        Library for generating random numbers using the RDRAND (read random) instruction
 Name:           RdRand
 Version:        2.1.6
 Release:        1%{?dist}
 # Automatically converted from old format: LGPLv2+ - review is highly recommended.
-License:        LicenseRef-Callaway-LGPLv2+
+License:        LGPLv2+
 URL:            https://github.com/jirka-h/%{name}
 Source0:        https://github.com/jirka-h/%{name}/archive/%{version}.tar.gz
 ExclusiveArch: %{ix86} x86_64
@@ -44,7 +44,7 @@ make %{?_smp_mflags}
 
 %install
 make install DESTDIR=$RPM_BUILD_ROOT INSTALL="%{__install} -p"
-rm -f $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand/include/rdrandconfig.h}
+rm -vf $RPM_BUILD_ROOT{%{_libdir}/librdrand.la,%{_libdir}/librdrand.a,%{_libdir}/librdrand/include/rdrandconfig.h}
 
 %ldconfig_scriptlets
 
